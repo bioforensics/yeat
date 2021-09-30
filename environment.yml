@@ -1,0 +1,8 @@
+name: yeat
+channels:
+    - conda-forge
+    - bioconda
+    - defaults
+dependencies:
+    - snakemake
+    - spades

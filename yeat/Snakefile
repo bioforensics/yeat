@@ -1,0 +1,17 @@
+
+
+
+
+rule spades:
+    output:
+        contigs="{sample}/contigs.fasta",
+        scaffolds="{sample}/scaffolds.fasta"
+    input:
+        read1="tests/data/{sample}_R1.fq.gz",
+        read2="tests/data/{sample}_R2.fq.gz"
+    threads:
+        8
+    shell:
+        """
+        spades.py -1 {input.read1} -2 {input.read2} -o {wildcards.sample}
+        """

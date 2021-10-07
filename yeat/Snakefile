@@ -1,17 +1,80 @@
+import pandas as pd
 
 
-
-
-rule spades:
+rule fastp:
     output:
-        contigs="{sample}/contigs.fasta",
-        scaffolds="{sample}/scaffolds.fasta"
+        out1="fastp/{sample}.R1.fq.gz",
+        out2="fastp/{sample}.R2.fq.gz",
     input:
         read1="tests/data/{sample}_R1.fq.gz",
-        read2="tests/data/{sample}_R2.fq.gz"
-    threads:
-        8
+        read2="tests/data/{sample}_R2.fq.gz",
     shell:
         """
-        spades.py -1 {input.read1} -2 {input.read2} -o {wildcards.sample}
+        fastp -i {input.read1} -I {input.read2} -o {output.out1} -O {output.out2} |& tee fastp/report.txt
+        mv fastp.html fastp.json fastp
+        """
+
+
+# rule fastqc:
+
+
+rule mash:
+    output:
+        sketch="mash/{sample}.R1.fq.gz.msh",
+        mash_report="mash/{sample}.report.tsv"
+    input:
+        read1="fastp/{sample}.R1.fq.gz",
+        read2="fastp/{sample}.R2.fq.gz",
+    shell:
+        """
+        mash sketch {input.read1}
+        mv {input.read1}.msh mash
+        mash info -t {output.sketch} > {output.mash_report}
+        """
+
+
+rule downsample:
+    output:
+        sub1="downsample/{sample}.R1.fq.gz",
+        sub2="downsample/{sample}.R2.fq.gz",
+    input:
+        read1="fastp/{sample}.R1.fq.gz",
+        read2="fastp/{sample}.R2.fq.gz",
+        mash_report="mash/{sample}.report.tsv"
+    run:
+        result = input.mash_report
+        df = pd.read_csv(result, sep="\t")
+        genome_size = df["Length"].iloc[0]
+        coverage = 150
+        read_length = 250
+        down = (genome_size * 150) // (2 * read_length)
+        print(f"genome size: {genome_size}")
+        print(f"down: {down}")
+        shell("seqtk sample {input.read1} {down} > downsample/{wildcards.sample}.R1.fq")
+        shell("seqtk sample {input.read2} {down} > downsample/{wildcards.sample}.R2.fq")
+        shell("gzip -f downsample/*")
+
+    
+rule spades:
+    output:
+        contigs="spades/{sample}/contigs.fasta",
+        scaffolds="spades/{sample}/scaffolds.fasta",
+    input:
+        read1="downsample/{sample}.R1.fq.gz",
+        read2="downsample/{sample}.R2.fq.gz",
+    threads: 8
+    shell:
+        """
+        spades.py -1 {input.read1} -2 {input.read2} -o spades/{wildcards.sample}
+        """
+
+
+rule quast:
+    output:
+        report="quast/{sample}/report.html",
+    input:
+        scaffold="spades/{sample}/scaffolds.fasta",
+    shell:
+        """
+        quast.py {input.scaffold} -o quast/{wildcards.sample}
         """

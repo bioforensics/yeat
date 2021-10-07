@@ -4,5 +4,11 @@ channels:
     - bioconda
     - defaults
 dependencies:
+    - fastp
+    - fastqc
+    - gzip
+    - mash
+    - quast
+    - seqtk
     - snakemake
     - spades

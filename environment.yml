@@ -4,11 +4,14 @@ channels:
     - bioconda
     - defaults
 dependencies:
+    - black
     - fastp
     - fastqc
     - gzip
     - mash
+    - pytest-cov
     - quast
     - seqtk
     - snakemake
     - spades
+    - versioneer

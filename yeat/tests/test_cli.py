@@ -1,8 +1,8 @@
+import os
+import pytest
 import yeat
 from yeat import cli
 from yeat.tests import data_file
-import os
-import pytest
 
 
 def test_basic_dry_run(tmp_path):

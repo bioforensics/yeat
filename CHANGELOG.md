@@ -10,5 +10,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Packaging YEAT for distribution (#3)
     - CLI
-    - version control
-    - unit testing
+    - Version Control
+    - Unit Testing

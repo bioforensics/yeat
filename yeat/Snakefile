@@ -1,17 +1,36 @@
+from shutil import copyfile
+import os
 import pandas as pd
+from pkg_resources import resource_filename
+
+
+out_dir = config["outdir"]
+analysis_dir = os.path.dirname(f"{out_dir}/analysis/")
+seq_input_dir = os.path.dirname(f"{out_dir}/seq/input/")
+os.makedirs(analysis_dir, exist_ok=True)
+os.makedirs(seq_input_dir, exist_ok=True)
+sample = config["sample"]
+copyfile(config["read1"], f"{seq_input_dir}/{sample}_R1.fq.gz")
+copyfile(config["read2"], f"{seq_input_dir}/{sample}_R2.fq.gz")
+
+
+rule all:
+    input:
+        expand(out_dir + "/analysis/quast/{sample}/report.html", sample=config["sample"])
 
 
 rule fastp:
     output:
-        out1="fastp/{sample}.R1.fq.gz",
-        out2="fastp/{sample}.R2.fq.gz",
+        out1=out_dir + "/seq/fastp/{sample}.R1.fq.gz",
+        out2=out_dir + "/seq/fastp/{sample}.R2.fq.gz",
     input:
-        read1="tests/data/{sample}_R1.fq.gz",
-        read2="tests/data/{sample}_R2.fq.gz",
+        read1=seq_input_dir + "/{sample}_R1.fq.gz",
+        read2=seq_input_dir + "/{sample}_R2.fq.gz"
     shell:
         """
-        fastp -i {input.read1} -I {input.read2} -o {output.out1} -O {output.out2} |& tee fastp/report.txt
-        mv fastp.html fastp.json fastp
+        fastp -i {input.read1} -I {input.read2} -o {output.out1} -O {output.out2} \
+            --html {out_dir}/seq/fastp/fastp.html --json {out_dir}/seq/fastp/fastp.json \
+                2> {out_dir}/seq/fastp/report.txt
         """
 
 
@@ -20,27 +39,25 @@ rule fastp:
 
 rule mash:
     output:
-        sketch="mash/{sample}.R1.fq.gz.msh",
-        mash_report="mash/{sample}.report.tsv"
+        sketch=out_dir + "/seq/mash/{sample}.R1.fq.gz.msh",
+        mash_report=out_dir + "/seq/mash/{sample}.report.tsv"
     input:
-        read1="fastp/{sample}.R1.fq.gz",
-        read2="fastp/{sample}.R2.fq.gz",
+        read1=rules.fastp.output[0]
     shell:
         """
-        mash sketch {input.read1}
-        mv {input.read1}.msh mash
+        mash sketch {input.read1} -o {output.sketch}
         mash info -t {output.sketch} > {output.mash_report}
         """
 
 
 rule downsample:
     output:
-        sub1="downsample/{sample}.R1.fq.gz",
-        sub2="downsample/{sample}.R2.fq.gz",
+        sub1=out_dir + "/seq/downsample/{sample}.R1.fq.gz",
+        sub2=out_dir + "/seq/downsample/{sample}.R2.fq.gz",
     input:
-        read1="fastp/{sample}.R1.fq.gz",
-        read2="fastp/{sample}.R2.fq.gz",
-        mash_report="mash/{sample}.report.tsv"
+        read1=out_dir + "/seq/fastp/{sample}.R1.fq.gz",
+        read2=out_dir + "/seq/fastp/{sample}.R2.fq.gz",
+        mash_report=out_dir + "/seq/mash/{sample}.report.tsv"
     run:
         result = input.mash_report
         df = pd.read_csv(result, sep="\t")
@@ -50,31 +67,31 @@ rule downsample:
         down = (genome_size * 150) // (2 * read_length)
         print(f"genome size: {genome_size}")
         print(f"down: {down}")
-        shell("seqtk sample {input.read1} {down} > downsample/{wildcards.sample}.R1.fq")
-        shell("seqtk sample {input.read2} {down} > downsample/{wildcards.sample}.R2.fq")
-        shell("gzip -f downsample/*")
+        shell("seqtk sample {input.read1} {down} > {out_dir}/seq/downsample/{wildcards.sample}.R1.fq")
+        shell("seqtk sample {input.read2} {down} > {out_dir}/seq/downsample/{wildcards.sample}.R2.fq")
+        shell("gzip -f {out_dir}/seq/downsample/*")
 
     
 rule spades:
     output:
-        contigs="spades/{sample}/contigs.fasta",
-        scaffolds="spades/{sample}/scaffolds.fasta",
+        contigs=out_dir + "/analysis/spades/{sample}/contigs.fasta",
+        scaffolds=out_dir + "/analysis/spades/{sample}/scaffolds.fasta",
     input:
-        read1="downsample/{sample}.R1.fq.gz",
-        read2="downsample/{sample}.R2.fq.gz",
+        read1=out_dir + "/seq/downsample/{sample}.R1.fq.gz",
+        read2=out_dir + "/seq/downsample/{sample}.R2.fq.gz",
     threads: 8
     shell:
         """
-        spades.py -1 {input.read1} -2 {input.read2} -o spades/{wildcards.sample}
+        spades.py -1 {input.read1} -2 {input.read2} -o {out_dir}/analysis/spades/{wildcards.sample}
         """
 
 
 rule quast:
     output:
-        report="quast/{sample}/report.html",
+        report=out_dir + "/analysis/quast/{sample}/report.html",
     input:
-        scaffold="spades/{sample}/scaffolds.fasta",
+        scaffold=out_dir + "/analysis/spades/{sample}/scaffolds.fasta",
     shell:
         """
-        quast.py {input.scaffold} -o quast/{wildcards.sample}
+        quast.py {input.scaffold} -o {out_dir}/analysis/quast/{wildcards.sample}
         """

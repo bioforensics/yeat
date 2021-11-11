@@ -7,12 +7,11 @@ import yeat
 
 def add_args(parser):
     parser.add_argument(
-        "-r1", type=str, nargs=1, metavar="file_name", default=None, help="read 1", required=True
+        "-r1", type=str, metavar="file_name", default=None, help="read 1", required=True
     )
     parser.add_argument(
         "-r2",
         type=str,
-        nargs=1,
         metavar="file_name",
         default=None,
         help="read 2",
@@ -21,40 +20,60 @@ def add_args(parser):
     parser.add_argument(
         "-o",
         type=str,
-        nargs=1,
         metavar="out_directory",
         default=".",
-        help="out directory; default is current directory",
+        help="out directory; default is '.'",
     )
     parser.add_argument(
         "-c",
         "--cores",
         type=int,
-        nargs=1,
         metavar="cores",
         default=1,
         help="number of cores for snakemake; default is 1",
     )
+    parser.add_argument(
+        "--sample",
+        type=str,
+        metavar="sample_name",
+        default="sample",
+        help="sample name for snakemake; default is 'sample'",
+    )
+    parser.add_argument(
+        "-n",
+        "--dry-run",
+        action="store_true",
+        help="construct workflow DAG and print a summary but do not execute",
+    )
     parser.add_argument("-v", "--version", action="version", version=f"YEAT v{yeat.__version__}")
 
 
-def run(read1, read2, output=".", cores=1):
+def run(read1, read2, outdir=".", cores=1, sample="sample", dryrun="dry"):
     rel_path = os.path.join("Snakefile")
     snakefile = resource_filename("yeat", rel_path)
-    config = dict(read1=read1, read2=read2, output=output, cores=cores)
+    config = dict(
+        read1=read1, read2=read2, outdir=outdir, cores=cores, sample=sample, dryrun=dryrun
+    )
     success = snakemake(
         snakefile,
         config=config,
         cores=cores,
-        dryrun="dry",
+        dryrun=dryrun,
         printshellcmds=True,
+        # workdir=outdir,
     )
     if not success:
         raise RuntimeError("Snakemake Failed")
 
 
-def main():
+def get_parser():
     parser = argparse.ArgumentParser()
-    add_args(parser)
-    args = parser.parse_args()
-    run(args.r1, args.r2, output=args.o, cores=args.cores)
+    return parser
+
+
+def main(args=None):
+    if args is None:
+        parser = get_parser()
+        add_args(parser)
+        args = parser.parse_args()
+    run(args.r1, args.r2, outdir=args.o, cores=args.cores, sample=args.sample, dryrun=args.dry_run)

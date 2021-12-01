@@ -1,7 +1,5 @@
 from shutil import copyfile
-import os
 import pandas as pd
-from pkg_resources import resource_filename
 
 
 rule all:
@@ -34,9 +32,6 @@ rule fastp:
             --html seq/fastp/fastp.html --json seq/fastp/fastp.json \
             2> seq/fastp/report.txt
         """
-
-
-# rule fastqc:
 
 
 rule mash:
@@ -82,10 +77,7 @@ rule spades:
         read1="seq/downsample/{sample}.R1.fq.gz",
         read2="seq/downsample/{sample}.R2.fq.gz",
     threads: 8
-    shell:
-        """
-        spades.py -1 {input.read1} -2 {input.read2} -o analysis/spades/{wildcards.sample}
-        """
+    shell: "spades.py -1 {input.read1} -2 {input.read2} -o analysis/spades/{wildcards.sample}"
 
 
 rule quast:
@@ -93,7 +85,4 @@ rule quast:
         report="analysis/quast/{sample}/report.html",
     input:
         scaffold="analysis/spades/{sample}/scaffolds.fasta",
-    shell:
-        """
-        quast.py {input.scaffold} -o analysis/quast/{wildcards.sample}
-        """
+    shell: "quast.py {input.scaffold} -o analysis/quast/{wildcards.sample}"

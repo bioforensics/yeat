@@ -9,21 +9,9 @@ def run(read1, read2, outdir=".", cores=1, sample="sample", dryrun="dry"):
     snakefile = resource_filename("yeat", "Snakefile")
     r1 = Path(read1).resolve()
     r2 = Path(read2).resolve()
-    config = dict(
-        read1=r1,
-        read2=r2,
-        outdir=outdir,
-        cores=cores,
-        sample=sample,
-        dryrun=dryrun,
-    )
+    config = dict(read1=r1, read2=r2, outdir=outdir, cores=cores, sample=sample, dryrun=dryrun,)
     success = snakemake(
-        snakefile,
-        config=config,
-        cores=cores,
-        dryrun=dryrun,
-        printshellcmds=True,
-        workdir=outdir,
+        snakefile, config=config, cores=cores, dryrun=dryrun, printshellcmds=True, workdir=outdir,
     )
     if not success:
         raise RuntimeError("Snakemake Failed")

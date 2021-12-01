@@ -6,38 +6,29 @@ import yeat
 
 
 def add_args(parser):
+    parser.add_argument("-v", "--version", action="version", version=f"YEAT v{yeat.__version__}")
     parser.add_argument(
-        "-r1", type=str, metavar="file_name", default=None, help="read 1", required=True
-    )
-    parser.add_argument(
-        "-r2",
+        "-O",
+        "--outdir",
         type=str,
-        metavar="file_name",
-        default=None,
-        help="read 2",
-        required=True,
-    )
-    parser.add_argument(
-        "-o",
-        type=str,
-        metavar="out_directory",
+        metavar="DIR",
         default=".",
-        help="out directory; default is '.'",
+        help="output directory; default is '.'",
     )
     parser.add_argument(
-        "-c",
-        "--cores",
+        "-t",
+        "--threads",
         type=int,
-        metavar="cores",
+        metavar="T",
         default=1,
-        help="number of cores for snakemake; default is 1",
+        help="number of threads for Snakemake; default is 1",
     )
     parser.add_argument(
         "--sample",
         type=str,
-        metavar="sample_name",
+        metavar="S",
         default="sample",
-        help="sample name for snakemake; default is 'sample'",
+        help="sample name for Snakemake; default is 'sample'",
     )
     parser.add_argument(
         "-n",
@@ -45,7 +36,7 @@ def add_args(parser):
         action="store_true",
         help="construct workflow DAG and print a summary but do not execute",
     )
-    parser.add_argument("-v", "--version", action="version", version=f"YEAT v{yeat.__version__}")
+    parser.add_argument("reads", type=str, nargs=2, help="paired-end reads in FASTQ format")
 
 
 def run(read1, read2, outdir=".", cores=1, sample="sample", dryrun="dry"):
@@ -81,4 +72,12 @@ def main(args=None):
         parser = get_parser()
         add_args(parser)
         args = parser.parse_args()
-    run(args.r1, args.r2, outdir=args.o, cores=args.cores, sample=args.sample, dryrun=args.dry_run)
+    read1, read2 = args.reads
+    run(
+        read1,
+        read2,
+        outdir=args.outdir,
+        cores=args.threads,
+        sample=args.sample,
+        dryrun=args.dry_run,
+    )

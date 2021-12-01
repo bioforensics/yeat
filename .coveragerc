@@ -1,0 +1,6 @@
+[report]
+show_missing = True
+
+[run]
+branch = True
+omit = */yeat/_version.py

@@ -1,3 +1,12 @@
+# -------------------------------------------------------------------------------------------------
+# Copyright (c) 2021, DHS. This file is part of YEAT: http://github.com/bioforensics/yeat
+#
+# This software was prepared for the Department of Homeland Security (DHS) by the Battelle National
+# Biodefense Institute, LLC (BNBI) as part of contract HSHQDC-15-C-00064 to manage and operate the
+# National Biodefense Analysis and Countermeasures Center (NBACC), a Federally Funded Research and
+# Development Center.
+# -------------------------------------------------------------------------------------------------
+
 import argparse
 from pathlib import Path
 from pkg_resources import resource_filename
@@ -9,9 +18,21 @@ def run(read1, read2, outdir=".", cores=1, sample="sample", dryrun="dry"):
     snakefile = resource_filename("yeat", "Snakefile")
     r1 = Path(read1).resolve()
     r2 = Path(read2).resolve()
-    config = dict(read1=r1, read2=r2, outdir=outdir, cores=cores, sample=sample, dryrun=dryrun,)
+    config = dict(
+        read1=r1,
+        read2=r2,
+        outdir=outdir,
+        cores=cores,
+        sample=sample,
+        dryrun=dryrun,
+    )
     success = snakemake(
-        snakefile, config=config, cores=cores, dryrun=dryrun, printshellcmds=True, workdir=outdir,
+        snakefile,
+        config=config,
+        cores=cores,
+        dryrun=dryrun,
+        printshellcmds=True,
+        workdir=outdir,
     )
     if not success:
         raise RuntimeError("Snakemake Failed")

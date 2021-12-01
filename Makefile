@@ -9,7 +9,7 @@ help: Makefile
 
 ## test:        run automated test suite
 test:
-	pytest --cov=yeat -m 'not drmaa and not long'
+	pytest --cov=yeat
 
 ## style:       check code style vs Black
 style:

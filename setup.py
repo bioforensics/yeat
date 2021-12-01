@@ -35,17 +35,10 @@ setup(
         "Topic :: Scientific/Engineering :: Bio-Informatics",
     ],
     zip_safe=True,
-    # keywords='genome assembly',  # Optional
-    # package_dir={'': 'yeat'},  # Optional
-    python_requires='>=3.9.7, <4',
-    # install_requires=['peppercorn'],  # Optional
-    # extras_require={  # Optional
-    #     'dev': ['check-manifest'],
-    #     'test': ['coverage'],
-    # },
-    # data_files=[('my_data', ['data/data_file'])],  # Optional
-    # project_urls={  # Optional
-    #     'Bug Reports': 'https://github.com/bioforensics/yeat/issues',
-    #     'Source': 'https://github.com/bioforensics/yeat',
-    # },
+    keywords='genome assembly',
+    python_requires='>=3.7',
+    project_urls={
+        'Bug Reports': 'https://github.com/bioforensics/yeat/issues',
+        'Source': 'https://github.com/bioforensics/yeat',
+    },
 )

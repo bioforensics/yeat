@@ -1,46 +1,69 @@
+# -------------------------------------------------------------------------------------------------
+# Copyright (c) 2021, DHS. This file is part of YEAT: http://github.com/bioforensics/yeat
+#
+# This software was prepared for the Department of Homeland Security (DHS) by the Battelle National
+# Biodefense Institute, LLC (BNBI) as part of contract HSHQDC-15-C-00064 to manage and operate the
+# National Biodefense Analysis and Countermeasures Center (NBACC), a Federally Funded Research and
+# Development Center.
+# -------------------------------------------------------------------------------------------------
+
+from shutil import copyfile
 import pandas as pd
+
+
+rule all:
+    input:
+        expand("analysis/quast/{sample}/report.html", sample=config["sample"])
+
+
+rule copyinput:
+    output:
+        read1="seq/input/{sample}_R1.fq.gz",
+        read2="seq/input/{sample}_R2.fq.gz"
+    input:
+        read1=config["read1"],
+        read2=config["read2"]
+    run:
+        copyfile(input.read1, output.read1)
+        copyfile(input.read2, output.read2)
 
 
 rule fastp:
     output:
-        out1="fastp/{sample}.R1.fq.gz",
-        out2="fastp/{sample}.R2.fq.gz",
+        out1="seq/fastp/{sample}.R1.fq.gz",
+        out2="seq/fastp/{sample}.R2.fq.gz",
     input:
-        read1="tests/data/{sample}_R1.fq.gz",
-        read2="tests/data/{sample}_R2.fq.gz",
+        read1="seq/input/{sample}_R1.fq.gz",
+        read2="seq/input/{sample}_R2.fq.gz"
     shell:
         """
-        fastp -i {input.read1} -I {input.read2} -o {output.out1} -O {output.out2} |& tee fastp/report.txt
-        mv fastp.html fastp.json fastp
+        fastp -i {input.read1} -I {input.read2} -o {output.out1} -O {output.out2} \
+            --html seq/fastp/fastp.html --json seq/fastp/fastp.json \
+            2> seq/fastp/report.txt
         """
-
-
-# rule fastqc:
 
 
 rule mash:
     output:
-        sketch="mash/{sample}.R1.fq.gz.msh",
-        mash_report="mash/{sample}.report.tsv"
+        sketch="seq/mash/{sample}.R1.fq.gz.msh",
+        mash_report="seq/mash/{sample}.report.tsv"
     input:
-        read1="fastp/{sample}.R1.fq.gz",
-        read2="fastp/{sample}.R2.fq.gz",
+        read1=rules.fastp.output.out1
     shell:
         """
-        mash sketch {input.read1}
-        mv {input.read1}.msh mash
+        mash sketch {input.read1} -o {output.sketch}
         mash info -t {output.sketch} > {output.mash_report}
         """
 
 
 rule downsample:
     output:
-        sub1="downsample/{sample}.R1.fq.gz",
-        sub2="downsample/{sample}.R2.fq.gz",
+        sub1="seq/downsample/{sample}.R1.fq.gz",
+        sub2="seq/downsample/{sample}.R2.fq.gz",
     input:
-        read1="fastp/{sample}.R1.fq.gz",
-        read2="fastp/{sample}.R2.fq.gz",
-        mash_report="mash/{sample}.report.tsv"
+        read1="seq/fastp/{sample}.R1.fq.gz",
+        read2="seq/fastp/{sample}.R2.fq.gz",
+        mash_report="seq/mash/{sample}.report.tsv"
     run:
         result = input.mash_report
         df = pd.read_csv(result, sep="\t")
@@ -50,31 +73,25 @@ rule downsample:
         down = (genome_size * 150) // (2 * read_length)
         print(f"genome size: {genome_size}")
         print(f"down: {down}")
-        shell("seqtk sample {input.read1} {down} > downsample/{wildcards.sample}.R1.fq")
-        shell("seqtk sample {input.read2} {down} > downsample/{wildcards.sample}.R2.fq")
-        shell("gzip -f downsample/*")
+        shell("seqtk sample {input.read1} {down} > seq/downsample/{wildcards.sample}.R1.fq")
+        shell("seqtk sample {input.read2} {down} > seq/downsample/{wildcards.sample}.R2.fq")
+        shell("gzip -f seq/downsample/*")
 
-    
+
 rule spades:
     output:
-        contigs="spades/{sample}/contigs.fasta",
-        scaffolds="spades/{sample}/scaffolds.fasta",
+        contigs="analysis/spades/{sample}/contigs.fasta",
+        scaffolds="analysis/spades/{sample}/scaffolds.fasta",
     input:
-        read1="downsample/{sample}.R1.fq.gz",
-        read2="downsample/{sample}.R2.fq.gz",
+        read1="seq/downsample/{sample}.R1.fq.gz",
+        read2="seq/downsample/{sample}.R2.fq.gz",
     threads: 8
-    shell:
-        """
-        spades.py -1 {input.read1} -2 {input.read2} -o spades/{wildcards.sample}
-        """
+    shell: "spades.py -1 {input.read1} -2 {input.read2} -o analysis/spades/{wildcards.sample}"
 
 
 rule quast:
     output:
-        report="quast/{sample}/report.html",
+        report="analysis/quast/{sample}/report.html",
     input:
-        scaffold="spades/{sample}/scaffolds.fasta",
-    shell:
-        """
-        quast.py {input.scaffold} -o quast/{wildcards.sample}
-        """
+        scaffold="analysis/spades/{sample}/scaffolds.fasta",
+    shell: "quast.py {input.scaffold} -o analysis/quast/{wildcards.sample}"

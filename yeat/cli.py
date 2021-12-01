@@ -1,11 +1,36 @@
 import argparse
-import os
+from pathlib import Path
 from pkg_resources import resource_filename
 from snakemake import snakemake
 import yeat
 
 
-def add_args(parser):
+def run(read1, read2, outdir=".", cores=1, sample="sample", dryrun="dry"):
+    snakefile = resource_filename("yeat", "Snakefile")
+    r1 = Path(read1).resolve()
+    r2 = Path(read2).resolve()
+    config = dict(
+        read1=r1,
+        read2=r2,
+        outdir=outdir,
+        cores=cores,
+        sample=sample,
+        dryrun=dryrun,
+    )
+    success = snakemake(
+        snakefile,
+        config=config,
+        cores=cores,
+        dryrun=dryrun,
+        printshellcmds=True,
+        workdir=outdir,
+    )
+    if not success:
+        raise RuntimeError("Snakemake Failed")
+
+
+def get_parser():
+    parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", action="version", version=f"YEAT v{yeat.__version__}")
     parser.add_argument(
         "-O",
@@ -37,45 +62,15 @@ def add_args(parser):
         help="construct workflow DAG and print a summary but do not execute",
     )
     parser.add_argument("reads", type=str, nargs=2, help="paired-end reads in FASTQ format")
-
-
-def run(read1, read2, outdir=".", cores=1, sample="sample", dryrun="dry"):
-    rel_path = os.path.join("Snakefile")
-    snakefile = resource_filename("yeat", rel_path)
-    config = dict(
-        read1=os.path.abspath(read1),
-        read2=os.path.abspath(read2),
-        outdir=outdir,
-        cores=cores,
-        sample=sample,
-        dryrun=dryrun,
-    )
-    success = snakemake(
-        snakefile,
-        config=config,
-        cores=cores,
-        dryrun=dryrun,
-        printshellcmds=True,
-        workdir=outdir,
-    )
-    if not success:
-        raise RuntimeError("Snakemake Failed")
-
-
-def get_parser():
-    parser = argparse.ArgumentParser()
     return parser
 
 
 def main(args=None):
     if args is None:
-        parser = get_parser()
-        add_args(parser)
-        args = parser.parse_args()
-    read1, read2 = args.reads
+        args = get_parser().parse_args()
+    assert len(args.reads) == 2
     run(
-        read1,
-        read2,
+        *args.reads,
         outdir=args.outdir,
         cores=args.threads,
         sample=args.sample,

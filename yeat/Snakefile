@@ -14,7 +14,7 @@ import pandas as pd
 rule all:
     input:
         expand("analysis/quast/{sample}/report.html", sample=config["sample"]),
-        expand("seq/fastqc/{sample}_R{number}_fastqc.html", sample=config["sample"], number=["1", "2"])
+        expand("seq/fastqc/{sample}_{reads}_fastqc.html", sample=config["sample"], reads=["R1", "R2"])
 
 
 rule copyinput:

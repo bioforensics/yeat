@@ -6,4 +6,4 @@ YEAT, **Y**our **E**verday **A**ssembly **T**ool, is an update to [`asm_tools`](
 
 ## Usage:
 
-```$ snakemake quast/Animal_289/report.html --cores 4```
+```$ yeat {read1} {read2} --outdir {path} --sample {name}```

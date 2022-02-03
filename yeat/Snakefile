@@ -13,7 +13,8 @@ import pandas as pd
 
 rule all:
     input:
-        expand("analysis/quast/{sample}/report.html", sample=config["sample"])
+        expand("analysis/quast/{sample}/report.html", sample=config["sample"]),
+        expand("seq/fastqc/{sample}_{reads}_fastqc.html", sample=config["sample"], reads=["R1", "R2"])
 
 
 rule copyinput:
@@ -26,6 +27,20 @@ rule copyinput:
     run:
         copyfile(input.read1, output.read1)
         copyfile(input.read2, output.read2)
+
+
+rule fastqc:
+    output:
+        out1="seq/fastqc/{sample}_R1_fastqc.html",
+        out2="seq/fastqc/{sample}_R2_fastqc.html"
+    input:
+        read1="seq/input/{sample}_R1.fq.gz",
+        read2="seq/input/{sample}_R2.fq.gz"
+    threads: 2
+    shell:
+        """
+        fastqc {input.read1} {input.read2} --threads {threads} -o seq/fastqc/
+        """
 
 
 rule fastp:

@@ -3,4 +3,6 @@ show_missing = True
 
 [run]
 branch = True
-omit = */yeat/_version.py
+omit = 
+    */yeat/_version.py
+    */yeat/Snakefile

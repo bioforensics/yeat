@@ -36,9 +36,10 @@ rule fastqc:
     input:
         read1="seq/input/{sample}_R1.fq.gz",
         read2="seq/input/{sample}_R2.fq.gz"
+    threads: 2
     shell:
         """
-        fastqc {input.read1} {input.read2} -o seq/fastqc/
+        fastqc {input.read1} {input.read2} --threads {threads} -o seq/fastqc/
         """
 
 

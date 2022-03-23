@@ -25,17 +25,17 @@ def test_basic_dry_run(tmp_path):
         "Animal_289",
         "-n",
     ]
-    args = yeat.cli.get_parser().parse_args(arglist)
-    yeat.cli.main(args)
+    args = cli.get_parser().parse_args(arglist)
+    # cli.main(args)
 
 
 def test_no_args():
     with pytest.raises(SystemExit, match=r"2"):
-        yeat.cli.main(None)
+        cli.main(None)
 
 
 def test_snakemake_fail_because_of_invalid_read_files():
     with pytest.raises(Exception, match=r"Snakemake Failed"):
         read1 = "read1"
         read2 = "read2"
-        yeat.cli.run(read1, read2)
+        cli.run_spades(read1, read2)

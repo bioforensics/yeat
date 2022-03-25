@@ -1,6 +1,5 @@
-import yeat
-from assembly import config
 from .cli import get_parser, run_spades
+from yeat.assembly import config
 
 
 def main(args=None):

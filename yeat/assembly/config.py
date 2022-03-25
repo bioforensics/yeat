@@ -1,5 +1,7 @@
-from . import ASSEMBLY_ALGORITHMS
 import json
+
+
+ASSEMBLY_ALGORITHMS = ["spades"]  # , "megahit"]
 
 
 class AssemblyConfigError(ValueError):

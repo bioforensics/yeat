@@ -17,6 +17,7 @@ from yeat.tests import data_file
 def test_basic_dry_run(tmp_path):
     wd = str(tmp_path)
     arglist = [
+        data_file("config.cfg"),
         data_file("Animal_289_R1.fq.gz"),
         data_file("Animal_289_R2.fq.gz"),
         "--outdir",

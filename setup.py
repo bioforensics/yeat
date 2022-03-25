@@ -25,8 +25,8 @@ setup(
     url='https://github.com/bioforensics/yeat',
     packages=[
         "yeat",
-        "yeat.cli",
         "yeat.assembly",
+        "yeat.cli",
         "yeat.tests",
     ],
     package_data={'yeat': ['yeat/data/*'],},

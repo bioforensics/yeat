@@ -8,7 +8,6 @@
 # -------------------------------------------------------------------------------------------------
 
 import pytest
-import yeat
 from yeat import cli
 from yeat.tests import data_file
 
@@ -27,7 +26,7 @@ def test_basic_dry_run(tmp_path):
         "-n",
     ]
     args = cli.get_parser().parse_args(arglist)
-    # cli.main(args)
+    cli.main(args)
 
 
 def test_no_args():

@@ -14,7 +14,6 @@ from pkg_resources import resource_filename
 from snakemake import snakemake
 import sys
 import yeat
-from yeat.assembly import config
 
 
 class InitAction(Action):

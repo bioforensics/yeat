@@ -23,10 +23,10 @@ class InitAction(Action):
                 label="assembly1",
                 algorithm="spades",
             ),
-            # dict(
-            #     label="assembly2",
-            #     algorithm="megahit",
-            # ),
+            dict(
+                label="assembly2",
+                algorithm="megahit",
+            ),
         ]
         json.dump(config, sys.stdout, indent=4)
         raise SystemExit()

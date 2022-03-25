@@ -7,6 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+import json
 import pytest
 from yeat import cli
 from yeat.tests import data_file
@@ -39,3 +40,16 @@ def test_snakemake_fail_because_of_invalid_read_files():
         read1 = "read1"
         read2 = "read2"
         cli.run_spades(read1, read2)
+
+
+def test_init_flag(capsys):
+    parser = cli.get_parser()
+    with pytest.raises(SystemExit):
+        parser.parse_args(["--init"])
+    terminal = capsys.readouterr()
+    obs_out = json.loads(terminal.out)
+    expected_out = [
+        {"label": "assembly1", "algorithm": "spades"},
+        {"label": "assembly2", "algorithm": "megahit"},
+    ]
+    assert obs_out == expected_out

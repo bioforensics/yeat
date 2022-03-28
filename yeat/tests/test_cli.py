@@ -7,9 +7,10 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+import json
 import pytest
-import yeat
 from yeat import cli
+from yeat.assembly.config import AssemblyConfiguration
 from yeat.tests import data_file
 
 
@@ -17,6 +18,7 @@ from yeat.tests import data_file
 def test_basic_dry_run(tmp_path):
     wd = str(tmp_path)
     arglist = [
+        data_file("config.cfg"),
         data_file("Animal_289_R1.fq.gz"),
         data_file("Animal_289_R2.fq.gz"),
         "--outdir",
@@ -25,17 +27,31 @@ def test_basic_dry_run(tmp_path):
         "Animal_289",
         "-n",
     ]
-    args = yeat.cli.get_parser().parse_args(arglist)
-    yeat.cli.main(args)
+    args = cli.get_parser().parse_args(arglist)
+    cli.main(args)
 
 
 def test_no_args():
     with pytest.raises(SystemExit, match=r"2"):
-        yeat.cli.main(None)
+        cli.main(None)
 
 
 def test_snakemake_fail_because_of_invalid_read_files():
     with pytest.raises(Exception, match=r"Snakemake Failed"):
         read1 = "read1"
         read2 = "read2"
-        yeat.cli.run(read1, read2)
+        assembler = AssemblyConfiguration("assembly1", "spades")
+        cli.run(read1, read2, assembler)
+
+
+def test_init_flag(capsys):
+    parser = cli.get_parser()
+    with pytest.raises(SystemExit):
+        parser.parse_args(["--init"])
+    terminal = capsys.readouterr()
+    obs_out = json.loads(terminal.out)
+    expected_out = [
+        {"label": "assembly1", "algorithm": "spades"},
+        {"label": "assembly2", "algorithm": "megahit"},
+    ]
+    assert obs_out == expected_out

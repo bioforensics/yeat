@@ -9,9 +9,6 @@
 
 from argparse import Action, ArgumentParser
 import json
-from pathlib import Path
-from pkg_resources import resource_filename
-from snakemake import snakemake
 import sys
 import yeat
 
@@ -77,27 +74,3 @@ def get_parser():
         help="print a template database config file to the terminal (stdout) and exit",
     )
     return parser
-
-
-def run_spades(read1, read2, outdir=".", cores=1, sample="sample", dryrun="dry"):
-    snakefile = resource_filename("yeat", "assembly/Snakefile_Spades")
-    r1 = Path(read1).resolve()
-    r2 = Path(read2).resolve()
-    config = dict(
-        read1=r1,
-        read2=r2,
-        outdir=outdir,
-        cores=cores,
-        sample=sample,
-        dryrun=dryrun,
-    )
-    success = snakemake(
-        snakefile,
-        config=config,
-        cores=cores,
-        dryrun=dryrun,
-        printshellcmds=True,
-        workdir=outdir,
-    )
-    if not success:
-        raise RuntimeError("Snakemake Failed")

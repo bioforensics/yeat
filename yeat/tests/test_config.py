@@ -30,6 +30,6 @@ def test_duplicate_assembly_algorithms():
         {"label": "assembly2", "algorithm": "spades"},
     ]
     f = io.StringIO(json.dumps(data))
-    error_message = r"Found duplicate assembly algorithm found in config file: \[\[spades\]\]!"
+    error_message = r"Found duplicate assembly algorithm in config file: \[\[spades\]\]!"
     with pytest.raises(config.AssemblyConfigError, match=error_message):
         config.AssemblyConfiguration.parse_json(f)

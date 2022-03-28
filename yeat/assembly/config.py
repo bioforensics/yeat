@@ -10,7 +10,7 @@
 import json
 
 
-ASSEMBLY_ALGORITHMS = ["spades"]  # , "megahit"]
+ASSEMBLY_ALGORITHMS = ["spades"]
 
 
 class AssemblyConfigError(ValueError):
@@ -37,9 +37,7 @@ class AssemblyConfiguration:
                 message = f"Found unsupported assembly algorithm in config file: [[{algorithm}]]!"
                 raise AssemblyConfigError(message)
             if algorithm in algorithms:
-                message = (
-                    f"Found duplicate assembly algorithm found in config file: [[{algorithm}]]!"
-                )
+                message = f"Found duplicate assembly algorithm in config file: [[{algorithm}]]!"
                 raise AssemblyConfigError(message)
             algorithms.append(algorithm)
             assemblers.append(AssemblyConfiguration.from_json(d))

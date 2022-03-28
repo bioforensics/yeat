@@ -10,6 +10,7 @@
 import json
 import pytest
 from yeat import cli
+from yeat.assembly.config import AssemblyConfiguration
 from yeat.tests import data_file
 
 
@@ -39,7 +40,8 @@ def test_snakemake_fail_because_of_invalid_read_files():
     with pytest.raises(Exception, match=r"Snakemake Failed"):
         read1 = "read1"
         read2 = "read2"
-        cli.run_spades(read1, read2)
+        assembler = AssemblyConfiguration("assembly1", "spades")
+        cli.run(read1, read2, assembler)
 
 
 def test_init_flag(capsys):

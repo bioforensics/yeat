@@ -7,8 +7,38 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from .cli import get_parser, run_spades
+from .cli import get_parser
+from pathlib import Path
+from pkg_resources import resource_filename
+from snakemake import snakemake
 from yeat.assembly import config
+
+
+SNAKEFILES = {"spades": resource_filename("yeat", "assembly/Snakefile_Spades")}
+
+
+def run(read1, read2, assembler, outdir=".", cores=1, sample="sample", dryrun="dry"):
+    snakefile = SNAKEFILES[assembler.algorithm]
+    r1 = Path(read1).resolve()
+    r2 = Path(read2).resolve()
+    config = dict(
+        read1=r1,
+        read2=r2,
+        outdir=outdir,
+        cores=cores,
+        sample=sample,
+        dryrun=dryrun,
+    )
+    success = snakemake(
+        snakefile,
+        config=config,
+        cores=cores,
+        dryrun=dryrun,
+        printshellcmds=True,
+        workdir=outdir,
+    )
+    if not success:
+        raise RuntimeError("Snakemake Failed")
 
 
 def main(args=None):
@@ -18,11 +48,11 @@ def main(args=None):
     with open(args.config, "r") as fh:
         assemblers = config.AssemblyConfiguration.parse_json(fh)
     for assembler in assemblers:
-        if assembler.algorithm == "spades":
-            run_spades(
-                *args.reads,
-                outdir=args.outdir,
-                cores=args.threads,
-                sample=args.sample,
-                dryrun=args.dry_run,
-            )
+        run(
+            *args.reads,
+            assembler=assembler,
+            outdir=args.outdir,
+            cores=args.threads,
+            sample=args.sample,
+            dryrun=args.dry_run,
+        )

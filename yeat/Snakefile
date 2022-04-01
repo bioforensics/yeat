@@ -13,7 +13,8 @@ import pandas as pd
 
 rule all:
     input:
-        expand("analysis/quast/{sample}/report.html", sample=config["sample"]),
+        if config["algorithm"] == "spades":
+            expand("analysis/quast/{sample}/report.html", sample=config["sample"]),
         expand("seq/fastqc/{sample}_{reads}_fastqc.html", sample=config["sample"], reads=["R1", "R2"])
 
 
@@ -104,9 +105,27 @@ rule spades:
     shell: "spades.py -1 {input.read1} -2 {input.read2} -o analysis/spades/{wildcards.sample}"
 
 
-rule quast:
+rule megahit:
+    output:
+        contigs="analysis/megahit/{sample}/final.contigs.fa"
+    input:
+        read1="seq/downsample/{sample}.R1.fq.gz",
+        read2="seq/downsample/{sample}.R2.fq.gz",
+    threads: 8
+    shell: "megahit -1 {input.read1} -2 {input.read2} -o analysis/megahit/{wildcards.sample}"
+
+
+rule spades_quast:
     output:
         report="analysis/quast/{sample}/report.html",
     input:
         scaffold="analysis/spades/{sample}/scaffolds.fasta",
+    shell: "quast.py {input.scaffold} -o analysis/quast/{wildcards.sample}"
+
+
+rule megahit_quast:
+    output:
+        report="analysis/quast/{sample}/report.html",
+    input:
+        scaffold="analysis/megahit/{sample}/scaffolds.fasta",
     shell: "quast.py {input.scaffold} -o analysis/quast/{wildcards.sample}"

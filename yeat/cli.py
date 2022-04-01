@@ -14,13 +14,14 @@ from snakemake import snakemake
 import yeat
 
 
-def run(read1, read2, outdir=".", cores=1, sample="sample", dryrun="dry"):
+def run(read1, read2, algorithm, outdir=".", cores=1, sample="sample", dryrun="dry"):
     snakefile = resource_filename("yeat", "Snakefile")
     r1 = Path(read1).resolve()
     r2 = Path(read2).resolve()
     config = dict(
         read1=r1,
         read2=r2,
+        algorithm=algorithm,
         outdir=outdir,
         cores=cores,
         sample=sample,
@@ -70,6 +71,9 @@ def get_parser():
         action="store_true",
         help="construct workflow DAG and print a summary but do not execute",
     )
+    parser.add_argument(
+        "algorithm", type=str, help="assembly algorithm; For example, `spades` or `megahit`"
+    )
     parser.add_argument("reads", type=str, nargs=2, help="paired-end reads in FASTQ format")
     return parser
 
@@ -80,6 +84,7 @@ def main(args=None):
     assert len(args.reads) == 2
     run(
         *args.reads,
+        algorithm=args.algorithm,
         outdir=args.outdir,
         cores=args.threads,
         sample=args.sample,

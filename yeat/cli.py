@@ -101,7 +101,7 @@ def check_assemblies(assembly):
                 f"Found duplicate assembly algorithm with `--assembly` flag: [[{algorithm}]]!"
             )
             warnings.warn(message)
-            continue
+            sys.exit()
         algorithms.append(algorithm)
     return algorithms
 

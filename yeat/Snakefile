@@ -100,9 +100,11 @@ rule spades:
         read1="seq/downsample/{sample}.R1.fq.gz",
         read2="seq/downsample/{sample}.R2.fq.gz"
     threads: 8
-    run:
-        shell("spades.py -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/spades")
-        shell("mv analysis/spades/scaffolds.fasta {output.contigs}")
+    shell:
+        """
+        spades.py -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/spades
+        ln -s scaffolds.fasta {output.contigs}
+        """
 
 
 rule megahit:
@@ -112,11 +114,13 @@ rule megahit:
         read1="seq/downsample/{sample}.R1.fq.gz",
         read2="seq/downsample/{sample}.R2.fq.gz",
     threads: 8
-    run:
-        shell("rm -r analysis")
-        shell("mkdir analysis")
-        shell("megahit -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/megahit/")
-        shell("mv analysis/megahit/final.contigs.fa {output.contigs}")
+    shell:
+        """
+        megahit -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/megahit-temp
+        mv analysis/megahit-temp/* analysis/megahit
+        rm -r analysis/megahit-temp
+        ln -s final.contigs.fa {output.contigs}
+        """
 
 
 rule quast:
@@ -124,6 +128,8 @@ rule quast:
         report="analysis/quast/{assembly}/{sample}_report.html"
     input:
         contigs="analysis/{assembly}/{sample}_contigs.fasta"
-    run:
-        shell("quast.py {input.contigs} -o analysis/quast/{wildcards.assembly}")
-        shell("mv analysis/quast/{wildcards.assembly}/report.html {output.report}")
+    shell:
+        """
+        quast.py {input.contigs} -o analysis/quast/{wildcards.assembly}
+        ln -s report.html {output.report}
+        """

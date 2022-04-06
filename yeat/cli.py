@@ -12,6 +12,7 @@ from pathlib import Path
 from pkg_resources import resource_filename
 from snakemake import snakemake
 import sys
+import warnings
 import yeat
 
 
@@ -22,7 +23,7 @@ def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", action="version", version=f"YEAT v{yeat.__version__}")
     parser.add_argument(
-        "-O",
+        "-o",
         "--outdir",
         type=str,
         metavar="DIR",
@@ -90,11 +91,17 @@ def check_assemblies(assembly):
     algorithms = []
     for algorithm in assembly:
         if algorithm not in ASSEMBLY_ALGORITHMS:
-            message = f"Found unsupported assembly algorithm in config file: [[{algorithm}]]!"
-            sys.exit(message)
+            message = (
+                f"Found unsupported assembly algorithm with `--assembly` flag: [[{algorithm}]]!"
+            )
+            warnings.warn(message)
+            sys.exit()
         if algorithm in algorithms:
-            message = f"Found duplicate assembly algorithm in config file: [[{algorithm}]]!"
-            sys.exit(message)
+            message = (
+                f"Found duplicate assembly algorithm with `--assembly` flag: [[{algorithm}]]!"
+            )
+            warnings.warn(message)
+            continue
         algorithms.append(algorithm)
     return algorithms
 

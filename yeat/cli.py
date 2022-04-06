@@ -11,32 +11,11 @@ import argparse
 from pathlib import Path
 from pkg_resources import resource_filename
 from snakemake import snakemake
+import sys
 import yeat
 
 
-def run(read1, read2, algorithm, outdir=".", cores=1, sample="sample", dryrun="dry"):
-    snakefile = resource_filename("yeat", "Snakefile")
-    r1 = Path(read1).resolve()
-    r2 = Path(read2).resolve()
-    config = dict(
-        read1=r1,
-        read2=r2,
-        algorithm=algorithm,
-        outdir=outdir,
-        cores=cores,
-        sample=sample,
-        dryrun=dryrun,
-    )
-    success = snakemake(
-        snakefile,
-        config=config,
-        cores=cores,
-        dryrun=dryrun,
-        printshellcmds=True,
-        workdir=outdir,
-    )
-    if not success:
-        raise RuntimeError("Snakemake Failed")
+ASSEMBLY_ALGORITHMS = ["spades", "megahit"]
 
 
 def get_parser():
@@ -71,20 +50,64 @@ def get_parser():
         action="store_true",
         help="construct workflow DAG and print a summary but do not execute",
     )
-    parser.add_argument(
-        "algorithm", type=str, help="assembly algorithm; For example, `spades` or `megahit`"
+    group = parser.add_argument_group("required arguments")
+    group.add_argument(
+        "--assembly",
+        required=True,
+        type=str,
+        help="assembly algorithm(s); For example, `spades`, `megahit`, or `spades,megahit`",
     )
     parser.add_argument("reads", type=str, nargs=2, help="paired-end reads in FASTQ format")
     return parser
+
+
+def run(read1, read2, assembly, outdir=".", cores=1, sample="sample", dryrun="dry"):
+    snakefile = resource_filename("yeat", "Snakefile")
+    r1 = Path(read1).resolve()
+    r2 = Path(read2).resolve()
+    config = dict(
+        read1=r1,
+        read2=r2,
+        assembly=assembly,
+        outdir=outdir,
+        cores=cores,
+        sample=sample,
+        dryrun=dryrun,
+    )
+    success = snakemake(
+        snakefile,
+        config=config,
+        cores=cores,
+        dryrun=dryrun,
+        printshellcmds=True,
+        workdir=outdir,
+    )
+    if not success:
+        raise RuntimeError("Snakemake Failed")
+
+
+def check_assemblies(assembly):
+    algorithms = []
+    for algorithm in assembly:
+        if algorithm not in ASSEMBLY_ALGORITHMS:
+            message = f"Found unsupported assembly algorithm in config file: [[{algorithm}]]!"
+            sys.exit(message)
+        if algorithm in algorithms:
+            message = f"Found duplicate assembly algorithm in config file: [[{algorithm}]]!"
+            sys.exit(message)
+        algorithms.append(algorithm)
+    return algorithms
 
 
 def main(args=None):
     if args is None:
         args = get_parser().parse_args()
     assert len(args.reads) == 2
+    assembly = list(filter(None, args.assembly.strip().split(",")))
+    assembly = check_assemblies(assembly)
     run(
         *args.reads,
-        algorithm=args.algorithm,
+        assembly=assembly,
         outdir=args.outdir,
         cores=args.threads,
         sample=args.sample,

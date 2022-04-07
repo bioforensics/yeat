@@ -17,6 +17,48 @@ import yeat
 ASSEMBLY_ALGORITHMS = ["spades", "megahit"]
 
 
+def check_assemblies(assembly):
+    algorithms = []
+    for algorithm in assembly:
+        if algorithm not in ASSEMBLY_ALGORITHMS:
+            message = (
+                f"Found unsupported assembly algorithm with `--assembly` flag: [[{algorithm}]]!"
+            )
+            raise ValueError(message)
+        if algorithm in algorithms:
+            message = (
+                f"Found duplicate assembly algorithm with `--assembly` flag: [[{algorithm}]]!"
+            )
+            raise ValueError(message)
+        algorithms.append(algorithm)
+    return algorithms
+
+
+def run(read1, read2, assembly, outdir=".", cores=1, sample="sample", dryrun="dry"):
+    snakefile = resource_filename("yeat", "Snakefile")
+    r1 = Path(read1).resolve()
+    r2 = Path(read2).resolve()
+    config = dict(
+        read1=r1,
+        read2=r2,
+        assembly=assembly,
+        outdir=outdir,
+        cores=cores,
+        sample=sample,
+        dryrun=dryrun,
+    )
+    success = snakemake(
+        snakefile,
+        config=config,
+        cores=cores,
+        dryrun=dryrun,
+        printshellcmds=True,
+        workdir=outdir,
+    )
+    if not success:
+        raise RuntimeError("Snakemake Failed")
+
+
 def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", action="version", version=f"YEAT v{yeat.__version__}")
@@ -58,48 +100,6 @@ def get_parser():
     )
     parser.add_argument("reads", type=str, nargs=2, help="paired-end reads in FASTQ format")
     return parser
-
-
-def run(read1, read2, assembly, outdir=".", cores=1, sample="sample", dryrun="dry"):
-    snakefile = resource_filename("yeat", "Snakefile")
-    r1 = Path(read1).resolve()
-    r2 = Path(read2).resolve()
-    config = dict(
-        read1=r1,
-        read2=r2,
-        assembly=assembly,
-        outdir=outdir,
-        cores=cores,
-        sample=sample,
-        dryrun=dryrun,
-    )
-    success = snakemake(
-        snakefile,
-        config=config,
-        cores=cores,
-        dryrun=dryrun,
-        printshellcmds=True,
-        workdir=outdir,
-    )
-    if not success:
-        raise RuntimeError("Snakemake Failed")
-
-
-def check_assemblies(assembly):
-    algorithms = []
-    for algorithm in assembly:
-        if algorithm not in ASSEMBLY_ALGORITHMS:
-            message = (
-                f"Found unsupported assembly algorithm with `--assembly` flag: [[{algorithm}]]!"
-            )
-            raise ValueError(message)
-        if algorithm in algorithms:
-            message = (
-                f"Found duplicate assembly algorithm with `--assembly` flag: [[{algorithm}]]!"
-            )
-            raise ValueError(message)
-        algorithms.append(algorithm)
-    return algorithms
 
 
 def main(args=None):

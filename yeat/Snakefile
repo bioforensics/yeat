@@ -13,8 +13,8 @@ import pandas as pd
 
 rule all:
     input:
-        expand("seq/fastqc/{sample}_{reads}_fastqc.html", sample=config["sample"], reads=["R1", "R2"]),
         expand("analysis/quast/{assembly}/{sample}_report.html", assembly=config["assembly"], sample=config["sample"])
+        expand("seq/fastqc/{sample}_{reads}_fastqc.html", sample=config["sample"], reads=["R1", "R2"]),
 
 
 rule copyinput:

@@ -49,11 +49,11 @@ def test_unsupported_assembly_algorithm():
     assembly = ["unsupported_assembly"]
     error_message = r"Found unsupported assembly algorithm with `--assembly` flag: \[\[unsupported_assembly\]\]!"
     with pytest.raises(ValueError, match=error_message):
-        yeat.cli.check_assemblies(assembly)
+        yeat.cli.check_assembly(assembly)
 
 
 def test_duplicate_assembly_algorithms():
     assembly = ["spades", "spades"]
     error_message = r"Found duplicate assembly algorithm with `--assembly` flag: \[\[spades\]\]!"
     with pytest.raises(ValueError, match=error_message):
-        yeat.cli.check_assemblies(assembly)
+        yeat.cli.check_assembly(assembly)

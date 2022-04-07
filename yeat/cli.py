@@ -17,7 +17,7 @@ import yeat
 ASSEMBLY_ALGORITHMS = ["spades", "megahit"]
 
 
-def check_assemblies(assembly):
+def check_assembly(assembly):
     algorithms = []
     for algorithm in assembly:
         if algorithm not in ASSEMBLY_ALGORITHMS:
@@ -31,7 +31,6 @@ def check_assemblies(assembly):
             )
             raise ValueError(message)
         algorithms.append(algorithm)
-    return algorithms
 
 
 def run(read1, read2, assembly, outdir=".", cores=1, sample="sample", dryrun="dry"):
@@ -107,7 +106,7 @@ def main(args=None):
         args = get_parser().parse_args()
     assert len(args.reads) == 2
     assembly = list(filter(None, args.assembly.strip().split(",")))
-    assembly = check_assemblies(assembly)
+    check_assembly(assembly)
     run(
         *args.reads,
         assembly=assembly,

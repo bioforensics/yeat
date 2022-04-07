@@ -91,8 +91,8 @@ def get_parser():
         action="store_true",
         help="construct workflow DAG and print a summary but do not execute",
     )
-    group = parser.add_argument_group("required arguments")
-    group.add_argument(
+    required = parser.add_argument_group("required arguments")
+    required.add_argument(
         "--assembly",
         required=True,
         type=str,

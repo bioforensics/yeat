@@ -13,7 +13,7 @@ import pandas as pd
 
 rule all:
     input:
-        expand("analysis/quast/{assembly}/{sample}_report.html", assembly=config["assembly"], sample=config["sample"]),
+        expand("analysis/quast/{assemblers}/{sample}_report.html", assemblers=config["assemblers"], sample=config["sample"]),
         expand("seq/fastqc/{sample}_{reads}_fastqc.html", sample=config["sample"], reads=["R1", "R2"])
 
 
@@ -36,7 +36,7 @@ rule fastqc:
     input:
         read1="seq/input/{sample}_R1.fq.gz",
         read2="seq/input/{sample}_R2.fq.gz"
-    threads: 2
+    threads: 128
     shell:
         """
         fastqc {input.read1} {input.read2} --threads {threads} -o seq/fastqc/
@@ -99,7 +99,7 @@ rule spades:
     input:
         read1="seq/downsample/{sample}.R1.fq.gz",
         read2="seq/downsample/{sample}.R2.fq.gz"
-    threads: 8
+    threads: 128
     shell:
         """
         spades.py -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/spades
@@ -113,7 +113,7 @@ rule megahit:
     input:
         read1="seq/downsample/{sample}.R1.fq.gz",
         read2="seq/downsample/{sample}.R2.fq.gz",
-    threads: 8
+    threads: 128
     shell:
         """
         megahit -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/megahit-temp
@@ -125,11 +125,11 @@ rule megahit:
 
 rule quast:
     output:
-        report="analysis/quast/{assembly}/{sample}_report.html"
+        report="analysis/quast/{assemblers}/{sample}_report.html"
     input:
-        contigs="analysis/{assembly}/{sample}_contigs.fasta"
+        contigs="analysis/{assemblers}/{sample}_contigs.fasta"
     shell:
         """
-        quast.py {input.contigs} -o analysis/quast/{wildcards.assembly}
+        quast.py {input.contigs} -o analysis/quast/{wildcards.assemblers}
         ln -s report.html {output.report}
         """

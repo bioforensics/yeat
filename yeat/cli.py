@@ -17,30 +17,30 @@ import yeat
 ASSEMBLY_ALGORITHMS = ["spades", "megahit"]
 
 
-def check_assembly(assembly):
+def check_assemblers(assemblers):
     algorithms = []
-    for algorithm in assembly:
+    for algorithm in assemblers:
         if algorithm not in ASSEMBLY_ALGORITHMS:
             message = (
-                f"Found unsupported assembly algorithm with `--assembly` flag: [[{algorithm}]]!"
+                f"Found unsupported assembly algorithm with `--assemblers` flag: [[{algorithm}]]!"
             )
             raise ValueError(message)
         if algorithm in algorithms:
             message = (
-                f"Found duplicate assembly algorithm with `--assembly` flag: [[{algorithm}]]!"
+                f"Found duplicate assembly algorithm with `--assemblers` flag: [[{algorithm}]]!"
             )
             raise ValueError(message)
         algorithms.append(algorithm)
 
 
-def run(read1, read2, assembly, outdir=".", cores=1, sample="sample", dryrun="dry"):
+def run(read1, read2, assemblers, outdir=".", cores=1, sample="sample", dryrun="dry"):
     snakefile = resource_filename("yeat", "Snakefile")
     r1 = Path(read1).resolve()
     r2 = Path(read2).resolve()
     config = dict(
         read1=r1,
         read2=r2,
-        assembly=assembly,
+        assemblers=assemblers,
         outdir=outdir,
         cores=cores,
         sample=sample,
@@ -92,7 +92,7 @@ def get_parser():
     )
     required = parser.add_argument_group("required arguments")
     required.add_argument(
-        "--assembly",
+        "--assemblers",
         required=True,
         type=str,
         help="assembly algorithm(s); For example, `spades`, `megahit`, or `spades,megahit`",
@@ -105,11 +105,11 @@ def main(args=None):
     if args is None:
         args = get_parser().parse_args()
     assert len(args.reads) == 2
-    assembly = list(filter(None, args.assembly.strip().split(",")))
-    check_assembly(assembly)
+    assemblers = list(filter(None, args.assemblers.strip().split(",")))
+    check_assemblers(assemblers)
     run(
         *args.reads,
-        assembly=assembly,
+        assemblers=assemblers,
         outdir=args.outdir,
         cores=args.threads,
         sample=args.sample,

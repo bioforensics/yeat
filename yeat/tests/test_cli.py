@@ -20,7 +20,7 @@ def test_basic_dry_run(tmp_path):
     arglist = [
         data_file("Animal_289_R1.fq.gz"),
         data_file("Animal_289_R2.fq.gz"),
-        "--assembly",
+        "--assemblers",
         "spades",
         "--outdir",
         wd,
@@ -41,19 +41,19 @@ def test_snakemake_fail_because_of_invalid_read_files():
     with pytest.raises(Exception, match=r"Snakemake Failed"):
         read1 = "read1"
         read2 = "read2"
-        assembly = "spades"
-        yeat.cli.run(read1, read2, assembly)
+        assemblers = "spades"
+        yeat.cli.run(read1, read2, assemblers)
 
 
 def test_unsupported_assembly_algorithm():
-    assembly = ["unsupported_assembly"]
-    error_message = r"Found unsupported assembly algorithm with `--assembly` flag: \[\[unsupported_assembly\]\]!"
+    assemblers = ["unsupported_assembly"]
+    error_message = r"Found unsupported assembly algorithm with `--assemblers` flag: \[\[unsupported_assembly\]\]!"
     with pytest.raises(ValueError, match=error_message):
-        yeat.cli.check_assembly(assembly)
+        yeat.cli.check_assemblers(assemblers)
 
 
 def test_duplicate_assembly_algorithms():
-    assembly = ["spades", "spades"]
-    error_message = r"Found duplicate assembly algorithm with `--assembly` flag: \[\[spades\]\]!"
+    assemblers = ["spades", "spades"]
+    error_message = r"Found duplicate assembly algorithm with `--assemblers` flag: \[\[spades\]\]!"
     with pytest.raises(ValueError, match=error_message):
-        yeat.cli.check_assembly(assembly)
+        yeat.cli.check_assemblers(assemblers)

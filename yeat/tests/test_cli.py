@@ -8,7 +8,6 @@
 # -------------------------------------------------------------------------------------------------
 
 import pytest
-import warnings
 import yeat
 from yeat import cli
 from yeat.tests import data_file

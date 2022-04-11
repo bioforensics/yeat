@@ -14,13 +14,33 @@ from snakemake import snakemake
 import yeat
 
 
-def run(read1, read2, outdir=".", cores=1, sample="sample", dryrun="dry"):
+ASSEMBLY_ALGORITHMS = ["spades", "megahit"]
+
+
+def check_assemblers(assemblers):
+    algorithms = []
+    for algorithm in assemblers:
+        if algorithm not in ASSEMBLY_ALGORITHMS:
+            message = (
+                f"Found unsupported assembly algorithm with `--assemblers` flag: [[{algorithm}]]!"
+            )
+            raise ValueError(message)
+        if algorithm in algorithms:
+            message = (
+                f"Found duplicate assembly algorithm with `--assemblers` flag: [[{algorithm}]]!"
+            )
+            raise ValueError(message)
+        algorithms.append(algorithm)
+
+
+def run(read1, read2, assemblers, outdir=".", cores=1, sample="sample", dryrun="dry"):
     snakefile = resource_filename("yeat", "Snakefile")
     r1 = Path(read1).resolve()
     r2 = Path(read2).resolve()
     config = dict(
         read1=r1,
         read2=r2,
+        assemblers=assemblers,
         outdir=outdir,
         cores=cores,
         sample=sample,
@@ -42,7 +62,7 @@ def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", action="version", version=f"YEAT v{yeat.__version__}")
     parser.add_argument(
-        "-O",
+        "-o",
         "--outdir",
         type=str,
         metavar="DIR",
@@ -70,6 +90,13 @@ def get_parser():
         action="store_true",
         help="construct workflow DAG and print a summary but do not execute",
     )
+    required = parser.add_argument_group("required arguments")
+    required.add_argument(
+        "--assemblers",
+        required=True,
+        type=str,
+        help="assembly algorithm(s); For example, `spades`, `megahit`, or `spades,megahit`",
+    )
     parser.add_argument("reads", type=str, nargs=2, help="paired-end reads in FASTQ format")
     return parser
 
@@ -78,8 +105,11 @@ def main(args=None):
     if args is None:
         args = get_parser().parse_args()
     assert len(args.reads) == 2
+    assemblers = list(filter(None, args.assemblers.strip().split(",")))
+    check_assemblers(assemblers)
     run(
         *args.reads,
+        assemblers=assemblers,
         outdir=args.outdir,
         cores=args.threads,
         sample=args.sample,

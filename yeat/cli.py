@@ -11,10 +11,11 @@ import argparse
 from pathlib import Path
 from pkg_resources import resource_filename
 from snakemake import snakemake
+import subprocess
 import yeat
 
 
-ASSEMBLY_ALGORITHMS = ["spades", "megahit"]
+ASSEMBLY_ALGORITHMS = ["spades", "megahit", "unicycler"]
 
 
 def check_assemblers(assemblers):
@@ -95,10 +96,18 @@ def get_parser():
         "--assemblers",
         required=True,
         type=str,
-        help="assembly algorithm(s); For example, `spades`, `megahit`, or `spades,megahit`",
+        help="assembly algorithm(s); For example, `spades`, `megahit`, `unicycler`, or `spades,megahit`",
     )
     parser.add_argument("reads", type=str, nargs=2, help="paired-end reads in FASTQ format")
     return parser
+
+
+def run_unicycler(args):
+    read1 = args.reads[0]
+    read2 = args.reads[1]
+    outdir = f"{args.outdir}/unicycler"
+    command = ["unicycler", "-1", read1, "-2", read2, "-o", outdir]
+    subprocess.run(command)
 
 
 def main(args=None):
@@ -107,6 +116,11 @@ def main(args=None):
     assert len(args.reads) == 2
     assemblers = list(filter(None, args.assemblers.strip().split(",")))
     check_assemblers(assemblers)
+    if "unicycler" in  assemblers:
+        run_unicycler(args)
+        assemblers.remove("unicycler")
+    if not assemblers:
+        return
     run(
         *args.reads,
         assemblers=assemblers,

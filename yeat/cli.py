@@ -116,7 +116,7 @@ def main(args=None):
     assert len(args.reads) == 2
     assemblers = list(filter(None, args.assemblers.strip().split(",")))
     check_assemblers(assemblers)
-    if "unicycler" in  assemblers:
+    if "unicycler" in assemblers:
         run_unicycler(args)
         assemblers.remove("unicycler")
     if not assemblers:

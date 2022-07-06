@@ -112,7 +112,7 @@ rule megahit:
         contigs="analysis/megahit/{sample}_contigs.fasta"
     input:
         read1="seq/downsample/{sample}.R1.fq.gz",
-        read2="seq/downsample/{sample}.R2.fq.gz",
+        read2="seq/downsample/{sample}.R2.fq.gz"
     threads: 128
     shell:
         """
@@ -120,6 +120,19 @@ rule megahit:
         mv analysis/megahit-temp/* analysis/megahit
         rm -r analysis/megahit-temp
         ln -s final.contigs.fa {output.contigs}
+        """
+
+
+rule unicycler:
+    output:
+        contigs="analysis/unicycler/{sample}_contigs.fasta"
+    input:
+        read1="seq/downsample/{sample}.R1.fq.gz",
+        read2="seq/downsample/{sample}.R2.fq.gz"
+    shell:
+        """
+        unicycler -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/unicycler
+        ln -s assembly.fasta {output.contigs}
         """
 
 

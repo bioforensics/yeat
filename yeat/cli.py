@@ -102,25 +102,12 @@ def get_parser():
     return parser
 
 
-def run_unicycler(args):
-    read1 = args.reads[0]
-    read2 = args.reads[1]
-    outdir = f"{args.outdir}/unicycler"
-    command = ["unicycler", "-1", read1, "-2", read2, "-o", outdir]
-    subprocess.run(command)
-
-
 def main(args=None):
     if args is None:
         args = get_parser().parse_args()
     assert len(args.reads) == 2
     assemblers = list(filter(None, args.assemblers.strip().split(",")))
     check_assemblers(assemblers)
-    if "unicycler" in assemblers:
-        run_unicycler(args)
-        assemblers.remove("unicycler")
-    if not assemblers:
-        return
     run(
         *args.reads,
         assemblers=assemblers,

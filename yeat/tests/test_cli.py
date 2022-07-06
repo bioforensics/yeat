@@ -71,7 +71,5 @@ def test_unicycler(capsys, tmp_path):
     ]
     args = yeat.cli.get_parser().parse_args(arglist)
     yeat.cli.main(args)
-    gfa_result = Path(wd).resolve() / "unicycler" / "assembly.gfa"
-    fasta_result = Path(wd).resolve() / "unicycler" / "assembly.fasta"
-    assert gfa_result.exists()
-    assert fasta_result.exists()
+    assembly_result = Path(wd).resolve() / "analysis" / "unicycler" / "assembly.fasta"
+    assert assembly_result.exists()

@@ -11,7 +11,6 @@ import argparse
 from pathlib import Path
 from pkg_resources import resource_filename
 from snakemake import snakemake
-import subprocess
 import yeat
 
 

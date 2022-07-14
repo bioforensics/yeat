@@ -7,6 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+from pathlib import Path
 import pytest
 import yeat
 from yeat import cli
@@ -56,3 +57,19 @@ def test_duplicate_assembly_algorithms():
     error_message = r"Found duplicate assembly algorithm with `--assemblers` flag: \[\[spades\]\]!"
     with pytest.raises(ValueError, match=error_message):
         yeat.cli.check_assemblers(assemblers)
+
+
+def test_unicycler(capsys, tmp_path):
+    wd = str(tmp_path)
+    arglist = [
+        data_file("short_reads_1.fastq.gz"),
+        data_file("short_reads_2.fastq.gz"),
+        "--assemblers",
+        "unicycler",
+        "--outdir",
+        wd,
+    ]
+    args = yeat.cli.get_parser().parse_args(arglist)
+    yeat.cli.main(args)
+    assembly_result = Path(wd).resolve() / "analysis" / "unicycler" / "assembly.fasta"
+    assert assembly_result.exists()

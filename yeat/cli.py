@@ -14,7 +14,7 @@ from snakemake import snakemake
 import yeat
 
 
-ASSEMBLY_ALGORITHMS = ["spades", "megahit"]
+ASSEMBLY_ALGORITHMS = ["spades", "megahit", "unicycler"]
 
 
 def check_assemblers(assemblers):
@@ -95,7 +95,7 @@ def get_parser():
         "--assemblers",
         required=True,
         type=str,
-        help="assembly algorithm(s); For example, `spades`, `megahit`, or `spades,megahit`",
+        help="assembly algorithm(s); For example, `spades`, `megahit`, `unicycler`, or `spades,megahit`",
     )
     parser.add_argument("reads", type=str, nargs=2, help="paired-end reads in FASTQ format")
     return parser

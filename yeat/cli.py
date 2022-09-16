@@ -12,25 +12,7 @@ from pathlib import Path
 from pkg_resources import resource_filename
 from snakemake import snakemake
 import yeat
-
-
-ASSEMBLY_ALGORITHMS = ["spades", "megahit", "unicycler"]
-
-
-def check_assemblers(assemblers):
-    algorithms = []
-    for algorithm in assemblers:
-        if algorithm not in ASSEMBLY_ALGORITHMS:
-            message = (
-                f"Found unsupported assembly algorithm with `--assemblers` flag: [[{algorithm}]]!"
-            )
-            raise ValueError(message)
-        if algorithm in algorithms:
-            message = (
-                f"Found duplicate assembly algorithm with `--assemblers` flag: [[{algorithm}]]!"
-            )
-            raise ValueError(message)
-        algorithms.append(algorithm)
+from yeat.config import AssemblerConfig
 
 
 def run(read1, read2, assemblers, outdir=".", cores=1, sample="sample", dryrun="dry"):
@@ -90,13 +72,7 @@ def get_parser():
         action="store_true",
         help="construct workflow DAG and print a summary but do not execute",
     )
-    required = parser.add_argument_group("required arguments")
-    required.add_argument(
-        "--assemblers",
-        required=True,
-        type=str,
-        help="assembly algorithm(s); For example, `spades`, `megahit`, `unicycler`, or `spades,megahit`",
-    )
+    parser.add_argument("config", type=str, help="configfile")
     parser.add_argument("reads", type=str, nargs=2, help="paired-end reads in FASTQ format")
     return parser
 
@@ -104,9 +80,8 @@ def get_parser():
 def main(args=None):
     if args is None:
         args = get_parser().parse_args()
-    assert len(args.reads) == 2
-    assemblers = list(filter(None, args.assemblers.strip().split(",")))
-    check_assemblers(assemblers)
+    assemblers = AssemblerConfig.parse_json(open(args.config))
+    assemblers = [x.assembler for x in assemblers]
     run(
         *args.reads,
         assemblers=assemblers,

@@ -18,19 +18,21 @@ import yeat
 from yeat.config import AssemblerConfig
 
 
+CONFIG_TEMPLATE = [
+    dict(
+        assembler="spades",
+        extra_args="",
+    ),
+    dict(
+        assembler="megahit",
+        extra_args="",
+    ),
+]
+
+
 class InitAction(Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        config = [
-            dict(
-                assembler="spades",
-                extra_args="",
-            ),
-            dict(
-                assembler="megahit",
-                extra_args="",
-            ),
-        ]
-        json.dump(config, sys.stdout, indent=4)
+        json.dump(CONFIG_TEMPLATE, sys.stdout, indent=4)
         print()
         raise SystemExit()
 
@@ -61,7 +63,7 @@ def run(read1, read2, assemblers, outdir=".", cores=1, sample="sample", dryrun="
         workdir=outdir,
     )
     if not success:
-        raise RuntimeError("Snakemake Failed")
+        raise RuntimeError("Snakemake Failed!")
 
 
 def get_parser():

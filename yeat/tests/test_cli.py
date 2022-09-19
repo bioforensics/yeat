@@ -7,10 +7,19 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+import json
 from pathlib import Path
 import pytest
 from yeat import cli
+from yeat.cli import InitAction
 from yeat.tests import data_file
+
+
+def test_display_config_template(capsys):
+    with pytest.raises(SystemExit):
+        InitAction.__call__(None, None, None, None)
+    out, err = capsys.readouterr()
+    assert json.loads(out) == cli.CONFIG_TEMPLATE
 
 
 def test_basic_dry_run(tmp_path):
@@ -35,7 +44,7 @@ def test_no_args():
         cli.main(None)
 
 
-def test_invalid_read_files():
+def test_invalid_read1_file():
     with pytest.raises(Exception, match=r"No such file:.*read1\'"):
         read1 = "read1"
         read2 = "read2"
@@ -43,7 +52,15 @@ def test_invalid_read_files():
         cli.run(read1, read2, assemblers)
 
 
-def test_multiple_assemblers(tmp_path):
+def test_invalid_read2_file():
+    with pytest.raises(Exception, match=r"No such file:.*read2\'"):
+        read1 = data_file("short_reads_1.fastq.gz")
+        read2 = "read2"
+        assemblers = ["spades"]
+        cli.run(read1, read2, assemblers)
+
+
+def test_multiple_assemblers(capsys, tmp_path):
     wd = str(tmp_path)
     arglist = [
         data_file("config.cfg"),
@@ -60,7 +77,7 @@ def test_multiple_assemblers(tmp_path):
     assert megahit_result.exists()
 
 
-def test_unicycler(tmp_path):
+def test_unicycler(capsys, tmp_path):
     wd = str(tmp_path)
     arglist = [
         data_file("unicycler.cfg"),

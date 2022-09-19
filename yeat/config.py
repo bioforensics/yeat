@@ -43,14 +43,10 @@ class AssemblerConfig:
     @staticmethod
     def check_algorithm(algorithm, algorithms):
         if algorithm not in ASSEMBLY_ALGORITHMS:
-            message = (
-                f"Found unsupported assembly algorithm in configuration settings: [[{algorithm}]]!"
-            )
+            message = f"Found unsupported assembly algorithm in config settings: [[{algorithm}]]!"
             raise ValueError(message)
         if algorithm in algorithms:
-            message = (
-                f"Found duplicate assembly algorithm in configuration settings: [[{algorithm}]]!"
-            )
+            message = f"Found duplicate assembly algorithm in config settings: [[{algorithm}]]!"
             raise ValueError(message)
 
     @staticmethod
@@ -66,9 +62,9 @@ class AssemblerConfig:
                 extrakeys.add(key)
         if len(missingkeys) > 0:
             keystr = ",".join(sorted(missingkeys))
-            message = f"Missing assembly configuration setting(s): {keystr}"
+            message = f"Missing assembly configuration setting(s): [[{keystr}]]!"
             raise AssemblerConfigError(message)
         if len(extrakeys) > 0:
             keystr = ",".join(sorted(extrakeys))
-            message = f"Ignoring unsupported configuration key(s): {keystr}"
+            message = f"Ignoring unsupported configuration key(s): [[{keystr}]]!"
             warn(message)

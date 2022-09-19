@@ -13,8 +13,8 @@ from yeat import cli
 from yeat.tests import data_file
 
 
-# the purpose of this test is to check if the snakemake workflow is properly defined.
 def test_basic_dry_run(tmp_path):
+    """The purpose of this test is to check if the snakemake workflow is properly defined."""
     wd = str(tmp_path)
     arglist = [
         data_file("config.cfg"),
@@ -35,37 +35,35 @@ def test_no_args():
         cli.main(None)
 
 
-def test_snakemake_fail_because_of_invalid_read_files():
-    with pytest.raises(Exception, match=r"Snakemake Failed"):
+def test_invalid_read_files():
+    with pytest.raises(Exception, match=r"No such file:.*read1\'"):
         read1 = "read1"
         read2 = "read2"
-        assemblers = "spades"
+        assemblers = ["spades"]
         cli.run(read1, read2, assemblers)
 
 
-# def test_unsupported_assembly_algorithm():
-#     assemblers = ["unsupported_assembly"]
-#     error_message = r"Found unsupported assembly algorithm with `--assemblers` flag: \[\[unsupported_assembly\]\]!"
-#     with pytest.raises(ValueError, match=error_message):
-#         cli.check_assemblers(assemblers)
-
-
-# def test_duplicate_assembly_algorithms():
-#     assemblers = ["spades", "spades"]
-#     error_message = r"Found duplicate assembly algorithm with `--assemblers` flag: \[\[spades\]\]!"
-#     with pytest.raises(ValueError, match=error_message):
-#         cli.check_assemblers(assemblers)
-
-
-
-# test for algorithms that I didn't say to run but doens't exist in config
-# for example, i want unicycler but it never ran unicycler
-
-
-def test_unicycler(capsys, tmp_path):
+def test_multiple_assemblers(tmp_path):
     wd = str(tmp_path)
     arglist = [
         data_file("config.cfg"),
+        data_file("short_reads_1.fastq.gz"),
+        data_file("short_reads_2.fastq.gz"),
+        "--outdir",
+        wd,
+    ]
+    args = cli.get_parser().parse_args(arglist)
+    cli.main(args)
+    spades_result = Path(wd).resolve() / "analysis" / "spades" / "contigs.fasta"
+    assert spades_result.exists()
+    megahit_result = Path(wd).resolve() / "analysis" / "megahit" / "final.contigs.fa"
+    assert megahit_result.exists()
+
+
+def test_unicycler(tmp_path):
+    wd = str(tmp_path)
+    arglist = [
+        data_file("unicycler.cfg"),
         data_file("short_reads_1.fastq.gz"),
         data_file("short_reads_2.fastq.gz"),
         "--outdir",

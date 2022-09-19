@@ -44,14 +44,14 @@ class AssemblerConfig:
     def check_algorithm(algorithm, algorithms):
         if algorithm not in ASSEMBLY_ALGORITHMS:
             message = (
-                f"Found unsupported assembly algorithm with `--assemblers` flag: [[{algorithm}]]!"
+                f"Found unsupported assembly algorithm in configuration settings: [[{algorithm}]]!"
             )
             raise ValueError(message)
         if algorithm in algorithms:
             message = (
-                f"Found duplicate assembly algorithm with `--assemblers` flag: [[{algorithm}]]!"
+                f"Found duplicate assembly algorithm in configuration settings: [[{algorithm}]]!"
             )
-            warn(message)
+            raise ValueError(message)
 
     @staticmethod
     def validate_config(config):

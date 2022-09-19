@@ -18,7 +18,11 @@ from yeat.config import AssemblerConfig
 def run(read1, read2, assemblers, outdir=".", cores=1, sample="sample", dryrun="dry"):
     snakefile = resource_filename("yeat", "Snakefile")
     r1 = Path(read1).resolve()
+    if not r1.is_file():
+        raise FileNotFoundError(f"No such file: '{r1}'")
     r2 = Path(read2).resolve()
+    if not r2.is_file():
+        raise FileNotFoundError(f"No such file: '{r2}'")
     config = dict(
         read1=r1,
         read2=r2,

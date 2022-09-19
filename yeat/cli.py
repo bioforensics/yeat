@@ -8,11 +8,31 @@
 # -------------------------------------------------------------------------------------------------
 
 import argparse
+from argparse import Action
+import json
 from pathlib import Path
 from pkg_resources import resource_filename
 from snakemake import snakemake
+import sys
 import yeat
 from yeat.config import AssemblerConfig
+
+
+class InitAction(Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        config = [
+            dict(
+                assembler="spades",
+                extra_args="",
+            ),
+            dict(
+                assembler="megahit",
+                extra_args="",
+            ),
+        ]
+        json.dump(config, sys.stdout, indent=4)
+        print()
+        raise SystemExit()
 
 
 def run(read1, read2, assemblers, outdir=".", cores=1, sample="sample", dryrun="dry"):
@@ -75,6 +95,12 @@ def get_parser():
         "--dry-run",
         action="store_true",
         help="construct workflow DAG and print a summary but do not execute",
+    )
+    parser.add_argument(
+        "--init",
+        action=InitAction,
+        nargs=0,
+        help="print a template assembly config file to the terminal (stdout) and exit",
     )
     parser.add_argument("config", type=str, help="configfile")
     parser.add_argument("reads", type=str, nargs=2, help="paired-end reads in FASTQ format")

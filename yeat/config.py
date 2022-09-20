@@ -11,59 +11,44 @@ import json
 from warnings import warn
 
 
-ASSEMBLY_ALGORITHMS = ["spades", "megahit", "unicycler"]
+ALGORITHMS = ("spades", "megahit", "unicycler")
 
 
-class AssemblerConfigError(ValueError):
+class AssemblyConfigurationError(ValueError):
     pass
 
 
 class AssemblerConfig:
-    def __init__(self, assembler, extra_args=""):
-        self.assembler = assembler
+    def __init__(self, algorithm, extra_args=""):
+        if algorithm not in ALGORITHMS:
+            raise AssemblyConfigurationError(f"Unsupported assembly algorithm '{algorithm}'")
+        self.algorithm = algorithm
         self.extra_args = extra_args
 
     @classmethod
     def from_json(cls, data):
-        return cls(data["assembler"], data["extra_args"])
+        return cls(data["algorithm"], data["extra_args"])
 
     @staticmethod
     def parse_json(instream):
-        data = json.load(instream)
-        algorithms = set()
-        assemblers = []
-        for d in data:
-            AssemblerConfig.validate_config(d)
-            algorithm = d["assembler"]
-            AssemblerConfig.check_algorithm(algorithm, algorithms)
-            algorithms.add(algorithm)
-            assemblers.append(AssemblerConfig.from_json(d))
-        return assemblers
+        configdata = json.load(instream)
+        for entry in configdata:
+            AssemblerConfig.validate(entry)
+        algorithms = [entry["algorithm"] for entry in configdata]
+        if len(algorithms) > len(set(algorithms)):
+            message = "Duplicate assembly configuration: please check config file"
+            raise AssemblyConfigurationError(message)
+        configlist = [AssemblerConfig.from_json(entry) for entry in configdata]
+        return configlist
 
     @staticmethod
-    def check_algorithm(algorithm, algorithms):
-        if algorithm not in ASSEMBLY_ALGORITHMS:
-            message = f"Found unsupported assembly algorithm in config settings: [[{algorithm}]]!"
-            raise ValueError(message)
-        if algorithm in algorithms:
-            message = f"Found duplicate assembly algorithm in config settings: [[{algorithm}]]!"
-            raise ValueError(message)
-
-    @staticmethod
-    def validate_config(config):
-        expectedkeys = ("assembler", "extra_args")
-        missingkeys = set()
-        extrakeys = set()
-        for key in expectedkeys:
-            if key not in config:
-                missingkeys.add(key)
-        for key in config:
-            if key not in expectedkeys:
-                extrakeys.add(key)
+    def validate(config):
+        missingkeys = set(["algorithm", "extra_args"]) - set(config.keys())
+        extrakeys = set(config.keys()) - set(["algorithm", "extra_args"])
         if len(missingkeys) > 0:
             keystr = ",".join(sorted(missingkeys))
             message = f"Missing assembly configuration setting(s): [[{keystr}]]!"
-            raise AssemblerConfigError(message)
+            raise AssemblyConfigurationError(message)
         if len(extrakeys) > 0:
             keystr = ",".join(sorted(extrakeys))
             message = f"Ignoring unsupported configuration key(s): [[{keystr}]]!"

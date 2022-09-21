@@ -63,7 +63,7 @@ def run(read1, read2, algorithms, outdir=".", cores=1, sample="sample", dryrun="
         workdir=outdir,
     )
     if not success:
-        raise RuntimeError("Snakemake Failed!")
+        raise RuntimeError("Snakemake Failed")
 
 
 def get_parser():

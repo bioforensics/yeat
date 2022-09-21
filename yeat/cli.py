@@ -20,12 +20,12 @@ from yeat.config import AssemblerConfig
 
 CONFIG_TEMPLATE = [
     dict(
-        assembler="spades",
-        extra_args="",
+        algorithm="spades",
+        extra_args="--meta",
     ),
     dict(
-        assembler="megahit",
-        extra_args="",
+        algorithm="megahit",
+        extra_args="--min-count 5 --min-contig-len 300",
     ),
 ]
 
@@ -37,7 +37,7 @@ class InitAction(Action):
         raise SystemExit()
 
 
-def run(read1, read2, assemblers, outdir=".", cores=1, sample="sample", dryrun="dry"):
+def run(read1, read2, algorithms, outdir=".", cores=1, sample="sample", dryrun="dry"):
     snakefile = resource_filename("yeat", "Snakefile")
     r1 = Path(read1).resolve()
     if not r1.is_file():
@@ -48,7 +48,7 @@ def run(read1, read2, assemblers, outdir=".", cores=1, sample="sample", dryrun="
     config = dict(
         read1=r1,
         read2=r2,
-        assemblers=assemblers,
+        algorithms=algorithms,
         outdir=outdir,
         cores=cores,
         sample=sample,
@@ -112,11 +112,11 @@ def get_parser():
 def main(args=None):
     if args is None:
         args = get_parser().parse_args()
-    assemblers = AssemblerConfig.parse_json(open(args.config))
-    assemblers = [x.assembler for x in assemblers]
+    algorithms = AssemblerConfig.parse_json(open(args.config))
+    algorithms = [x.algorithm for x in algorithms]
     run(
         *args.reads,
-        assemblers=assemblers,
+        algorithms=algorithms,
         outdir=args.outdir,
         cores=args.threads,
         sample=args.sample,

@@ -102,7 +102,7 @@ rule spades:
     threads: 128
     shell:
         """
-        spades.py -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/spades
+        spades.py -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/spades {config[extraargs][spades]}
         ln -s scaffolds.fasta {output.contigs}
         """
 
@@ -116,7 +116,7 @@ rule megahit:
     threads: 128
     shell:
         """
-        megahit -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/megahit-temp
+        megahit -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/megahit-temp {config[extraargs][megahit]}
         mv analysis/megahit-temp/* analysis/megahit
         rm -r analysis/megahit-temp
         ln -s final.contigs.fa {output.contigs}
@@ -131,7 +131,7 @@ rule unicycler:
         read2="seq/downsample/{sample}.R2.fq.gz"
     shell:
         """
-        unicycler -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/unicycler
+        unicycler -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/unicycler {config[extraargs][unicycler]}
         ln -s assembly.fasta {output.contigs}
         """
 

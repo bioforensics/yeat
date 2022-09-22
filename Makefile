@@ -9,6 +9,14 @@ help: Makefile
 
 ## test:        run automated test suite
 test:
+	pytest --cov=yeat -m 'not long'
+
+## testlong:    run only long-running automated tests
+testlong:
+	pytest --cov=yeat -m long
+
+## testall:     run all tests
+testall:
 	pytest --cov=yeat
 
 ## style:       check code style vs Black

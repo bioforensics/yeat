@@ -60,6 +60,7 @@ def test_invalid_read2_file():
         cli.run(read1, read2, assemblers)
 
 
+@pytest.mark.long
 def test_multiple_assemblers(capsys, tmp_path):
     wd = str(tmp_path)
     arglist = [
@@ -77,6 +78,7 @@ def test_multiple_assemblers(capsys, tmp_path):
     assert megahit_result.exists()
 
 
+@pytest.mark.long
 def test_unicycler(capsys, tmp_path):
     wd = str(tmp_path)
     arglist = [

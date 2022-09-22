@@ -37,25 +37,21 @@ class InitAction(Action):
         raise SystemExit()
 
 
-def run(read1, read2, algorithms, outdir=".", cores=1, sample="sample", dryrun="dry"):
+def run(fastq1, fastq2, assembly_configs, outdir=".", cores=1, sample="sample", dryrun="dry"):
     snakefile = resource_filename("yeat", "Snakefile")
-    r1 = Path(read1).resolve()
+    r1 = Path(fastq1).resolve()
     if not r1.is_file():
         raise FileNotFoundError(f"No such file: '{r1}'")
-    r2 = Path(read2).resolve()
+    r2 = Path(fastq2).resolve()
     if not r2.is_file():
         raise FileNotFoundError(f"No such file: '{r2}'")
-    assemblers = []
-    extraargs = {}
-    for algorithm in algorithms:
-        assembler = algorithm.algorithm
-        assemblers.append(assembler)
-        extraargs[assembler] = algorithm.extra_args
+    assemblers = [config.algorithm for config in assembly_configs]
+    extra_args = {config.algorithm: config.extra_args for config in assembly_configs}
     config = dict(
         read1=r1,
         read2=r2,
         assemblers=assemblers,
-        extraargs=extraargs,
+        extra_args=extra_args,
         outdir=outdir,
         cores=cores,
         sample=sample,
@@ -119,10 +115,10 @@ def get_parser():
 def main(args=None):
     if args is None:
         args = get_parser().parse_args()
-    algorithms = AssemblerConfig.parse_json(open(args.config))
+    assembly_configs = AssemblerConfig.parse_json(open(args.config))
     run(
         *args.reads,
-        algorithms=algorithms,
+        assembly_configs=assembly_configs,
         outdir=args.outdir,
         cores=args.threads,
         sample=args.sample,

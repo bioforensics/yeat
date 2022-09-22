@@ -13,7 +13,7 @@ import pandas as pd
 
 rule all:
     input:
-        expand("analysis/quast/{algorithm}/{sample}_report.html", algorithm=config["algorithms"], sample=config["sample"]),
+        expand("analysis/quast/{assembler}/{sample}_report.html", assembler=config["assemblers"], sample=config["sample"]),
         expand("seq/fastqc/{sample}_{reads}_fastqc.html", sample=config["sample"], reads=["R1", "R2"])
 
 
@@ -138,11 +138,11 @@ rule unicycler:
 
 rule quast:
     output:
-        report="analysis/quast/{algorithm}/{sample}_report.html"
+        report="analysis/quast/{assembler}/{sample}_report.html"
     input:
-        contigs="analysis/{algorithm}/{sample}_contigs.fasta"
+        contigs="analysis/{assembler}/{sample}_contigs.fasta"
     shell:
         """
-        quast.py {input.contigs} -o analysis/quast/{wildcards.algorithm}
+        quast.py {input.contigs} -o analysis/quast/{wildcards.assembler}
         ln -s report.html {output.report}
         """

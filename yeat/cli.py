@@ -45,13 +45,16 @@ def run(read1, read2, algorithms, outdir=".", cores=1, sample="sample", dryrun="
     r2 = Path(read2).resolve()
     if not r2.is_file():
         raise FileNotFoundError(f"No such file: '{r2}'")
+    assemblers = []
     extraargs = {}
-    for x in algorithms:
-        extraargs[x.algorithm] = x.extra_args
+    for algorithm in algorithms:
+        assembler = algorithm.algorithm
+        assemblers.append(assembler)
+        extraargs[assembler] = algorithm.extra_args
     config = dict(
         read1=r1,
         read2=r2,
-        algorithms=list(extraargs.keys()),
+        assemblers=assemblers,
         extraargs=extraargs,
         outdir=outdir,
         cores=cores,

@@ -8,39 +8,50 @@
 # -------------------------------------------------------------------------------------------------
 
 import argparse
+from argparse import Action
+import json
 from pathlib import Path
 from pkg_resources import resource_filename
 from snakemake import snakemake
+import sys
 import yeat
+from yeat.config import AssemblerConfig
 
 
-ASSEMBLY_ALGORITHMS = ["spades", "megahit", "unicycler"]
+CONFIG_TEMPLATE = [
+    dict(
+        algorithm="spades",
+        extra_args="--meta",
+    ),
+    dict(
+        algorithm="megahit",
+        extra_args="--min-count 5 --min-contig-len 300",
+    ),
+]
 
 
-def check_assemblers(assemblers):
-    algorithms = []
-    for algorithm in assemblers:
-        if algorithm not in ASSEMBLY_ALGORITHMS:
-            message = (
-                f"Found unsupported assembly algorithm with `--assemblers` flag: [[{algorithm}]]!"
-            )
-            raise ValueError(message)
-        if algorithm in algorithms:
-            message = (
-                f"Found duplicate assembly algorithm with `--assemblers` flag: [[{algorithm}]]!"
-            )
-            raise ValueError(message)
-        algorithms.append(algorithm)
+class InitAction(Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        json.dump(CONFIG_TEMPLATE, sys.stdout, indent=4)
+        print()
+        raise SystemExit()
 
 
-def run(read1, read2, assemblers, outdir=".", cores=1, sample="sample", dryrun="dry"):
+def run(fastq1, fastq2, assembly_configs, outdir=".", cores=1, sample="sample", dryrun="dry"):
     snakefile = resource_filename("yeat", "Snakefile")
-    r1 = Path(read1).resolve()
-    r2 = Path(read2).resolve()
+    r1 = Path(fastq1).resolve()
+    if not r1.is_file():
+        raise FileNotFoundError(f"No such file: '{r1}'")
+    r2 = Path(fastq2).resolve()
+    if not r2.is_file():
+        raise FileNotFoundError(f"No such file: '{r2}'")
+    assemblers = [config.algorithm for config in assembly_configs]
+    extra_args = {config.algorithm: config.extra_args for config in assembly_configs}
     config = dict(
         read1=r1,
         read2=r2,
         assemblers=assemblers,
+        extra_args=extra_args,
         outdir=outdir,
         cores=cores,
         sample=sample,
@@ -90,13 +101,13 @@ def get_parser():
         action="store_true",
         help="construct workflow DAG and print a summary but do not execute",
     )
-    required = parser.add_argument_group("required arguments")
-    required.add_argument(
-        "--assemblers",
-        required=True,
-        type=str,
-        help="assembly algorithm(s); For example, `spades`, `megahit`, `unicycler`, or `spades,megahit`",
+    parser.add_argument(
+        "--init",
+        action=InitAction,
+        nargs=0,
+        help="print a template assembly config file to the terminal (stdout) and exit",
     )
+    parser.add_argument("config", type=str, help="configfile")
     parser.add_argument("reads", type=str, nargs=2, help="paired-end reads in FASTQ format")
     return parser
 
@@ -104,12 +115,10 @@ def get_parser():
 def main(args=None):
     if args is None:
         args = get_parser().parse_args()
-    assert len(args.reads) == 2
-    assemblers = list(filter(None, args.assemblers.strip().split(",")))
-    check_assemblers(assemblers)
+    assembly_configs = AssemblerConfig.parse_json(open(args.config))
     run(
         *args.reads,
-        assemblers=assemblers,
+        assembly_configs=assembly_configs,
         outdir=args.outdir,
         cores=args.threads,
         sample=args.sample,

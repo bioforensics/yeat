@@ -100,9 +100,11 @@ rule spades:
         read1="seq/downsample/{sample}.R1.fq.gz",
         read2="seq/downsample/{sample}.R2.fq.gz"
     threads: 128
+    params:
+        extra_args=config["extra_args"]
     shell:
         """
-        spades.py -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/spades
+        spades.py -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/spades {params.extra_args[spades]}
         ln -s scaffolds.fasta {output.contigs}
         """
 
@@ -114,9 +116,11 @@ rule megahit:
         read1="seq/downsample/{sample}.R1.fq.gz",
         read2="seq/downsample/{sample}.R2.fq.gz"
     threads: 128
+    params:
+        extra_args=config["extra_args"]
     shell:
         """
-        megahit -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/megahit-temp
+        megahit -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/megahit-temp {params.extra_args[megahit]}
         mv analysis/megahit-temp/* analysis/megahit
         rm -r analysis/megahit-temp
         ln -s final.contigs.fa {output.contigs}
@@ -129,9 +133,11 @@ rule unicycler:
     input:
         read1="seq/downsample/{sample}.R1.fq.gz",
         read2="seq/downsample/{sample}.R2.fq.gz"
+    params:
+        extra_args=config["extra_args"]
     shell:
         """
-        unicycler -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/unicycler
+        unicycler -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/unicycler {params.extra_args[unicycler]}
         ln -s assembly.fasta {output.contigs}
         """
 

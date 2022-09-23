@@ -117,7 +117,7 @@ def get_parser():
         type=int,
         metavar="D",
         default=0,
-        help="downsample reads down to a custom number; by default, D=0; when no value is given, YEAT will auto-downsample",
+        help="downsample reads down to a custom number; by default, D=0; when set to default, YEAT will auto downsample; set D=-1 to not downsample",
     )
     parser.add_argument(
         "--init",

@@ -8,6 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 import json
+import pandas as pd
 from pathlib import Path
 import pytest
 from yeat import cli
@@ -92,3 +93,30 @@ def test_unicycler(capsys, tmp_path):
     cli.main(args)
     assembly_result = Path(wd).resolve() / "analysis" / "unicycler" / "assembly.fasta"
     assert assembly_result.exists()
+
+
+@pytest.mark.long
+@pytest.mark.parametrize(
+    "downsample,num_contigs,largest_contig,total_len",
+    [("2000", 71, 5120, 69189), ("-1", 56, 35168, 199940)],
+)
+def test_custom_downsample_input(
+    downsample, num_contigs, largest_contig, total_len, capsys, tmp_path
+):
+    wd = str(tmp_path)
+    arglist = [
+        data_file("megahit.cfg"),
+        data_file("short_reads_1.fastq.gz"),
+        data_file("short_reads_2.fastq.gz"),
+        "--outdir",
+        wd,
+        "-d",
+        downsample,
+    ]
+    args = cli.get_parser().parse_args(arglist)
+    cli.main(args)
+    quast_report = Path(wd).resolve() / "analysis" / "quast" / "megahit" / "report.tsv"
+    df = pd.read_csv(quast_report, sep="\t")
+    assert df.iloc[12]["sample_contigs"] == num_contigs
+    assert df.iloc[13]["sample_contigs"] == largest_contig
+    assert df.iloc[14]["sample_contigs"] == total_len

@@ -12,6 +12,7 @@ from warnings import warn
 
 
 ALGORITHMS = ("spades", "megahit", "unicycler")
+KEYS = ["algorithm", "extra_args"]
 
 
 class AssemblyConfigurationError(ValueError):
@@ -43,8 +44,8 @@ class AssemblerConfig:
 
     @staticmethod
     def validate(config):
-        missingkeys = set(["algorithm", "extra_args"]) - set(config.keys())
-        extrakeys = set(config.keys()) - set(["algorithm", "extra_args"])
+        missingkeys = set(KEYS) - set(config.keys())
+        extrakeys = set(config.keys()) - set(KEYS)
         if len(missingkeys) > 0:
             keystr = ",".join(sorted(missingkeys))
             message = f"Missing assembly configuration setting(s) '{keystr}'"

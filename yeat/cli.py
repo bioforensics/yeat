@@ -37,7 +37,16 @@ class InitAction(Action):
         raise SystemExit()
 
 
-def run(fastq1, fastq2, assembly_configs, outdir=".", cores=1, sample="sample", dryrun="dry"):
+def run(
+    fastq1,
+    fastq2,
+    assembly_configs,
+    outdir=".",
+    cores=1,
+    sample="sample",
+    dryrun="dry",
+    downsample=0,
+):
     snakefile = resource_filename("yeat", "Snakefile")
     r1 = Path(fastq1).resolve()
     if not r1.is_file():
@@ -56,6 +65,7 @@ def run(fastq1, fastq2, assembly_configs, outdir=".", cores=1, sample="sample", 
         cores=cores,
         sample=sample,
         dryrun=dryrun,
+        downsample=downsample,
     )
     success = snakemake(
         snakefile,
@@ -102,6 +112,14 @@ def get_parser():
         help="construct workflow DAG and print a summary but do not execute",
     )
     parser.add_argument(
+        "-d",
+        "--downsample",
+        type=int,
+        metavar="D",
+        default=0,
+        help="downsample reads down to the desired number; by default, D=0; when set to default, YEAT will auto downsample; set D=-1 to not downsample",
+    )
+    parser.add_argument(
         "--init",
         action=InitAction,
         nargs=0,
@@ -123,4 +141,5 @@ def main(args=None):
         cores=args.threads,
         sample=args.sample,
         dryrun=args.dry_run,
+        downsample=args.downsample,
     )

@@ -9,6 +9,7 @@
 
 from shutil import copyfile
 import pandas as pd
+from pathlib import Path
 
 
 rule all:
@@ -79,15 +80,27 @@ rule downsample:
         read1="seq/fastp/{sample}.R1.fq.gz",
         read2="seq/fastp/{sample}.R2.fq.gz",
         mash_report="seq/mash/{sample}.report.tsv"
+    params:
+        downsample=config["downsample"]
     run:
+        if params.downsample == -1:
+            p = Path("seq/downsample")
+            p.mkdir(parents=True, exist_ok=True)
+            copyfile(input.read1, output.sub1)
+            copyfile(input.read2, output.sub2)
+            return
         result = input.mash_report
         df = pd.read_csv(result, sep="\t")
         genome_size = df["Length"].iloc[0]
-        coverage = 150
-        read_length = 250
-        down = (genome_size * 150) // (2 * read_length)
-        print(f"genome size: {genome_size}")
-        print(f"down: {down}")
+        print(f"genome size: {genome_size}")    
+        if params.downsample == 0:
+            coverage = 150
+            read_length = 250
+            down = (genome_size * coverage) // (2 * read_length)
+            print(f"auto down: {down}")
+        else:
+            down = params.downsample
+            print(f"custom down: {down}")
         shell("seqtk sample {input.read1} {down} > seq/downsample/{wildcards.sample}.R1.fq")
         shell("seqtk sample {input.read2} {down} > seq/downsample/{wildcards.sample}.R2.fq")
         shell("gzip -f seq/downsample/*")

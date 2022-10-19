@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for Unicycler (#14)
 - Support for assembly configuration file (#16)
 - Commands to run a short or long test suite (#20)
-- Custom downsampling flag (#21, )
+- Custom downsampling flag (#21, #23)
 
 
 ## [0.1] 2021-12-01

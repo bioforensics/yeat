@@ -46,6 +46,7 @@ def run(
     sample="sample",
     dryrun="dry",
     downsample=0,
+    coverage=0,
 ):
     snakefile = resource_filename("yeat", "Snakefile")
     r1 = Path(fastq1).resolve()
@@ -66,6 +67,7 @@ def run(
         sample=sample,
         dryrun=dryrun,
         downsample=downsample,
+        coverage=coverage,
     )
     success = snakemake(
         snakefile,
@@ -120,6 +122,14 @@ def get_parser():
         help="downsample reads down to the desired number; by default, D=0; when set to default, YEAT will auto downsample; set D=-1 to not downsample",
     )
     parser.add_argument(
+        "-c",
+        "--coverage",
+        type=int,
+        metavar="C",
+        default=150,
+        help="set coverage to the desired number; by default, C=150",
+    )
+    parser.add_argument(
         "--init",
         action=InitAction,
         nargs=0,
@@ -142,4 +152,5 @@ def main(args=None):
         sample=args.sample,
         dryrun=args.dry_run,
         downsample=args.downsample,
+        coverage=args.coverage,
     )

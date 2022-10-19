@@ -7,6 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+import json
 from shutil import copyfile
 import pandas as pd
 from pathlib import Path
@@ -81,7 +82,9 @@ rule downsample:
         read2="seq/fastp/{sample}.R2.fq.gz",
         mash_report="seq/mash/{sample}.report.tsv"
     params:
-        downsample=config["downsample"]
+        coverage=config["coverage"],
+        downsample=config["downsample"],
+        fastp_report="seq/fastp/fastp.json"
     run:
         if params.downsample == -1:
             p = Path("seq/downsample")
@@ -89,14 +92,21 @@ rule downsample:
             copyfile(input.read1, output.sub1)
             copyfile(input.read2, output.sub2)
             return
-        result = input.mash_report
-        df = pd.read_csv(result, sep="\t")
+        df = pd.read_csv(input.mash_report, sep="\t")
         genome_size = df["Length"].iloc[0]
-        print(f"genome size: {genome_size}")    
+        print(f"genome size: {genome_size}")
+        data = json.load(open(params.fastp_report))
+        read1_length = data["summary"]["after_filtering"]["read1_mean_length"]
+        read2_length = data["summary"]["after_filtering"]["read2_mean_length"]
+        read_lengths = [read1_length, read2_length]
+        avg_length = sum(read_lengths) // len(read_lengths)
+        print(f"average read length: {avg_length}")
+        if params.coverage == 150:
+            print(f"default coverage: {params.coverage}")
+        else:
+            print(f"custom coverage: {params.coverage}")
         if params.downsample == 0:
-            coverage = 150
-            read_length = 250
-            down = (genome_size * coverage) // (2 * read_length)
+            down = (genome_size * params.coverage) // (2 * avg_length)
             print(f"auto down: {down}")
         else:
             down = params.downsample

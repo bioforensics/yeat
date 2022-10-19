@@ -46,7 +46,7 @@ def run(
     sample="sample",
     dryrun="dry",
     downsample=0,
-    coverage=0,
+    coverage=150,
 ):
     snakefile = resource_filename("yeat", "Snakefile")
     r1 = Path(fastq1).resolve()

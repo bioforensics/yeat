@@ -7,6 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+import argparse
 import json
 import pandas as pd
 from pathlib import Path
@@ -41,7 +42,7 @@ def test_basic_dry_run(tmp_path):
 
 
 def test_no_args():
-    with pytest.raises(SystemExit, match=r"2"):
+    with pytest.raises(Exception, match=r"yeat is not an integer"):
         cli.main(None)
 
 
@@ -112,6 +113,59 @@ def test_custom_downsample_input(
         wd,
         "-d",
         downsample,
+    ]
+    args = cli.get_parser().parse_args(arglist)
+    cli.main(args)
+    quast_report = Path(wd).resolve() / "analysis" / "quast" / "megahit" / "report.tsv"
+    df = pd.read_csv(quast_report, sep="\t")
+    assert df.iloc[12]["sample_contigs"] == num_contigs
+    assert df.iloc[13]["sample_contigs"] == largest_contig
+    assert df.iloc[14]["sample_contigs"] == total_len
+
+
+@pytest.mark.parametrize("coverage", [("-1"), ("0")])
+def test_invalid_custom_coverage_1(coverage):
+    arglist = [
+        data_file("megahit.cfg"),
+        data_file("short_reads_1.fastq.gz"),
+        data_file("short_reads_2.fastq.gz"),
+        "--coverage",
+        coverage,
+    ]
+    with pytest.raises(SystemExit) as e:
+        args = cli.get_parser().parse_args(arglist)
+    assert isinstance(e.value.__context__, argparse.ArgumentError)
+    assert f"{coverage} is not a positive integer" in e.value.__context__.message
+
+
+@pytest.mark.parametrize("coverage", [("string"), ("3.14")])
+def test_invalid_custom_coverage_2(coverage):
+    arglist = [
+        data_file("megahit.cfg"),
+        data_file("short_reads_1.fastq.gz"),
+        data_file("short_reads_2.fastq.gz"),
+        "--coverage",
+        coverage,
+    ]
+    with pytest.raises(Exception, match=r"is not an integer"):
+        args = cli.get_parser().parse_args(arglist)
+
+
+@pytest.mark.long
+@pytest.mark.parametrize(
+    "coverage,num_contigs,largest_contig,total_len",
+    [("125", 56, 35168, 199940), ("150", 56, 35168, 199940)],
+)
+def test_custom_coverage_input(coverage, num_contigs, largest_contig, total_len, capsys, tmp_path):
+    wd = str(tmp_path)
+    arglist = [
+        data_file("megahit.cfg"),
+        data_file("short_reads_1.fastq.gz"),
+        data_file("short_reads_2.fastq.gz"),
+        "--outdir",
+        wd,
+        "-c",
+        coverage,
     ]
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)

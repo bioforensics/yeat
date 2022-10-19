@@ -81,6 +81,16 @@ def run(
         raise RuntimeError("Snakemake Failed")
 
 
+def check_positive(value):
+    try:
+        value = int(value)
+        if value <= 0:
+            raise argparse.ArgumentTypeError(f"{value} is not a positive integer")
+    except ValueError:
+        raise Exception(f"{value} is not an integer")
+    return value
+
+
 def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", action="version", version=f"YEAT v{yeat.__version__}")
@@ -124,7 +134,7 @@ def get_parser():
     parser.add_argument(
         "-c",
         "--coverage",
-        type=int,
+        type=check_positive,
         metavar="C",
         default=150,
         help="set coverage to the desired number; by default, C=150",

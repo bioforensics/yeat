@@ -41,11 +41,6 @@ def test_basic_dry_run(tmp_path):
     cli.main(args)
 
 
-def test_no_args():
-    with pytest.raises(SystemExit, match=r"2"):
-        cli.main(None)
-
-
 def test_invalid_read1_file():
     with pytest.raises(Exception, match=r"No such file:.*read1\'"):
         read1 = "read1"
@@ -132,10 +127,8 @@ def test_invalid_custom_coverage_negative(coverage):
         "--coverage",
         coverage,
     ]
-    with pytest.raises(SystemExit) as error:
+    with pytest.raises(argparse.ArgumentError, match=rf"{coverage} is not a positive integer"):
         args = cli.get_parser().parse_args(arglist)
-    assert isinstance(error.value.__context__, argparse.ArgumentError)
-    assert f"{coverage} is not a positive integer" in error.value.__context__.message
 
 
 @pytest.mark.parametrize("coverage", [("string"), ("3.14")])
@@ -147,10 +140,8 @@ def test_invalid_custom_coverage_noninteger(coverage):
         "--coverage",
         coverage,
     ]
-    with pytest.raises(SystemExit) as error:
+    with pytest.raises(argparse.ArgumentError, match=rf"{coverage} is not an integer"):
         args = cli.get_parser().parse_args(arglist)
-    assert isinstance(error.value.__context__, argparse.ArgumentError)
-    assert f"{coverage} is not an integer" in error.value.__context__.message
 
 
 @pytest.mark.long
@@ -170,6 +161,6 @@ def test_custom_coverage_input(coverage, capsys, tmp_path):
     cli.main(args)
     quast_report = Path(wd).resolve() / "analysis" / "quast" / "megahit" / "report.tsv"
     df = pd.read_csv(quast_report, sep="\t")
-    assert df.iloc[12]["sample_contigs"] == 56  # total contigs
-    assert df.iloc[13]["sample_contigs"] == 35168  # largest contig
-    assert df.iloc[14]["sample_contigs"] == 199940  # total length
+    assert df.iloc[12]["sample_contigs"] == 56  # num_contigs
+    assert df.iloc[13]["sample_contigs"] == 35168  # largest_contig
+    assert df.iloc[14]["sample_contigs"] == 199940  # total_len

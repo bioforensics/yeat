@@ -95,18 +95,18 @@ rule downsample:
         df = pd.read_csv(input.mash_report, sep="\t")
         genome_size = df["Length"].iloc[0]
         print(f"genome size: {genome_size}")
-        data = json.load(open(params.fastp_report))
-        read1_length = data["summary"]["after_filtering"]["read1_mean_length"]
-        read2_length = data["summary"]["after_filtering"]["read2_mean_length"]
-        read_lengths = [read1_length, read2_length]
-        avg_length = sum(read_lengths) // len(read_lengths)
-        print(f"average read length: {avg_length}")
+        with open(params.fastp_report, "r") as fh:
+            qcdata = json.load(fh)
+        base_count = qcdata["summary"]["after_filtering"]["total_bases"]
+        read_count = qcdata["summary"]["after_filtering"]["total_reads"]
+        avg_read_length = base_count / read_count
+        print(f"average read length: {avg_read_length}")
         if params.coverage == 150:
             print(f"default coverage: {params.coverage}")
         else:
             print(f"custom coverage: {params.coverage}")
         if params.downsample == 0:
-            down = (genome_size * params.coverage) // (2 * avg_length)
+            down = int((genome_size * params.coverage) / (2 * avg_read_length))
             print(f"auto down: {down}")
         else:
             down = params.downsample

@@ -42,7 +42,7 @@ def test_basic_dry_run(tmp_path):
 
 
 def test_no_args():
-    with pytest.raises(Exception, match=r"yeat is not an integer"):
+    with pytest.raises(SystemExit, match=r"2"):
         cli.main(None)
 
 
@@ -124,7 +124,7 @@ def test_custom_downsample_input(
 
 
 @pytest.mark.parametrize("coverage", [("-1"), ("0")])
-def test_invalid_custom_coverage_1(coverage):
+def test_invalid_custom_coverage_negative(coverage):
     arglist = [
         data_file("megahit.cfg"),
         data_file("short_reads_1.fastq.gz"),
@@ -132,14 +132,14 @@ def test_invalid_custom_coverage_1(coverage):
         "--coverage",
         coverage,
     ]
-    with pytest.raises(SystemExit) as e:
+    with pytest.raises(SystemExit) as error:
         args = cli.get_parser().parse_args(arglist)
-    assert isinstance(e.value.__context__, argparse.ArgumentError)
-    assert f"{coverage} is not a positive integer" in e.value.__context__.message
+    assert isinstance(error.value.__context__, argparse.ArgumentError)
+    assert f"{coverage} is not a positive integer" in error.value.__context__.message
 
 
 @pytest.mark.parametrize("coverage", [("string"), ("3.14")])
-def test_invalid_custom_coverage_2(coverage):
+def test_invalid_custom_coverage_noninteger(coverage):
     arglist = [
         data_file("megahit.cfg"),
         data_file("short_reads_1.fastq.gz"),
@@ -147,16 +147,15 @@ def test_invalid_custom_coverage_2(coverage):
         "--coverage",
         coverage,
     ]
-    with pytest.raises(Exception, match=r"is not an integer"):
+    with pytest.raises(SystemExit) as error:
         args = cli.get_parser().parse_args(arglist)
+    assert isinstance(error.value.__context__, argparse.ArgumentError)
+    assert f"{coverage} is not an integer" in error.value.__context__.message
 
 
 @pytest.mark.long
-@pytest.mark.parametrize(
-    "coverage,num_contigs,largest_contig,total_len",
-    [("125", 56, 35168, 199940), ("150", 56, 35168, 199940)],
-)
-def test_custom_coverage_input(coverage, num_contigs, largest_contig, total_len, capsys, tmp_path):
+@pytest.mark.parametrize("coverage", [("150"), ("75"), ("10")])
+def test_custom_coverage_input(coverage, capsys, tmp_path):
     wd = str(tmp_path)
     arglist = [
         data_file("megahit.cfg"),
@@ -171,6 +170,6 @@ def test_custom_coverage_input(coverage, num_contigs, largest_contig, total_len,
     cli.main(args)
     quast_report = Path(wd).resolve() / "analysis" / "quast" / "megahit" / "report.tsv"
     df = pd.read_csv(quast_report, sep="\t")
-    assert df.iloc[12]["sample_contigs"] == num_contigs
-    assert df.iloc[13]["sample_contigs"] == largest_contig
-    assert df.iloc[14]["sample_contigs"] == total_len
+    assert df.iloc[12]["sample_contigs"] == 56  # total contigs
+    assert df.iloc[13]["sample_contigs"] == 35168  # largest contig
+    assert df.iloc[14]["sample_contigs"] == 199940  # total length

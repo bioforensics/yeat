@@ -87,7 +87,7 @@ def check_positive(value):
         if value <= 0:
             raise argparse.ArgumentTypeError(f"{value} is not a positive integer")
     except ValueError:
-        raise Exception(f"{value} is not an integer")
+        raise argparse.ArgumentTypeError(f"{value} is not an integer")
     return value
 
 

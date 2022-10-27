@@ -90,8 +90,8 @@ def check_positive(value):
     return value
 
 
-def get_parser():
-    parser = ArgumentParser(exit_on_error=False)
+def get_parser(exit_on_error=True):
+    parser = ArgumentParser(exit_on_error=exit_on_error)
     parser.add_argument("-v", "--version", action="version", version=f"YEAT v{yeat.__version__}")
     parser.add_argument(
         "-o",

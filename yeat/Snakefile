@@ -11,6 +11,7 @@ import json
 from shutil import copyfile
 import pandas as pd
 from pathlib import Path
+from random import randint
 
 
 rule all:
@@ -100,19 +101,17 @@ rule downsample:
         base_count = qcdata["summary"]["after_filtering"]["total_bases"]
         read_count = qcdata["summary"]["after_filtering"]["total_reads"]
         avg_read_length = base_count / read_count
-        print(f"average read length: {avg_read_length}")
-        if params.coverage == 150:
-            print(f"default coverage: {params.coverage}")
-        else:
-            print(f"custom coverage: {params.coverage}")
         if params.downsample == 0:
             down = int((genome_size * params.coverage) / (2 * avg_read_length))
-            print(f"auto down: {down}")
         else:
             down = params.downsample
-            print(f"custom down: {down}")
-        shell("seqtk sample {input.read1} {down} > seq/downsample/{wildcards.sample}.R1.fq")
-        shell("seqtk sample {input.read2} {down} > seq/downsample/{wildcards.sample}.R2.fq")
+        seed = randint(1, 2**16-1)
+        print(f"[yeat] average read length: {avg_read_length}")
+        print(f"[yeat] target depth of coverage: {params.coverage}x")
+        print(f"[yeat] number of reads to sample: {down}")
+        print(f"[yeat] random seed for sampling: {seed}")
+        shell("seqtk sample -s {seed} {input.read1} {down} > seq/downsample/{wildcards.sample}.R1.fq")
+        shell("seqtk sample -s {seed} {input.read2} {down} > seq/downsample/{wildcards.sample}.R2.fq")
         shell("gzip -f seq/downsample/*")
 
 

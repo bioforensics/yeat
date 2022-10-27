@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-import argparse
+from argparse import ArgumentError
 import json
 import pandas as pd
 from pathlib import Path
@@ -127,8 +127,8 @@ def test_invalid_custom_coverage_negative(coverage):
         "--coverage",
         coverage,
     ]
-    with pytest.raises(argparse.ArgumentError, match=rf"{coverage} is not a positive integer"):
-        args = cli.get_parser().parse_args(arglist)
+    with pytest.raises(ArgumentError, match=rf"{coverage} is not a positive integer"):
+        args = cli.get_parser(exit_on_error=False).parse_args(arglist)
 
 
 @pytest.mark.parametrize("coverage", [("string"), ("3.14")])
@@ -140,8 +140,8 @@ def test_invalid_custom_coverage_noninteger(coverage):
         "--coverage",
         coverage,
     ]
-    with pytest.raises(argparse.ArgumentError, match=rf"{coverage} is not an integer"):
-        args = cli.get_parser().parse_args(arglist)
+    with pytest.raises(ArgumentError, match=rf"{coverage} is not an integer"):
+        args = cli.get_parser(exit_on_error=False).parse_args(arglist)
 
 
 @pytest.mark.long

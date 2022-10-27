@@ -7,6 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+from argparse import ArgumentError
 import json
 import pandas as pd
 from pathlib import Path
@@ -38,11 +39,6 @@ def test_basic_dry_run(tmp_path):
     ]
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
-
-
-def test_no_args():
-    with pytest.raises(SystemExit, match=r"2"):
-        cli.main(None)
 
 
 def test_invalid_read1_file():
@@ -120,3 +116,51 @@ def test_custom_downsample_input(
     assert df.iloc[12]["sample_contigs"] == num_contigs
     assert df.iloc[13]["sample_contigs"] == largest_contig
     assert df.iloc[14]["sample_contigs"] == total_len
+
+
+@pytest.mark.parametrize("coverage", [("-1"), ("0")])
+def test_invalid_custom_coverage_negative(coverage):
+    arglist = [
+        data_file("megahit.cfg"),
+        data_file("short_reads_1.fastq.gz"),
+        data_file("short_reads_2.fastq.gz"),
+        "--coverage",
+        coverage,
+    ]
+    with pytest.raises(ArgumentError, match=rf"{coverage} is not a positive integer"):
+        args = cli.get_parser(exit_on_error=False).parse_args(arglist)
+
+
+@pytest.mark.parametrize("coverage", [("string"), ("3.14")])
+def test_invalid_custom_coverage_noninteger(coverage):
+    arglist = [
+        data_file("megahit.cfg"),
+        data_file("short_reads_1.fastq.gz"),
+        data_file("short_reads_2.fastq.gz"),
+        "--coverage",
+        coverage,
+    ]
+    with pytest.raises(ArgumentError, match=rf"{coverage} is not an integer"):
+        args = cli.get_parser(exit_on_error=False).parse_args(arglist)
+
+
+@pytest.mark.long
+@pytest.mark.parametrize("coverage", [("150"), ("75"), ("10")])
+def test_custom_coverage_input(coverage, capsys, tmp_path):
+    wd = str(tmp_path)
+    arglist = [
+        data_file("megahit.cfg"),
+        data_file("short_reads_1.fastq.gz"),
+        data_file("short_reads_2.fastq.gz"),
+        "--outdir",
+        wd,
+        "-c",
+        coverage,
+    ]
+    args = cli.get_parser().parse_args(arglist)
+    cli.main(args)
+    quast_report = Path(wd).resolve() / "analysis" / "quast" / "megahit" / "report.tsv"
+    df = pd.read_csv(quast_report, sep="\t")
+    assert df.iloc[12]["sample_contigs"] == 56  # num_contigs
+    assert df.iloc[13]["sample_contigs"] == 35168  # largest_contig
+    assert df.iloc[14]["sample_contigs"] == 199940  # total_len

@@ -7,8 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-import argparse
-from argparse import Action
+from argparse import Action, ArgumentParser, ArgumentTypeError
 import json
 from pathlib import Path
 from pkg_resources import resource_filename
@@ -46,6 +45,7 @@ def run(
     sample="sample",
     dryrun="dry",
     downsample=0,
+    coverage=150,
 ):
     snakefile = resource_filename("yeat", "Snakefile")
     r1 = Path(fastq1).resolve()
@@ -66,6 +66,7 @@ def run(
         sample=sample,
         dryrun=dryrun,
         downsample=downsample,
+        coverage=coverage,
     )
     success = snakemake(
         snakefile,
@@ -79,8 +80,18 @@ def run(
         raise RuntimeError("Snakemake Failed")
 
 
-def get_parser():
-    parser = argparse.ArgumentParser()
+def check_positive(value):
+    try:
+        value = int(value)
+        if value <= 0:
+            raise ArgumentTypeError(f"{value} is not a positive integer")
+    except ValueError:
+        raise ArgumentTypeError(f"{value} is not an integer")
+    return value
+
+
+def get_parser(exit_on_error=True):
+    parser = ArgumentParser(exit_on_error=exit_on_error)
     parser.add_argument("-v", "--version", action="version", version=f"YEAT v{yeat.__version__}")
     parser.add_argument(
         "-o",
@@ -88,7 +99,7 @@ def get_parser():
         type=str,
         metavar="DIR",
         default=".",
-        help="output directory; default is '.'",
+        help="output directory; default is current working directory",
     )
     parser.add_argument(
         "-t",
@@ -96,14 +107,14 @@ def get_parser():
         type=int,
         metavar="T",
         default=1,
-        help="number of threads for Snakemake; default is 1",
+        help="execute workflow with T threads; by default T=1",
     )
     parser.add_argument(
         "--sample",
         type=str,
         metavar="S",
         default="sample",
-        help="sample name for Snakemake; default is 'sample'",
+        help="specify a unique sample name S for storing assembly results in the working directory; by default S=sample",
     )
     parser.add_argument(
         "-n",
@@ -117,7 +128,15 @@ def get_parser():
         type=int,
         metavar="D",
         default=0,
-        help="downsample reads down to the desired number; by default, D=0; when set to default, YEAT will auto downsample; set D=-1 to not downsample",
+        help="randomly sample D reads from the input rather than assembling the full set; set D=0 to perform auto-downsampling to a desired level of coverage (see --coverage); set D=-1 to disable downsampling; by default D=0",
+    )
+    parser.add_argument(
+        "-c",
+        "--coverage",
+        type=check_positive,
+        metavar="C",
+        default=150,
+        help="target an average depth of coverage Cx when auto-downsampling; by default, C=150",
     )
     parser.add_argument(
         "--init",
@@ -142,4 +161,5 @@ def main(args=None):
         sample=args.sample,
         dryrun=args.dry_run,
         downsample=args.downsample,
+        coverage=args.coverage,
     )

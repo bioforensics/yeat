@@ -11,6 +11,7 @@ import json
 from shutil import copyfile
 import pandas as pd
 from pathlib import Path
+import random
 from random import randint
 
 
@@ -85,7 +86,8 @@ rule downsample:
     params:
         coverage=config["coverage"],
         downsample=config["downsample"],
-        fastp_report="seq/fastp/fastp.json"
+        fastp_report="seq/fastp/fastp.json",
+        seed=config["seed"]
     run:
         if params.downsample == -1:
             p = Path("seq/downsample")
@@ -105,6 +107,7 @@ rule downsample:
             down = int((genome_size * params.coverage) / (2 * avg_read_length))
         else:
             down = params.downsample
+        random.seed(params.seed) # for unit tests
         seed = randint(1, 2**16-1)
         print(f"[yeat] average read length: {avg_read_length}")
         print(f"[yeat] target depth of coverage: {params.coverage}x")

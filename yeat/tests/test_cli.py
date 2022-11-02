@@ -94,7 +94,7 @@ def test_unicycler(capsys, tmp_path):
 @pytest.mark.long
 @pytest.mark.parametrize(
     "downsample,num_contigs,largest_contig,total_len",
-    [("2000", 69, 5103, 70075), ("-1", 56, 35168, 199940)],
+    [("2000", 79, 5294, 70818), ("-1", 56, 35168, 199940)],
 )
 def test_custom_downsample_input(
     downsample, num_contigs, largest_contig, total_len, capsys, tmp_path

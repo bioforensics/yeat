@@ -107,8 +107,10 @@ rule downsample:
             down = int((genome_size * params.coverage) / (2 * avg_read_length))
         else:
             down = params.downsample
-        random.seed(params.seed) # for unit tests
-        seed = randint(1, 2**16-1)
+        if params.seed == None:
+            seed = randint(1, 2**16-1)
+        else:
+            seed = params.seed
         print(f"[yeat] average read length: {avg_read_length}")
         print(f"[yeat] target depth of coverage: {params.coverage}x")
         print(f"[yeat] number of reads to sample: {down}")

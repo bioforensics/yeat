@@ -11,7 +11,6 @@ import json
 from shutil import copyfile
 import pandas as pd
 from pathlib import Path
-import random
 from random import randint
 
 

@@ -12,6 +12,7 @@ import json
 import pandas as pd
 from pathlib import Path
 import pytest
+from random import randint
 from yeat import cli
 from yeat.cli import InitAction
 from yeat.tests import data_file
@@ -109,7 +110,7 @@ def test_custom_downsample_input(
         "-d",
         downsample,
         "--seed",
-        0,
+        "0",
     ]
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
@@ -166,3 +167,25 @@ def test_custom_coverage_input(coverage, capsys, tmp_path):
     assert df.iloc[12]["sample_contigs"] == 56  # num_contigs
     assert df.iloc[13]["sample_contigs"] == 35168  # largest_contig
     assert df.iloc[14]["sample_contigs"] == 199940  # total_len
+
+
+@pytest.mark.long
+@pytest.mark.parametrize("execution_number", range(3))
+def test_random_downsample_seed(execution_number, capsys, tmp_path):
+    wd = str(tmp_path)
+    arglist = [
+        data_file("megahit.cfg"),
+        data_file("short_reads_1.fastq.gz"),
+        data_file("short_reads_2.fastq.gz"),
+        "--outdir",
+        wd,
+        "-d",
+        "2000",
+    ]
+    args = cli.get_parser().parse_args(arglist)
+    cli.main(args)
+    quast_report = Path(wd).resolve() / "analysis" / "quast" / "megahit" / "report.tsv"
+    df = pd.read_csv(quast_report, sep="\t")
+    assert 61 <= df.iloc[12]["sample_contigs"] <= 91  # 76 +-20% of avg num_contigs
+    assert 4183 <= df.iloc[13]["sample_contigs"] <= 6273  # 5228 +-20% of avg largest_contig
+    assert 59515 <= df.iloc[14]["sample_contigs"] <= 89271  # 74393 +-20% of avg total_len

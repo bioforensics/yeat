@@ -86,7 +86,7 @@ rule downsample:
         coverage=config["coverage"],
         downsample=config["downsample"],
         fastp_report="seq/fastp/fastp.json",
-        genome_size=config["genomesize"]
+        genome_size=config["genomesize"],
         seed=config["seed"]
     run:
         if params.downsample == -1:

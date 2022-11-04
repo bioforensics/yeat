@@ -47,6 +47,7 @@ def run(
     downsample=0,
     coverage=150,
     seed=None,
+    genomesize=0,
 ):
     snakefile = resource_filename("yeat", "Snakefile")
     r1 = Path(fastq1).resolve()
@@ -69,6 +70,7 @@ def run(
         downsample=downsample,
         coverage=coverage,
         seed=seed,
+        genomesize=genomesize,
     )
     success = snakemake(
         snakefile,
@@ -148,6 +150,14 @@ def get_parser(exit_on_error=True):
         help="seed for the random number generator used for downsampling; by default the seed is chosen randomly",
     )
     parser.add_argument(
+        "-g",
+        "--genome-size",
+        type=int,
+        metavar="G",
+        default=0,
+        help="provide known genome size in base pairs (bp); by default, G=0",
+    )
+    parser.add_argument(
         "--init",
         action=InitAction,
         nargs=0,
@@ -172,4 +182,5 @@ def main(args=None):
         downsample=args.downsample,
         coverage=args.coverage,
         seed=args.seed,
+        genomesize=args.genome_size,
     )

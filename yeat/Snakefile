@@ -85,7 +85,8 @@ rule downsample:
     params:
         coverage=config["coverage"],
         downsample=config["downsample"],
-        fastp_report="seq/fastp/fastp.json"
+        fastp_report="seq/fastp/fastp.json",
+        seed=config["seed"]
     run:
         if params.downsample == -1:
             p = Path("seq/downsample")
@@ -105,7 +106,10 @@ rule downsample:
             down = int((genome_size * params.coverage) / (2 * avg_read_length))
         else:
             down = params.downsample
-        seed = randint(1, 2**16-1)
+        if params.seed == None:
+            seed = randint(1, 2**16-1)
+        else:
+            seed = params.seed
         print(f"[yeat] average read length: {avg_read_length}")
         print(f"[yeat] target depth of coverage: {params.coverage}x")
         print(f"[yeat] number of reads to sample: {down}")

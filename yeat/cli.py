@@ -46,6 +46,7 @@ def run(
     dryrun="dry",
     downsample=0,
     coverage=150,
+    seed=None,
 ):
     snakefile = resource_filename("yeat", "Snakefile")
     r1 = Path(fastq1).resolve()
@@ -67,6 +68,7 @@ def run(
         dryrun=dryrun,
         downsample=downsample,
         coverage=coverage,
+        seed=seed,
     )
     success = snakemake(
         snakefile,
@@ -139,6 +141,13 @@ def get_parser(exit_on_error=True):
         help="target an average depth of coverage Cx when auto-downsampling; by default, C=150",
     )
     parser.add_argument(
+        "--seed",
+        type=int,
+        metavar="S",
+        default=None,
+        help="seed for the random number generator used for downsampling; by default the seed is chosen randomly",
+    )
+    parser.add_argument(
         "--init",
         action=InitAction,
         nargs=0,
@@ -162,4 +171,5 @@ def main(args=None):
         dryrun=args.dry_run,
         downsample=args.downsample,
         coverage=args.coverage,
+        seed=args.seed,
     )

@@ -12,6 +12,7 @@ import json
 import pandas as pd
 from pathlib import Path
 import pytest
+from random import randint
 from yeat import cli
 from yeat.cli import InitAction
 from yeat.tests import data_file
@@ -94,7 +95,7 @@ def test_unicycler(capsys, tmp_path):
 @pytest.mark.long
 @pytest.mark.parametrize(
     "downsample,num_contigs,largest_contig,total_len",
-    [("2000", 71, 5120, 69189), ("-1", 56, 35168, 199940)],
+    [("2000", 79, 5294, 70818), ("-1", 56, 35168, 199940)],
 )
 def test_custom_downsample_input(
     downsample, num_contigs, largest_contig, total_len, capsys, tmp_path
@@ -108,6 +109,8 @@ def test_custom_downsample_input(
         wd,
         "-d",
         downsample,
+        "--seed",
+        "0",
     ]
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
@@ -161,6 +164,34 @@ def test_custom_coverage_input(coverage, capsys, tmp_path):
     cli.main(args)
     quast_report = Path(wd).resolve() / "analysis" / "quast" / "megahit" / "report.tsv"
     df = pd.read_csv(quast_report, sep="\t")
-    assert df.iloc[12]["sample_contigs"] == 56  # num_contigs
-    assert df.iloc[13]["sample_contigs"] == 35168  # largest_contig
-    assert df.iloc[14]["sample_contigs"] == 199940  # total_len
+    num_contigs = df.iloc[12]["sample_contigs"]
+    assert num_contigs == 56
+    largest_contig = df.iloc[13]["sample_contigs"]
+    assert largest_contig == 35168
+    total_len = df.iloc[14]["sample_contigs"]
+    assert total_len == 199940
+
+
+@pytest.mark.long
+@pytest.mark.parametrize("execution_number", range(3))
+def test_random_downsample_seed(execution_number, capsys, tmp_path):
+    wd = str(tmp_path)
+    arglist = [
+        data_file("megahit.cfg"),
+        data_file("short_reads_1.fastq.gz"),
+        data_file("short_reads_2.fastq.gz"),
+        "--outdir",
+        wd,
+        "-d",
+        "2000",
+    ]
+    args = cli.get_parser().parse_args(arglist)
+    cli.main(args)
+    quast_report = Path(wd).resolve() / "analysis" / "quast" / "megahit" / "report.tsv"
+    df = pd.read_csv(quast_report, sep="\t")
+    num_contigs = df.iloc[12]["sample_contigs"]
+    assert num_contigs == pytest.approx(76, abs=15)  # 76 +/- 20%
+    largest_contig = df.iloc[13]["sample_contigs"]
+    assert largest_contig == pytest.approx(5228, abs=1045)  # 5228 +/- 20%
+    total_len = df.iloc[14]["sample_contigs"]
+    assert total_len == pytest.approx(74393, abs=14878)  # 74393 +/- 20%

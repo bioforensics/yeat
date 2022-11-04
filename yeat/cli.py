@@ -146,7 +146,7 @@ def get_parser(exit_on_error=True):
         type=int,
         metavar="G",
         default=0,
-        help="genome size; by default, G=0",
+        help="provide known genome size in base pairs (bp); by default, G=0",
     )
     parser.add_argument(
         "--init",

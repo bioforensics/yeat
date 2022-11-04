@@ -45,7 +45,7 @@ setup(
     ],
     zip_safe=True,
     keywords='genome assembly',
-    python_requires='>=3.7',
+    python_requires='>=3.9',
     project_urls={
         'Bug Reports': 'https://github.com/bioforensics/yeat/issues',
         'Source': 'https://github.com/bioforensics/yeat',

@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Commands to run a short or long test suite (#20)
 - Custom downsampling flag (#21)
 - Custom coverage flag (#23)
+- Custom seed flag (#29)
+- 3.9 Python version pin for `exit_on_error` parameter and 3.10's incompatibility with SPAdes <v3.15.4 (#23, #29)
 - Custom genome size flag (#30)
 
 

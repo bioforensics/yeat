@@ -46,6 +46,7 @@ def run(
     dryrun="dry",
     downsample=0,
     coverage=150,
+    seed=None,
     genomesize=0,
 ):
     snakefile = resource_filename("yeat", "Snakefile")
@@ -68,6 +69,7 @@ def run(
         dryrun=dryrun,
         downsample=downsample,
         coverage=coverage,
+        seed=seed,
         genomesize=genomesize,
     )
     success = snakemake(
@@ -141,6 +143,13 @@ def get_parser(exit_on_error=True):
         help="target an average depth of coverage Cx when auto-downsampling; by default, C=150",
     )
     parser.add_argument(
+        "--seed",
+        type=int,
+        metavar="S",
+        default=None,
+        help="seed for the random number generator used for downsampling; by default the seed is chosen randomly",
+    )
+    parser.add_argument(
         "-g",
         "--genome-size",
         type=int,
@@ -172,5 +181,6 @@ def main(args=None):
         dryrun=args.dry_run,
         downsample=args.downsample,
         coverage=args.coverage,
+        seed=args.seed,
         genomesize=args.genome_size,
     )

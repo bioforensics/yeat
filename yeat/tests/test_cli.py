@@ -190,8 +190,8 @@ def test_random_downsample_seed(execution_number, capsys, tmp_path):
     quast_report = Path(wd).resolve() / "analysis" / "quast" / "megahit" / "report.tsv"
     df = pd.read_csv(quast_report, sep="\t")
     num_contigs = df.iloc[12]["sample_contigs"]
-    assert num_contigs == pytest.approx(76, abs=15)
+    assert num_contigs == pytest.approx(76, abs=15)  # +/- 20%
     largest_contig = df.iloc[13]["sample_contigs"]
-    assert largest_contig == pytest.approx(5228, abs=1045)
+    assert largest_contig == pytest.approx(5228, abs=1045)  # +/- 20%
     total_len = df.iloc[14]["sample_contigs"]
-    assert total_len == pytest.approx(74393, abs=14878)
+    assert total_len == pytest.approx(74393, abs=14878)  # +/- 20%

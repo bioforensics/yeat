@@ -145,7 +145,7 @@ def get_parser(exit_on_error=True):
         type=int,
         metavar="S",
         default=None,
-        help="override the randomly chosen seed S when downsampling; by default, S=None",
+        help="seed for the random number generator used for downsampling; by default the seed is chosen randomly",
     )
     parser.add_argument(
         "--init",

@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom downsampling flag (#21)
 - Custom coverage flag (#23)
 - Custom seed flag (#29)
+- Pinned required Python version to 3.9 for `exit_on_error` parameter and 3.10's incompatibility with SPAdes <v3.15.4 (#23, #29)
 
 
 ## [0.1] 2021-12-01

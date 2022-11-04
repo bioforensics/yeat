@@ -164,9 +164,12 @@ def test_custom_coverage_input(coverage, capsys, tmp_path):
     cli.main(args)
     quast_report = Path(wd).resolve() / "analysis" / "quast" / "megahit" / "report.tsv"
     df = pd.read_csv(quast_report, sep="\t")
-    assert df.iloc[12]["sample_contigs"] == 56  # num_contigs
-    assert df.iloc[13]["sample_contigs"] == 35168  # largest_contig
-    assert df.iloc[14]["sample_contigs"] == 199940  # total_len
+    num_contigs = df.iloc[12]["sample_contigs"]
+    assert num_contigs == 56
+    largest_contig = df.iloc[13]["sample_contigs"]
+    assert largest_contig == 35168
+    total_len = df.iloc[14]["sample_contigs"]
+    assert total_len == 199940
 
 
 @pytest.mark.long
@@ -186,6 +189,9 @@ def test_random_downsample_seed(execution_number, capsys, tmp_path):
     cli.main(args)
     quast_report = Path(wd).resolve() / "analysis" / "quast" / "megahit" / "report.tsv"
     df = pd.read_csv(quast_report, sep="\t")
-    assert 61 <= df.iloc[12]["sample_contigs"] <= 91  # 76 +-20% of avg num_contigs
-    assert 4183 <= df.iloc[13]["sample_contigs"] <= 6273  # 5228 +-20% of avg largest_contig
-    assert 59515 <= df.iloc[14]["sample_contigs"] <= 89271  # 74393 +-20% of avg total_len
+    num_contigs = df.iloc[12]["sample_contigs"]
+    assert num_contigs == pytest.approx(76, abs=15)
+    largest_contig = df.iloc[13]["sample_contigs"]
+    assert largest_contig == pytest.approx(5228, abs=1045)
+    total_len = df.iloc[14]["sample_contigs"]
+    assert total_len == pytest.approx(74393, abs=14878)

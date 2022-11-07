@@ -12,7 +12,9 @@ import json
 import pandas as pd
 from pathlib import Path
 import pytest
+import re
 from random import randint
+import subprocess
 from yeat import cli
 from yeat.cli import InitAction
 from yeat.tests import data_file
@@ -195,3 +197,32 @@ def test_random_downsample_seed(execution_number, capsys, tmp_path):
     assert largest_contig == pytest.approx(5228, abs=1045)  # 5228 +/- 20%
     total_len = df.iloc[14]["sample_contigs"]
     assert total_len == pytest.approx(74393, abs=14878)  # 74393 +/- 20%
+
+
+@pytest.mark.long
+@pytest.mark.parametrize(
+    "inread1,inread2",
+    [
+        ("short_reads_1.fastq", "short_reads_2.fastq"),
+        # ("short_reads_1.fastq.gz", "short_reads_2.fastq"),
+    ],
+)
+def test_uncompressed_input_reads(inread1, inread2, capsys, tmp_path):
+    wd = str(tmp_path)
+    arglist = [
+        data_file("megahit.cfg"),
+        data_file(inread1),
+        data_file(inread2),
+        "--outdir",
+        wd,
+    ]
+    args = cli.get_parser().parse_args(arglist)
+    cli.main(args)
+    outread1 = Path(wd).resolve() / "seq" / "input" / "sample_R1.fq.gz"
+    outread2 = Path(wd).resolve() / "seq" / "input" / "sample_R2.fq.gz"
+    assert outread1.exists()
+    assert outread2.exists()
+    subprocess.run(["gzip", "-tv", outread1, outread2])
+    captured = capsys.readouterr()
+    assert re.match(r"seq\/input\/sample_R1.fq.gz:\s*OK", captured.err)
+    assert re.match(r"seq\/input\/sample_R2.fq.gz:\s*OK", captured.err)

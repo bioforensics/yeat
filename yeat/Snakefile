@@ -38,9 +38,8 @@ rule copyinput:
             copyfile(input.read1, output.read1)
             shell("gzip {input.read2} > {output.read2}")
         else:
-            copyfile(input.read1, params.file1)
-            copyfile(input.read2, params.file2)
-            shell("gzip seq/input/*")
+            shell("gzip {input.read1} > {output.read1}")
+            shell("gzip {input.read2} > {output.read2}")
 
 
 rule fastqc:

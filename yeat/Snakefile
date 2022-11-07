@@ -35,13 +35,11 @@ rule copyinput:
             copyfile(input.read1, output.read1)
             copyfile(input.read2, output.read2)
         elif input.read1[-3:] != ".gz" and input.read2[-3:] == ".gz":
-            copyfile(input.read1, params.file1)
+            shell("gzip {input.read1} > {params.file1}")
             copyfile(input.read2, output.read2)
-            shell("gzip {params.file1}")
         elif input.read1[-3:] == ".gz" and input.read2[-3:] != ".gz":
             copyfile(input.read1, output.read1)
-            copyfile(input.read2, params.file2)
-            shell("gzip {params.file2}")
+            shell("gzip {input.read2} > {params.file2}")
         else:
             copyfile(input.read1, params.file1)
             copyfile(input.read2, params.file2)

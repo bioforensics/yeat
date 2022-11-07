@@ -27,9 +27,25 @@ rule copyinput:
     input:
         read1=config["read1"],
         read2=config["read2"]
+    params:
+        file1="seq/input/{sample}_R1.fq",
+        file2="seq/input/{sample}_R2.fq"
     run:
-        copyfile(input.read1, output.read1)
-        copyfile(input.read2, output.read2)
+        if input.read1[-3:] == ".gz" and input.read2[-3:] == ".gz":
+            copyfile(input.read1, output.read1)
+            copyfile(input.read2, output.read2)
+        elif input.read1[-3:] != ".gz" and input.read2[-3:] == ".gz":
+            copyfile(input.read1, params.file1)
+            copyfile(input.read2, output.read2)
+            shell("gzip {params.file1}")
+        elif input.read1[-3:] == ".gz" and input.read2[-3:] != ".gz":
+            copyfile(input.read1, output.read1)
+            copyfile(input.read2, params.file2)
+            shell("gzip {params.file2}")
+        else:
+            copyfile(input.read1, params.file1)
+            copyfile(input.read2, params.file2)
+            shell("gzip seq/input/*")
 
 
 rule fastqc:

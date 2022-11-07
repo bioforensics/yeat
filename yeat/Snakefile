@@ -32,14 +32,14 @@ rule copyinput:
             copyfile(input.read1, output.read1)
             copyfile(input.read2, output.read2)
         elif input.read1[-3:] != ".gz" and input.read2[-3:] == ".gz":
-            shell("gzip {input.read1} > {output.read1}")
+            shell("gzip -c {input.read1} > {output.read1}")
             copyfile(input.read2, output.read2)
         elif input.read1[-3:] == ".gz" and input.read2[-3:] != ".gz":
             copyfile(input.read1, output.read1)
-            shell("gzip {input.read2} > {output.read2}")
+            shell("gzip -c {input.read2} > {output.read2}")
         else:
-            shell("gzip {input.read1} > {output.read1}")
-            shell("gzip {input.read2} > {output.read2}")
+            shell("gzip -c {input.read1} > {output.read1}")
+            shell("gzip -c {input.read2} > {output.read2}")
 
 
 rule fastqc:

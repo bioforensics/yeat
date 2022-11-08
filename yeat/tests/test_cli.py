@@ -12,7 +12,8 @@ import json
 import pandas as pd
 from pathlib import Path
 import pytest
-from random import randint
+import re
+import subprocess
 from yeat import cli
 from yeat.cli import InitAction
 from yeat.tests import data_file
@@ -195,3 +196,46 @@ def test_random_downsample_seed(execution_number, capsys, tmp_path):
     assert largest_contig == pytest.approx(5228, abs=1045)  # 5228 +/- 20%
     total_len = df.iloc[14]["sample_contigs"]
     assert total_len == pytest.approx(74393, abs=14878)  # 74393 +/- 20%
+
+
+def prep_uncompressed_reads(filename, tmp_path):
+    if filename.endswith(".gz"):
+        return data_file(filename)
+    datadir = tmp_path / "data"
+    datadir.mkdir(parents=True, exist_ok=True)
+    gzfile = data_file(f"{filename}.gz")
+    ungzfile = datadir / filename
+    with open(ungzfile, "w") as fh:
+        subprocess.run(["gunzip", "-c", gzfile], stdout=fh)
+    return str(ungzfile)
+
+
+@pytest.mark.long
+@pytest.mark.parametrize(
+    "inread1,inread2",
+    [
+        ("short_reads_1.fastq", "short_reads_2.fastq"),
+        ("short_reads_1.fastq.gz", "short_reads_2.fastq"),
+    ],
+)
+def test_uncompressed_input_reads(inread1, inread2, capfd, tmp_path):
+    wd = tmp_path / "wd"
+    inread1 = prep_uncompressed_reads(inread1, tmp_path)
+    inread2 = prep_uncompressed_reads(inread2, tmp_path)
+    arglist = [
+        data_file("megahit.cfg"),
+        inread1,
+        inread2,
+        "--outdir",
+        str(wd),
+    ]
+    args = cli.get_parser().parse_args(arglist)
+    cli.main(args)
+    outread1 = wd / "seq" / "input" / "sample_R1.fq.gz"
+    outread2 = wd / "seq" / "input" / "sample_R2.fq.gz"
+    assert outread1.exists()
+    assert outread2.exists()
+    subprocess.run(["gzip", "-tv", outread1, outread2])
+    captured = capfd.readouterr()
+    assert re.search(r"seq/input/sample_R1.fq.gz:\s*OK", captured.err)
+    assert re.search(r"seq/input/sample_R2.fq.gz:\s*OK", captured.err)

@@ -28,8 +28,11 @@ rule copyinput:
         read1=config["read1"],
         read2=config["read2"]
     run:
-        copyfile(input.read1, output.read1)
-        copyfile(input.read2, output.read2)
+        for inreads, outreads in zip(input, output):
+            if inreads.endswith(".gz"):
+                copyfile(inreads, outreads)
+            else:
+                shell(f"gzip -c {inreads} > {outreads}")
 
 
 rule fastqc:

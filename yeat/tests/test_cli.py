@@ -13,7 +13,6 @@ import pandas as pd
 from pathlib import Path
 import pytest
 import re
-from random import randint
 import subprocess
 from yeat import cli
 from yeat.cli import InitAction
@@ -204,10 +203,10 @@ def test_random_downsample_seed(execution_number, capsys, tmp_path):
     "inread1,inread2",
     [
         ("short_reads_1.fastq", "short_reads_2.fastq"),
-        # ("short_reads_1.fastq.gz", "short_reads_2.fastq"),
+        ("short_reads_1.fastq.gz", "short_reads_2.fastq"),
     ],
 )
-def test_uncompressed_input_reads(inread1, inread2, capsys, tmp_path):
+def test_uncompressed_input_reads(inread1, inread2, capfd, tmp_path):
     wd = str(tmp_path)
     arglist = [
         data_file("megahit.cfg"),
@@ -223,6 +222,6 @@ def test_uncompressed_input_reads(inread1, inread2, capsys, tmp_path):
     assert outread1.exists()
     assert outread2.exists()
     subprocess.run(["gzip", "-tv", outread1, outread2])
-    captured = capsys.readouterr()
-    assert re.match(r"seq\/input\/sample_R1.fq.gz:\s*OK", captured.err)
-    assert re.match(r"seq\/input\/sample_R2.fq.gz:\s*OK", captured.err)
+    captured = capfd.readouterr()
+    assert re.search(r"seq\/input\/sample_R1.fq.gz:\s*OK", captured.err)
+    assert re.search(r"seq\/input\/sample_R2.fq.gz:\s*OK", captured.err)

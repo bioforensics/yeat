@@ -6,3 +6,4 @@ branch = True
 omit = 
     */yeat/_version.py
     */yeat/Snakefile
+    */yeat/tests/*

@@ -7,8 +7,8 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from argparse import Action, ArgumentParser, ArgumentTypeError
 from .bandage import bandage
+from argparse import Action, ArgumentParser, ArgumentTypeError
 import json
 from pathlib import Path
 from pkg_resources import resource_filename

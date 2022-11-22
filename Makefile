@@ -1,5 +1,6 @@
 SHELL = bash
 PYFILES = $(shell ls yeat/*.py yeat/*/*.py)
+OS = $(shell uname)
 
 ## #===== development tasks =====#
 
@@ -26,6 +27,16 @@ style:
 ## format:      autoformat Python code
 format:
 	black --line-length=99 $(PYFILES)
+
+## bandage:     unpack Bandage to enable assembly graphs visualizations
+bandage:
+	@if [[ "$(OS)" == "Linux" ]]; then \
+		yes A | unzip yeat/data/Bandage_Ubuntu_dynamic_v0_8_1.zip -d ~/Bandage; \
+	elif [[ "$(OS)" == "Darwin" ]]; then \
+		yes A | unzip yeat/data/Bandage_Mac_v0_8_1.zip -d ~/Bandage; \
+	else \
+		echo "yeat does not support Bandage for: $(OS)"; \
+	fi
 
 ## hooks:       deploy git pre-commit hooks for development
 hooks:

@@ -8,6 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 from argparse import Action, ArgumentParser, ArgumentTypeError
+from .bandage import bandage
 import json
 from pathlib import Path
 from pkg_resources import resource_filename
@@ -63,10 +64,7 @@ def run(
         read2=r2,
         assemblers=assemblers,
         extra_args=extra_args,
-        outdir=outdir,
-        cores=cores,
         sample=sample,
-        dryrun=dryrun,
         downsample=downsample,
         coverage=coverage,
         seed=seed,
@@ -184,3 +182,4 @@ def main(args=None):
         seed=args.seed,
         genomesize=args.genome_size,
     )
+    bandage.run_bandage(assembly_configs=assembly_configs, outdir=args.outdir, cores=args.threads)

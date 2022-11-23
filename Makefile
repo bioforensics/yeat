@@ -32,6 +32,8 @@ format:
 bandage:
 	@if [[ "$(OS)" == "Linux" ]]; then \
 		yes A | unzip yeat/data/Bandage_Ubuntu_dynamic_v0_8_1.zip -d ~/Bandage; \
+		sudo apt install build-essential git libgl1-mesa-dev libxcb-xinerama0; \
+		sudo apt-get install libqt5gui5; \
 	elif [[ "$(OS)" == "Darwin" ]]; then \
 		yes A | unzip yeat/data/Bandage_Mac_v0_8_1.zip -d ~/Bandage; \
 	else \

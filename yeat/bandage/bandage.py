@@ -15,7 +15,7 @@ import warnings
 
 
 bandage = {
-    "Linux": Path("~/Bandage/Bandage.sh").expanduser(),
+    "Linux": Path("~/Bandage/Bandage").expanduser(),
     "macOS": Path("~/Bandage/Bandage.app/Contents/MacOS/Bandage").expanduser(),
 }
 

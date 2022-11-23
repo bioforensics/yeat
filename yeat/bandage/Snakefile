@@ -7,6 +7,8 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+from glob import glob
+import os
 from pathlib import Path
 import re
 
@@ -60,16 +62,17 @@ rule megahit:
         shell("touch {output[0]}")
 
 
+def get_unicycler_graphic_files(wildcards):
+    glob_pattern = os.path.join('analysis/unicycler', '*.gfa')
+    files = sorted(glob(glob_pattern), key=os.path.getctime)
+    return files
+
+
 rule unicycler:
     output:
         "analysis/bandage/unicycler/.done"
     input:
-        "analysis/unicycler/001_best_spades_graph.gfa",
-        "analysis/unicycler/002_overlaps_removed.gfa",
-        "analysis/unicycler/003_bridges_applied.gfa",
-        "analysis/unicycler/004_final_clean.gfa",
-        "analysis/unicycler/005_polished.gfa",
-        "analysis/unicycler/assembly.gfa"
+        get_unicycler_graphic_files
     params:
         bandage=config["bandage"]
     run:

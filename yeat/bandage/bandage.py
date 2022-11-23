@@ -48,7 +48,6 @@ def run_bandage(assembly_configs, outdir=".", cores=1):
         snakefile,
         config=config,
         cores=cores,
-        dryrun=False,
         printshellcmds=True,
         workdir=outdir,
     )

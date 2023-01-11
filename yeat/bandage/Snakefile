@@ -26,12 +26,10 @@ rule spades:
         "analysis/spades/assembly_graph_with_scaffolds.gfa",
         "analysis/spades/assembly_graph.fastg",
         "analysis/spades/strain_graph.gfa"
-    params:
-        bandage=config["bandage"]
     run:
         for gfa in input:
             filename = Path(gfa).stem
-            shell("{params.bandage} image {gfa} analysis/bandage/spades/{filename}.jpg")
+            shell("Bandage image {gfa} analysis/bandage/spades/{filename}.jpg")
         shell("touch {output[0]}")
 
 
@@ -47,8 +45,6 @@ rule megahit:
         "analysis/megahit/intermediate_contigs/k99.contigs.fa",
         "analysis/megahit/intermediate_contigs/k119.contigs.fa",
         "analysis/megahit/intermediate_contigs/k141.contigs.fa"
-    params:
-        bandage=config["bandage"]
     run:
         fastg_files = []
         for fa in input:
@@ -58,7 +54,7 @@ rule megahit:
             shell("megahit_toolkit contig2fastg {kmer} {fa} > analysis/megahit/intermediate_contigs/{filename}.fastg")
         for fastg in fastg_files:
             filename = Path(fastg).stem
-            shell("{params.bandage} image {fastg} analysis/bandage/megahit/{filename}.jpg")
+            shell("Bandage image {fastg} analysis/bandage/megahit/{filename}.jpg")
         shell("touch {output[0]}")
 
 
@@ -73,10 +69,8 @@ rule unicycler:
         "analysis/bandage/unicycler/.done"
     input:
         get_unicycler_graphic_files
-    params:
-        bandage=config["bandage"]
-    run:
+    run:x
         for gfa in input:
             filename = Path(gfa).stem
-            shell("{params.bandage} image {gfa} analysis/bandage/unicycler/{filename}.jpg")
+            shell("Bandage image {gfa} analysis/bandage/unicycler/{filename}.jpg")
         shell("touch {output[0]}")

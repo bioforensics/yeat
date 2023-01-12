@@ -183,4 +183,6 @@ def main(args=None):
         genomesize=args.genome_size,
     )
     if not args.dry_run:
-        bandage.run_bandage(assembly_configs=assembly_configs, outdir=args.outdir, cores=args.threads)
+        bandage.run_bandage(
+            assembly_configs=assembly_configs, outdir=args.outdir, cores=args.threads
+        )

@@ -20,12 +20,12 @@ If the pre-built binary files are used, users will need to update their environm
 
 Example for Ubuntu:
 ```
-export PATH=~/Bandage_Ubuntu_dynamic_v0_8_1:$PATH
+export PATH={BANDAGE_DIR}:$PATH
 ```
 
 Example for MacOS:
 ```
-export PATH=~/Bandage_Mac_v0_8_1/Bandage.app/Contents/MacOS:$PATH
+export PATH={BANDAGE_DIR}/Bandage.app/Contents/MacOS:$PATH
 ```
 
 In order to run the pre-built binary files successfully, ensure that the binary file is kept in the same directory with all of the other files that came with it.

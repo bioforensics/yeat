@@ -14,7 +14,11 @@ import warnings
 
 
 def check_bandage():
-    completed_process = subprocess.run(["Bandage", "--help"], capture_output=True, text=True)
+    try:
+        completed_process = subprocess.run(["Bandage", "--help"], capture_output=True, text=True)
+    except Exception as exception:
+        print(f"{type(exception).__name__}: {exception}")
+        return False
     if completed_process.returncode == 1:
         print(completed_process.stderr)
         return False

@@ -46,29 +46,21 @@ rule megahit:
         "analysis/megahit/intermediate_contigs/k119.contigs.fa",
         "analysis/megahit/intermediate_contigs/k141.contigs.fa"
     run:
-        fastg_files = []
         for fa in input:
             kmer = re.findall(r'\d+', fa)[0]
             filename = Path(fa).stem
-            fastg_files.append(f"analysis/megahit/intermediate_contigs/{filename}.fastg")
-            shell("megahit_toolkit contig2fastg {kmer} {fa} > analysis/megahit/intermediate_contigs/{filename}.fastg")
-        for fastg in fastg_files:
-            filename = Path(fastg).stem
-            shell("Bandage image {fastg} analysis/bandage/megahit/{filename}.jpg")
+            fastg = f"analysis/megahit/intermediate_contigs/{filename}.fastg"
+            shell("megahit_toolkit contig2fastg {kmer} {fa} > {fastg}")
+            jpg = f"analysis/bandage/megahit/{filename}.jpg"
+            shell("Bandage image {fastg} {jpg}")
         shell("touch {output[0]}")
-
-
-def get_unicycler_graphic_files(wildcards):
-    glob_pattern = os.path.join('analysis/unicycler', '*.gfa')
-    files = sorted(glob(glob_pattern), key=os.path.getctime)
-    return files
 
 
 rule unicycler:
     output:
         "analysis/bandage/unicycler/.done"
     input:
-        get_unicycler_graphic_files
+        glob("analysis/unicycler/*.gfa")
     run:
         for gfa in input:
             filename = Path(gfa).stem

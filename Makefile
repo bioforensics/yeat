@@ -9,15 +9,19 @@ help: Makefile
 
 ## test:        run automated test suite
 test:
-	pytest --cov=yeat -m 'not long'
+	pytest --cov=yeat -m 'not long and not bandage'
 
 ## testlong:    run only long-running automated tests
 testlong:
-	pytest --cov=yeat -m long
+	pytest --cov=yeat -m 'long and not bandage'
 
-## testall:     run all tests
+## testbandage: run only bandage required automated tests
+testbandage:
+	pytest --cov=yeat -m bandage
+
+## testall:     run all tests but bandage required tests
 testall:
-	pytest --cov=yeat
+	pytest --cov=yeat -m 'not bandage'
 
 ## style:       check code style vs Black
 style:

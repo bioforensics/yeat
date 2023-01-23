@@ -166,6 +166,7 @@ rule unicycler:
     input:
         read1="seq/downsample/{sample}.R1.fq.gz",
         read2="seq/downsample/{sample}.R2.fq.gz"
+    threads: 128
     params:
         extra_args=config["extra_args"]
     shell:

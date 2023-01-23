@@ -1,0 +1,64 @@
+# -------------------------------------------------------------------------------------------------
+# Copyright (c) 2022, DHS. This file is part of YEAT: http://github.com/bioforensics/yeat
+#
+# This software was prepared for the Department of Homeland Security (DHS) by the Battelle National
+# Biodefense Institute, LLC (BNBI) as part of contract HSHQDC-15-C-00064 to manage and operate the
+# National Biodefense Analysis and Countermeasures Center (NBACC), a Federally Funded Research and
+# Development Center.
+# -------------------------------------------------------------------------------------------------
+
+from glob import glob
+from pathlib import Path
+import re
+
+
+rule all:
+    input:
+        expand("analysis/bandage/{assembler}/.done", assembler=config["assemblers"])
+
+
+rule spades:
+    output:
+        "analysis/bandage/spades/.done"
+    input:
+        glob("analysis/spades/*.gfa"),
+        glob("analysis/spades/*.fastg")
+    run:
+        for gfa in input:
+            filename = Path(gfa).stem
+            shell("Bandage image {gfa} analysis/bandage/spades/{filename}.jpg")
+        shell("touch {output[0]}")
+
+
+def get_and_filter_contig_files():
+    pattern = r"analysis/megahit/intermediate_contigs/k\d+.contigs.fa"
+    contigs = glob(r"analysis/megahit/intermediate_contigs/k*.contigs.fa")
+    return filter(re.compile(pattern).match, contigs)
+
+
+rule megahit:
+    output:
+        "analysis/bandage/megahit/.done"
+    input:
+        get_and_filter_contig_files()
+    run:
+        for fa in input:
+            kmer = re.findall(r'\d+', fa)[0]
+            filename = Path(fa).stem
+            fastg = f"analysis/megahit/intermediate_contigs/{filename}.fastg"
+            shell("megahit_toolkit contig2fastg {kmer} {fa} > {fastg}")
+            jpg = f"analysis/bandage/megahit/{filename}.jpg"
+            shell("Bandage image {fastg} {jpg}")
+        shell("touch {output[0]}")
+
+
+rule unicycler:
+    output:
+        "analysis/bandage/unicycler/.done"
+    input:
+        glob("analysis/unicycler/*.gfa")
+    run:
+        for gfa in input:
+            filename = Path(gfa).stem
+            shell("Bandage image {gfa} analysis/bandage/unicycler/{filename}.jpg")
+        shell("touch {output[0]}")

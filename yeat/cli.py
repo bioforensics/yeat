@@ -7,6 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+from .bandage import bandage
 from argparse import Action, ArgumentParser, ArgumentTypeError
 import json
 from pathlib import Path
@@ -63,10 +64,7 @@ def run(
         read2=r2,
         assemblers=assemblers,
         extra_args=extra_args,
-        outdir=outdir,
-        cores=cores,
         sample=sample,
-        dryrun=dryrun,
         downsample=downsample,
         coverage=coverage,
         seed=seed,
@@ -184,3 +182,7 @@ def main(args=None):
         seed=args.seed,
         genomesize=args.genome_size,
     )
+    if not args.dry_run:
+        bandage.run_bandage(
+            assembly_configs=assembly_configs, outdir=args.outdir, cores=args.threads
+        )

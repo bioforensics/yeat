@@ -8,7 +8,6 @@
 # -------------------------------------------------------------------------------------------------
 
 from glob import glob
-import os
 from pathlib import Path
 import re
 
@@ -22,10 +21,8 @@ rule spades:
     output:
         "analysis/bandage/spades/.done"
     input:
-        "analysis/spades/assembly_graph_after_simplification.gfa",
-        "analysis/spades/assembly_graph_with_scaffolds.gfa",
-        "analysis/spades/assembly_graph.fastg",
-        "analysis/spades/strain_graph.gfa"
+        glob("analysis/spades/*.gfa"),
+        glob("analysis/spades/*.fastg")
     run:
         for gfa in input:
             filename = Path(gfa).stem
@@ -33,18 +30,17 @@ rule spades:
         shell("touch {output[0]}")
 
 
+def get_and_filter_contig_files():
+    pattern = r"analysis/megahit/intermediate_contigs/k\d+.contigs.fa"
+    contigs = glob(r"analysis/megahit/intermediate_contigs/k*.contigs.fa")
+    return filter(re.compile(pattern).match, contigs)
+
+
 rule megahit:
     output:
         "analysis/bandage/megahit/.done"
     input:
-        "analysis/megahit/intermediate_contigs/k21.contigs.fa",
-        "analysis/megahit/intermediate_contigs/k29.contigs.fa",
-        "analysis/megahit/intermediate_contigs/k39.contigs.fa",
-        "analysis/megahit/intermediate_contigs/k59.contigs.fa",
-        "analysis/megahit/intermediate_contigs/k79.contigs.fa",
-        "analysis/megahit/intermediate_contigs/k99.contigs.fa",
-        "analysis/megahit/intermediate_contigs/k119.contigs.fa",
-        "analysis/megahit/intermediate_contigs/k141.contigs.fa"
+        get_and_filter_contig_files()
     run:
         for fa in input:
             kmer = re.findall(r'\d+', fa)[0]

@@ -8,6 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 from . import cli
+from .cli import *
 from .config import AssemblerConfig
 from yeat.bandage import bandage
 from yeat.workflows import run_workflow

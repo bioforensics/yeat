@@ -8,10 +8,13 @@
 # -------------------------------------------------------------------------------------------------
 
 from . import short, long
+from .config import AssemblerConfig
 from argparse import Action, ArgumentParser
 import json
 import sys
 import yeat
+from yeat.bandage import bandage
+from yeat.workflows import workflows
 
 
 CONFIG_TEMPLATE = [
@@ -78,6 +81,16 @@ def get_parser(exit_on_error=True):
     subparsers = parser.add_subparsers(dest="readtype", required=True, help="read type")
     short.cli(subparsers)
     long.cli(subparsers)
-    # hybrid.cli()
     parser.add_argument("config", type=str, help="config file")
     return parser
+
+
+def main(args=None):
+    if args is None:
+        args = get_parser().parse_args()
+    assembly_configs = AssemblerConfig.parse_json(open(args.config))
+    workflows.run_workflow(args, assembly_configs)
+    if not args.dry_run:
+        bandage.run_bandage(
+            assembly_configs=assembly_configs, outdir=args.outdir, cores=args.threads
+        )

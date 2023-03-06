@@ -8,18 +8,17 @@
 # -------------------------------------------------------------------------------------------------
 
 from . import cli
-from .cli import *
 from .config import AssemblerConfig
 from yeat.bandage import bandage
-from yeat.workflows import run_workflow
+from yeat.workflows import workflows
 
 
 def main(args=None):
     if args is None:
         args = cli.get_parser().parse_args()
     assembly_configs = AssemblerConfig.parse_json(open(args.config))
-    run_workflow(args, assembly_configs)
-    if not args.dry_run:
-        bandage.run_bandage(
-            assembly_configs=assembly_configs, outdir=args.outdir, cores=args.threads
-        )
+    workflows.run_workflow(args, assembly_configs)
+    # if not args.dry_run:
+    #     bandage.run_bandage(
+    #         assembly_configs=assembly_configs, outdir=args.outdir, cores=args.threads
+    #     )

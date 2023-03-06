@@ -1,0 +1,51 @@
+# -------------------------------------------------------------------------------------------------
+# Copyright (c) 2023, DHS. This file is part of YEAT: http://github.com/bioforensics/yeat
+#
+# This software was prepared for the Department of Homeland Security (DHS) by the Battelle National
+# Biodefense Institute, LLC (BNBI) as part of contract HSHQDC-15-C-00064 to manage and operate the
+# National Biodefense Analysis and Countermeasures Center (NBACC), a Federally Funded Research and
+# Development Center.
+# -------------------------------------------------------------------------------------------------
+
+from shutil import copyfile
+
+
+rule all:
+    input:
+        expand("analysis/quast/{assembler}/{sample}_report.html", assembler=config["assemblers"], sample=config["sample"])
+
+
+rule copyinput:
+    output:
+        read="seq/input/{sample}.fq.gz"
+    input:
+        read=config["fastq"]
+    run:
+        if input.read.suffix == ".gz":
+            copyfile(input.read, output.read)
+        else:
+            shell(f"gzip -c {input.read} > {output.read}")
+
+
+rule flye:
+    output:
+        contigs="analysis/pacbio/{sample}_contigs.fasta"
+    input:
+        read="seq/input/{sample}.fq.gz"
+    shell:
+        """
+        flye --pacbio-raw {input.read} --out-dir analysis/pacbio/assembly.fasta --threads 4
+        ln -s assembly.fasta {output.report}
+        """
+
+
+rule quast:
+    output:
+        report="analysis/quast/{assembler}/{sample}_report.html"
+    input:
+        contigs="analysis/{assembler}/{sample}_contigs.fasta"
+    shell:
+        """
+        quast.py {input.contigs} -o analysis/quast/{wildcards.assembler}
+        ln -s report.html {output.report}
+        """

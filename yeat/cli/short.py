@@ -57,4 +57,13 @@ def options(parser):
 def cli(subparsers):
     parser_short = subparsers.add_parser("short", help="short-reads")
     options(parser_short)
-    parser_short.add_argument("reads", type=str, nargs=2, help="paired-end reads in FASTQ format")
+    mx = parser_short.add_mutually_exclusive_group(required=True)
+    mx.add_argument(
+        "--paired",
+        metavar=("READ1", "READ2"),
+        type=str,
+        nargs=2,
+        help="paired-end reads in FASTQ format",
+    )
+    # mx.add_argument("--single", metavar="READ", type=str, help="single-end reads in FASTQ format")
+    # mx.add_argument("--interleaved", metavar="READ", type=str, help="interleaved-paired-end reads in FASTQ format")

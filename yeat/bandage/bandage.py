@@ -31,12 +31,6 @@ def run_bandage(assembly_configs, outdir=".", cores=1):
         return
     config = dict(assemblers=[config.algorithm for config in assembly_configs])
     snakefile = resource_filename("yeat", "bandage/Snakefile")
-    success = snakemake(
-        snakefile,
-        config=config,
-        cores=cores,
-        printshellcmds=True,
-        workdir=outdir,
-    )
+    success = snakemake(snakefile, config=config, cores=cores, printshellcmds=True, workdir=outdir)
     if not success:
         raise RuntimeError("Snakemake Failed")

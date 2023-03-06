@@ -75,8 +75,9 @@ def options(parser):
 def get_parser(exit_on_error=True):
     parser = ArgumentParser(exit_on_error=exit_on_error)
     options(parser)
-    subparsers = parser.add_subparsers(dest="subparser", required=True, help="read lengths")
+    subparsers = parser.add_subparsers(dest="readtype", required=True, help="read type")
     short.cli(subparsers)
     long.cli(subparsers)
+    # hybrid.cli()
     parser.add_argument("config", type=str, help="config file")
     return parser

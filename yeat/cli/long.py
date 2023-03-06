@@ -10,4 +10,7 @@
 
 def cli(subparsers):
     parser_long = subparsers.add_parser("long", help="long-reads")
-    parser_long.add_argument("read", type=str, help="long read in FASTQ format")
+    mx = parser_long.add_mutually_exclusive_group(required=True)
+    mx.add_argument("--pacbio", metavar="READ", type=str, help="PacBio reads in FASTQ format")
+    # mx.add_argument("--nanopore", metavar="READ", type=str, help="Nanopore reads in FASTQ format")
+    # mx.add_argument("--sanger", metavar="READ", type=str, help="Sanger reads in FASTQ format")

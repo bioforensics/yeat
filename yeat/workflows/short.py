@@ -12,7 +12,7 @@ from pkg_resources import resource_filename
 from snakemake import snakemake
 
 
-def run(
+def run_paired(
     fastq1,
     fastq2,
     assembly_configs,
@@ -25,7 +25,7 @@ def run(
     seed=None,
     genomesize=0,
 ):
-    snakefile = resource_filename("yeat", "workflows/short/paired/Snakefile")
+    snakefile = resource_filename("yeat", "workflows/snakefiles/Paired")
     r1 = Path(fastq1).resolve()
     if not r1.is_file():
         raise FileNotFoundError(f"No such file: '{r1}'")
@@ -46,12 +46,7 @@ def run(
         genomesize=genomesize,
     )
     success = snakemake(
-        snakefile,
-        config=config,
-        cores=cores,
-        dryrun=dryrun,
-        printshellcmds=True,
-        workdir=outdir,
+        snakefile, config=config, cores=cores, dryrun=dryrun, printshellcmds=True, workdir=outdir
     )
     if not success:
         raise RuntimeError("Snakemake Failed")

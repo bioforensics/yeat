@@ -1,5 +1,5 @@
 SHELL = bash
-PYFILES = $(shell ls yeat/*.py yeat/*/*.py yeat/*/*/*.py yeat/*/*/*/*.py)
+PYFILES = $(shell ls yeat/*.py yeat/*/*.py yeat/*/*/*.py)
 # grep -R ".py" . <- doing this gets lots of random files
 
 ## #===== development tasks =====#

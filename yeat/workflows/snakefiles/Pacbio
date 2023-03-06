@@ -21,7 +21,7 @@ rule copyinput:
     input:
         read=config["fastq"]
     run:
-        if input.read.suffix == ".gz":
+        if input.read.endswith(".gz"):
             copyfile(input.read, output.read)
         else:
             shell(f"gzip -c {input.read} > {output.read}")
@@ -29,13 +29,13 @@ rule copyinput:
 
 rule flye:
     output:
-        contigs="analysis/pacbio/{sample}_contigs.fasta"
+        contigs="analysis/flye/{sample}_contigs.fasta"
     input:
         read="seq/input/{sample}.fq.gz"
     shell:
         """
-        flye --pacbio-raw {input.read} --out-dir analysis/pacbio/assembly.fasta --threads 4
-        ln -s assembly.fasta {output.report}
+        flye --pacbio-raw {input.read} --out-dir analysis/flye --threads 4
+        ln -s assembly.fasta {output.contigs}
         """
 
 

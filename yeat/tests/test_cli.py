@@ -35,7 +35,7 @@ def test_basic_dry_run(tmp_path):
         "--sample",
         "Animal_289",
         "-n",
-        "short",
+        "--paired",
         data_file("Animal_289_R1.fq.gz"),
         data_file("Animal_289_R2.fq.gz"),
         data_file("config.cfg"),
@@ -66,7 +66,7 @@ def test_multiple_assemblers(capsys, tmp_path):
     arglist = [
         "--outdir",
         wd,
-        "short",
+        "--paired",
         data_file("short_reads_1.fastq.gz"),
         data_file("short_reads_2.fastq.gz"),
         data_file("config.cfg"),
@@ -85,7 +85,7 @@ def test_unicycler(capsys, tmp_path):
     arglist = [
         "--outdir",
         wd,
-        "short",
+        "--paired",
         data_file("short_reads_1.fastq.gz"),
         data_file("short_reads_2.fastq.gz"),
         data_file("unicycler.cfg"),
@@ -108,7 +108,7 @@ def test_custom_downsample_input(
     arglist = [
         "--outdir",
         wd,
-        "short",
+        "--paired",
         data_file("short_reads_1.fastq.gz"),
         data_file("short_reads_2.fastq.gz"),
         "-d",
@@ -161,7 +161,7 @@ def test_custom_coverage_input(coverage, capsys, tmp_path):
     arglist = [
         "--outdir",
         wd,
-        "short",
+        "--paired",
         data_file("short_reads_1.fastq.gz"),
         data_file("short_reads_2.fastq.gz"),
         "-c",
@@ -187,7 +187,7 @@ def test_random_downsample_seed(execution_number, capsys, tmp_path):
     arglist = [
         "--outdir",
         wd,
-        "short",
+        "--paired",
         data_file("short_reads_1.fastq.gz"),
         data_file("short_reads_2.fastq.gz"),
         "-d",
@@ -233,7 +233,7 @@ def test_uncompressed_input_reads(inread1, inread2, capfd, tmp_path):
     arglist = [
         "--outdir",
         str(wd),
-        "short",
+        "--paired",
         inread1,
         inread2,
         data_file("megahit.cfg"),

@@ -12,7 +12,8 @@ from shutil import copyfile
 
 rule all:
     input:
-        expand("analysis/quast/{assembler}/{sample}_report.html", assembler=config["assemblers"], sample=config["sample"])
+        expand("analysis/quast/{assembler}/{sample}_report.html", assembler=config["assemblers"], sample=config["sample"]),
+        expand("seq/fastqc/{sample}_fastqc.html", sample=config["sample"])
 
 
 rule copyinput:
@@ -27,16 +28,46 @@ rule copyinput:
             shell(f"gzip -c {input.read} > {output.read}")
 
 
+rule fastqc:
+    output:
+        out="seq/fastqc/{sample}_fastqc.html"
+    input:
+        read="seq/input/{sample}.fq.gz"
+    threads: 128
+    shell:
+        """
+        fastqc {input.read} --threads {threads} -o seq/fastqc/
+        """
+
+
 rule flye:
     output:
         contigs="analysis/flye/{sample}_contigs.fasta"
     input:
         read="seq/input/{sample}.fq.gz"
+    threads: 128
+    params:
+        extra_args=config["extra_args"]
     shell:
         """
-        flye --pacbio-raw {input.read} --out-dir analysis/flye --threads 4
+        flye --pacbio-hifi {input.read} -t {threads} -o analysis/flye {params.extra_args[flye]}
         ln -s assembly.fasta {output.contigs}
         """
+
+
+rule canu:
+    output:
+        contigs="analysis/canu/{sample}_contigs.fasta"
+    input:
+        read="seq/input/{sample}.fq.gz"
+    threads: 128
+    params:
+        extra_args=config["extra_args"]
+    run:
+        if "genomeSize=" not in params.extra_args["canu"]:
+            raise ValueError("Missing required input argument from config: 'genomeSize'")
+        shell("canu -pacbio-hifi {input.read} maxThreads={threads} -p {wildcards.sample} -d analysis/canu {params.extra_args[canu]}")
+        shell("ln -s {sample}.contigs.fasta {output.contigs}")
 
 
 rule quast:

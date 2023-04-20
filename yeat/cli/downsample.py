@@ -21,7 +21,8 @@ def check_positive(value):
 
 
 def options(parser):
-    parser.add_argument(
+    short = parser.add_argument_group("downsample options")
+    short.add_argument(
         "-c",
         "--coverage",
         type=check_positive,
@@ -29,7 +30,7 @@ def options(parser):
         default=150,
         help="target an average depth of coverage Cx when auto-downsampling; by default, C=150",
     )
-    parser.add_argument(
+    short.add_argument(
         "-d",
         "--downsample",
         type=int,
@@ -37,7 +38,7 @@ def options(parser):
         default=0,
         help="randomly sample D reads from the input rather than assembling the full set; set D=0 to perform auto-downsampling to a desired level of coverage (see --coverage); set D=-1 to disable downsampling; by default D=0",
     )
-    parser.add_argument(
+    short.add_argument(
         "-g",
         "--genome-size",
         type=int,
@@ -45,25 +46,10 @@ def options(parser):
         default=0,
         help="provide known genome size in base pairs (bp); by default, G=0",
     )
-    parser.add_argument(
+    short.add_argument(
         "--seed",
         type=int,
         metavar="S",
         default=None,
         help="seed for the random number generator used for downsampling; by default the seed is chosen randomly",
     )
-
-
-def cli(subparsers):
-    parser_short = subparsers.add_parser("short", help="short-reads")
-    options(parser_short)
-    mx = parser_short.add_mutually_exclusive_group(required=True)
-    mx.add_argument(
-        "--paired",
-        metavar=("READ1", "READ2"),
-        type=str,
-        nargs=2,
-        help="paired-end reads in FASTQ format",
-    )
-    # mx.add_argument("--single", metavar="READ", type=str, help="single-end reads in FASTQ format")
-    # mx.add_argument("--interleaved", metavar="READ", type=str, help="interleaved-paired-end reads in FASTQ format")

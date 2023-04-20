@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import short, long
+from . import downsample
 from .config import AssemblerConfig
 from argparse import Action, ArgumentParser
 import json
@@ -75,12 +75,24 @@ def options(parser):
     parser.add_argument("-v", "--version", action="version", version=f"YEAT v{yeat.__version__}")
 
 
+def read_input_types(parser):
+    read_input_options = parser.add_argument_group("input read options")
+    mx = read_input_options.add_mutually_exclusive_group(required=True)
+    mx.add_argument(
+        "--paired",
+        metavar=("READ1", "READ2"),
+        type=str,
+        nargs=2,
+        help="paired-end reads in FASTQ format",
+    )
+    mx.add_argument("--pacbio", metavar="READ", type=str, help="PacBio HiFi-reads in FASTQ format")
+
+
 def get_parser(exit_on_error=True):
     parser = ArgumentParser(exit_on_error=exit_on_error)
     options(parser)
-    subparsers = parser.add_subparsers(dest="readtype", required=True, help="read type")
-    short.cli(subparsers)
-    long.cli(subparsers)
+    downsample.options(parser)
+    read_input_types(parser)
     parser.add_argument("config", type=str, help="config file")
     return parser
 

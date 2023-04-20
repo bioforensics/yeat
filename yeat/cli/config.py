@@ -11,7 +11,7 @@ import json
 from warnings import warn
 
 
-ALGORITHMS = ("spades", "megahit", "unicycler", "flye")
+ALGORITHMS = ("spades", "megahit", "unicycler", "flye", "canu")
 KEYS = ["algorithm", "extra_args"]
 
 

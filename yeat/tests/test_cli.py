@@ -49,7 +49,7 @@ def test_invalid_read1_file():
         read1 = "read1"
         read2 = "read2"
         assemblers = ["spades"]
-        workflows.short.paired.run(read1, read2, assemblers)
+        workflows.run_paired(read1, read2, assemblers)
 
 
 def test_invalid_read2_file():
@@ -57,7 +57,7 @@ def test_invalid_read2_file():
         read1 = data_file("short_reads_1.fastq.gz")
         read2 = "read2"
         assemblers = ["spades"]
-        workflows.short.paired.run(read1, read2, assemblers)
+        workflows.run_paired(read1, read2, assemblers)
 
 
 @pytest.mark.long
@@ -108,13 +108,13 @@ def test_custom_downsample_input(
     arglist = [
         "--outdir",
         wd,
-        "--paired",
-        data_file("short_reads_1.fastq.gz"),
-        data_file("short_reads_2.fastq.gz"),
         "-d",
         downsample,
         "--seed",
         "0",
+        "--paired",
+        data_file("short_reads_1.fastq.gz"),
+        data_file("short_reads_2.fastq.gz"),
         data_file("megahit.cfg"),
     ]
     args = cli.get_parser().parse_args(arglist)
@@ -126,32 +126,32 @@ def test_custom_downsample_input(
     assert df.iloc[14]["sample_contigs"] == total_len
 
 
-# @pytest.mark.parametrize("coverage", [("-1"), ("0")])
-# def test_invalid_custom_coverage_negative(coverage):
-#     arglist = [
-#         "short",
-#         data_file("short_reads_1.fastq.gz"),
-#         data_file("short_reads_2.fastq.gz"),
-#         "--coverage",
-#         coverage,
-#         data_file("megahit.cfg"),
-#     ]
-#     with pytest.raises(ArgumentError, match=rf"{coverage} is not a positive integer"):
-#         args = cli.get_parser(exit_on_error=False).parse_args(arglist)
+@pytest.mark.parametrize("coverage", [("-1"), ("0")])
+def test_invalid_custom_coverage_negative(coverage):
+    arglist = [
+        "--coverage",
+        coverage,
+        "--paired",
+        data_file("short_reads_1.fastq.gz"),
+        data_file("short_reads_2.fastq.gz"),
+        data_file("megahit.cfg"),
+    ]
+    with pytest.raises(ArgumentError, match=rf"{coverage} is not a positive integer"):
+        args = cli.get_parser(exit_on_error=False).parse_args(arglist)
 
 
-# @pytest.mark.parametrize("coverage", [("string"), ("3.14")])
-# def test_invalid_custom_coverage_noninteger(coverage):
-#     arglist = [
-#         "short",
-#         data_file("short_reads_1.fastq.gz"),
-#         data_file("short_reads_2.fastq.gz"),
-#         "--coverage",
-#         coverage,
-#         data_file("megahit.cfg"),
-#     ]
-#     with pytest.raises(ArgumentError, match=rf"{coverage} is not an integer"):
-#         args = cli.get_parser(exit_on_error=False).parse_args(arglist)
+@pytest.mark.parametrize("coverage", [("string"), ("3.14")])
+def test_invalid_custom_coverage_noninteger(coverage):
+    arglist = [
+        "--coverage",
+        coverage,
+        "--paired",
+        data_file("short_reads_1.fastq.gz"),
+        data_file("short_reads_2.fastq.gz"),
+        data_file("megahit.cfg"),
+    ]
+    with pytest.raises(ArgumentError, match=rf"{coverage} is not an integer"):
+        args = cli.get_parser(exit_on_error=False).parse_args(arglist)
 
 
 @pytest.mark.long
@@ -161,11 +161,11 @@ def test_custom_coverage_input(coverage, capsys, tmp_path):
     arglist = [
         "--outdir",
         wd,
+        "-c",
+        coverage,
         "--paired",
         data_file("short_reads_1.fastq.gz"),
         data_file("short_reads_2.fastq.gz"),
-        "-c",
-        coverage,
         data_file("megahit.cfg"),
     ]
     args = cli.get_parser().parse_args(arglist)
@@ -187,11 +187,11 @@ def test_random_downsample_seed(execution_number, capsys, tmp_path):
     arglist = [
         "--outdir",
         wd,
+        "-d",
+        "2000",
         "--paired",
         data_file("short_reads_1.fastq.gz"),
         data_file("short_reads_2.fastq.gz"),
-        "-d",
-        "2000",
         data_file("megahit.cfg"),
     ]
     args = cli.get_parser().parse_args(arglist)

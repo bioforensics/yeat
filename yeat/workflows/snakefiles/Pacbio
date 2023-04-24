@@ -63,13 +63,11 @@ rule canu:
     threads: 128
     params:
         extra_args=config["extra_args"]
-    run:
-        if "genomeSize=" not in params.extra_args["canu"]:
-            raise ValueError("Missing required input argument from config: 'genomeSize'")
-        if config["threads"] < 4:
-            raise ValueError("Canu requires at least 4 avaliable cores; increase `--threads` to 4 or more")
-        shell("canu -pacbio-hifi {input.read} maxThreads={threads} -p {wildcards.sample} -d analysis/canu {params.extra_args[canu]}")
-        shell("ln -s {wildcards.sample}.contigs.fasta {output.contigs}")
+    shell:
+        """
+        canu -pacbio-hifi {input.read} maxThreads={threads} -p {wildcards.sample} -d analysis/canu {params.extra_args[canu]}
+        ln -s {wildcards.sample}.contigs.fasta {output.contigs}
+        """
 
 
 rule quast:

@@ -53,6 +53,15 @@ def run_paired(
         raise RuntimeError("Snakemake Failed")
 
 
+def check_canu_required_params(extra_args, cores):
+    if "genomeSize=" not in extra_args:
+        raise ValueError("Missing required input argument from config: 'genomeSize'")
+    if cores < 4:
+        raise ValueError(
+            "Canu requires at least 4 avaliable cores; increase `--threads` to 4 or more"
+        )
+
+
 def run_pacbio(fastq, assembly_configs, outdir=".", cores=1, sample="sample", dryrun="dry"):
     snakefile = resource_filename("yeat", "workflows/snakefiles/Pacbio")
     fastq = Path(fastq).resolve()
@@ -60,6 +69,7 @@ def run_pacbio(fastq, assembly_configs, outdir=".", cores=1, sample="sample", dr
         raise FileNotFoundError(f"No such file: '{fastq}'")
     assemblers = [config.algorithm for config in assembly_configs]
     extra_args = {config.algorithm: config.extra_args for config in assembly_configs}
+    check_canu_required_params(extra_args["canu"], cores)
     config = dict(
         fastq=fastq, assemblers=assemblers, extra_args=extra_args, sample=sample, threads=cores
     )

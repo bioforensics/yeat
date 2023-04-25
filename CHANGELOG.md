@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Support for Bandage (#34)
-- Support for assemblying PacBio HiFi-reads with Flye and Canu (#37)
+- Support for basic PacBio HiFi-reads assembly with Flye and Canu (#37)
 
 ## [0.2] 2022-11-09
 

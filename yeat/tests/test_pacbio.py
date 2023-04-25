@@ -14,12 +14,14 @@ from yeat import cli, workflows
 from yeat.tests import data_file
 
 
-def test_long_read_assemblers_dry_run(tmp_path):
+def test_pacbio_hifi_read_assemblers_dry_run(tmp_path):
     wd = str(tmp_path)
     arglist = [
         "--outdir",
         wd,
         "-n",
+        "-t",
+        "4",
         "--pacbio",
         data_file("ecoli.fastq.gz"),
         data_file("pacbio.cfg"),
@@ -28,11 +30,17 @@ def test_long_read_assemblers_dry_run(tmp_path):
     cli.main(args)
 
 
+def test_invalid_read_file():
+    with pytest.raises(Exception, match=r"No such file:.*read\'"):
+        read = "read"
+        assemblers = ["flye"]
+        workflows.run_pacbio(read, assemblers)
+
+
 @pytest.mark.parametrize(
     "extra_args,cores,expected",
     [
         ("", 4, r"Missing required input argument from config: 'genomeSize'"),
-        ("helloworld", 4, r"Missing required input argument from config: 'genomeSize'"),
         (
             "genomeSize=4.8m",
             1,
@@ -40,12 +48,12 @@ def test_long_read_assemblers_dry_run(tmp_path):
         ),
     ],
 )
-def test_check_canu_required_params(extra_args, cores, expected):
+def test_check_canu_required_params_errors(extra_args, cores, expected):
     with pytest.raises(ValueError, match=expected):
         workflows.check_canu_required_params(extra_args, cores)
 
 
-@pytest.mark.extralong
+@pytest.mark.long
 @pytest.mark.parametrize(
     "algorithm,finalcontigs",
     [
@@ -53,7 +61,7 @@ def test_check_canu_required_params(extra_args, cores, expected):
         ("flye", "assembly.fasta"),
     ],
 )
-def test_long_read_assemblers(algorithm, finalcontigs, capsys, tmp_path):
+def test_pacbio_hifi_read_assemblers(algorithm, finalcontigs, capsys, tmp_path):
     wd = str(tmp_path)
     cores = str(multiprocessing.cpu_count())
     arglist = [

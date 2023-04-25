@@ -30,6 +30,16 @@ export PATH={BANDAGE_DIR}/Bandage.app/Contents/MacOS:$PATH
 
 In order to run the pre-built binary files successfully, ensure that the binary file is kept in the same directory with all of the other files that came with it.
 
+### Running PacBio Hifi-Reads Tests For Developers
+
+Before running the test suite, download the filtered 25x coverage E. coli Hifi-read data by calling the following make command.
+
+```
+make hifidata
+```
+
 ## Usage:
 
-```$ yeat {config} {read1} {read2} --outdir {path} --sample {name}```
+```
+$ yeat --outdir {path} --sample {name} (--paired {read1} {read2} | --pacbio {read}) {config}
+```

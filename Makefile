@@ -23,6 +23,11 @@ testbandage:
 testall:
 	pytest --cov=yeat -m 'not bandage'
 
+## hifidata:    download PacBio HiFi test data for test suite
+hifidata:
+	curl -L -o yeat/tests/data/ecoli.fastq http://gembox.cbcb.umd.edu/mhap/raw/ecoli_p6_25x.filtered.fastq
+	gzip yeat/tests/data/ecoli.fastq
+
 ## style:       check code style vs Black
 style:
 	black --line-length=99 --check $(PYFILES)

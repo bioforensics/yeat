@@ -69,7 +69,8 @@ def run_pacbio(fastq, assembly_configs, outdir=".", cores=1, sample="sample", dr
         raise FileNotFoundError(f"No such file: '{fastq}'")
     assemblers = [config.algorithm for config in assembly_configs]
     extra_args = {config.algorithm: config.extra_args for config in assembly_configs}
-    check_canu_required_params(extra_args["canu"], cores)
+    if "canu" in assemblers:
+        check_canu_required_params(extra_args["canu"], cores)
     config = dict(
         fastq=fastq, assemblers=assemblers, extra_args=extra_args, sample=sample, threads=cores
     )

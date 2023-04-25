@@ -25,7 +25,7 @@ testall:
 
 ## hifidata:    download PacBio HiFi test data for test suite
 hifidata:
-	curl -L -o yeat/tests/data/ecoli.fastq http://gembox.cbcb.umd.edu/mhap/raw/ecoli_p6_25x.filtered.fastq
+	curl -L -o yeat/tests/data/ecoli.fastq https://sra-pub-src-1.s3.amazonaws.com/SRR10971019/m54316_180808_005743.fastq.1
 	gzip yeat/tests/data/ecoli.fastq
 
 ## style:       check code style vs Black

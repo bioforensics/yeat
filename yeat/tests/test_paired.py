@@ -117,6 +117,32 @@ def test_custom_downsample_input(
 
 
 @pytest.mark.long
+@pytest.mark.parametrize("coverage", [("150"), ("75"), ("10")])
+def test_custom_coverage_input(coverage, capsys, tmp_path):
+    wd = str(tmp_path)
+    arglist = [
+        "--outdir",
+        wd,
+        "-c",
+        coverage,
+        "--paired",
+        data_file("short_reads_1.fastq.gz"),
+        data_file("short_reads_2.fastq.gz"),
+        data_file("megahit.cfg"),
+    ]
+    args = cli.get_parser().parse_args(arglist)
+    cli.main(args)
+    quast_report = Path(wd).resolve() / "analysis" / "quast" / "megahit" / "report.tsv"
+    df = pd.read_csv(quast_report, sep="\t")
+    num_contigs = df.iloc[12]["sample_contigs"]
+    assert num_contigs == 56
+    largest_contig = df.iloc[13]["sample_contigs"]
+    assert largest_contig == 35168
+    total_len = df.iloc[14]["sample_contigs"]
+    assert total_len == 199940
+
+
+@pytest.mark.long
 @pytest.mark.parametrize("execution_number", range(3))
 def test_random_downsample_seed(execution_number, capsys, tmp_path):
     wd = str(tmp_path)
@@ -184,29 +210,3 @@ def test_uncompressed_input_reads(inread1, inread2, capfd, tmp_path):
     captured = capfd.readouterr()
     assert re.search(r"seq/input/sample_R1.fq.gz:\s*OK", captured.err)
     assert re.search(r"seq/input/sample_R2.fq.gz:\s*OK", captured.err)
-
-
-@pytest.mark.long
-@pytest.mark.parametrize("coverage", [("150"), ("75"), ("10")])
-def test_custom_coverage_input(coverage, capsys, tmp_path):
-    wd = str(tmp_path)
-    arglist = [
-        "--outdir",
-        wd,
-        "-c",
-        coverage,
-        "--paired",
-        data_file("short_reads_1.fastq.gz"),
-        data_file("short_reads_2.fastq.gz"),
-        data_file("megahit.cfg"),
-    ]
-    args = cli.get_parser().parse_args(arglist)
-    cli.main(args)
-    quast_report = Path(wd).resolve() / "analysis" / "quast" / "megahit" / "report.tsv"
-    df = pd.read_csv(quast_report, sep="\t")
-    num_contigs = df.iloc[12]["sample_contigs"]
-    assert num_contigs == 56
-    largest_contig = df.iloc[13]["sample_contigs"]
-    assert largest_contig == 35168
-    total_len = df.iloc[14]["sample_contigs"]
-    assert total_len == 199940

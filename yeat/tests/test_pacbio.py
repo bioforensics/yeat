@@ -53,7 +53,7 @@ def test_check_canu_required_params_errors(extra_args, cores, expected):
         workflows.check_canu_required_params(extra_args, cores)
 
 
-@pytest.mark.long
+@pytest.mark.hifi
 @pytest.mark.parametrize(
     "algorithm,finalcontigs",
     [

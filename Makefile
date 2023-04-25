@@ -9,15 +9,19 @@ help: Makefile
 
 ## test:        run automated test suite
 test:
-	pytest --cov=yeat -m 'not long and not bandage'
+	pytest --cov=yeat -m 'not long and not bandage and not hifi'
 
 ## testlong:    run only long-running automated tests
 testlong:
-	pytest --cov=yeat -m 'long and not bandage'
+	pytest --cov=yeat -m 'long and not bandage and not hifi'
 
 ## testbandage: run only bandage required automated tests
 testbandage:
 	pytest --cov=yeat -m bandage
+
+## testhifi:    run only PacBio HiFi-reads automated tests
+testhifi:
+	pytest --cov=yeat -m 'hifi and not long and not bandage'
 
 ## testall:     run all tests but bandage required tests
 testall:

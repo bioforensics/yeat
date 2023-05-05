@@ -1,0 +1,82 @@
+# -------------------------------------------------------------------------------------------------
+# Copyright (c) 2023, DHS. This file is part of YEAT: http://github.com/bioforensics/yeat
+#
+# This software was prepared for the Department of Homeland Security (DHS) by the Battelle National
+# Biodefense Institute, LLC (BNBI) as part of contract HSHQDC-15-C-00064 to manage and operate the
+# National Biodefense Analysis and Countermeasures Center (NBACC), a Federally Funded Research and
+# Development Center.
+# -------------------------------------------------------------------------------------------------
+
+from shutil import copyfile
+
+
+rule all:
+    input:
+        expand("analysis/quast/{assembler}/{sample}_report.html", assembler=config["assemblers"], sample=config["sample"]),
+        expand("seq/fastqc/{sample}_fastqc.html", sample=config["sample"])
+
+
+rule copyinput:
+    output:
+        read="seq/input/{sample}.fq.gz"
+    input:
+        read=config["fastq"]
+    run:
+        if input.read.endswith(".gz"):
+            copyfile(input.read, output.read)
+        else:
+            shell(f"gzip -c {input.read} > {output.read}")
+
+
+rule fastqc:
+    output:
+        out="seq/fastqc/{sample}_fastqc.html"
+    input:
+        read="seq/input/{sample}.fq.gz"
+    threads: 128
+    shell:
+        """
+        fastqc {input.read} --threads {threads} -o seq/fastqc/
+        """
+
+
+rule flye:
+    output:
+        contigs="analysis/flye/{sample}_contigs.fasta"
+    input:
+        read="seq/input/{sample}.fq.gz"
+    threads: 128
+    params:
+        extra_args=config["extra_args"]
+    shell:
+        """
+        flye --pacbio-hifi {input.read} -t {threads} -o analysis/flye {params.extra_args[flye]}
+        ln -s assembly.fasta {output.contigs}
+        """
+
+
+rule canu:
+    output:
+        contigs="analysis/canu/{sample}_contigs.fasta"
+    input:
+        read="seq/input/{sample}.fq.gz"
+    threads: 128
+    params:
+        extra_args=config["extra_args"]
+    shell:
+        """
+        canu -pacbio-hifi {input.read} maxThreads={threads} -p {wildcards.sample} -d analysis/canu {params.extra_args[canu]}
+        ln -s {wildcards.sample}.contigs.fasta {output.contigs}
+        """
+
+
+rule quast:
+    output:
+        report="analysis/quast/{assembler}/{sample}_report.html"
+    input:
+        contigs="analysis/{assembler}/{sample}_contigs.fasta"
+    shell:
+        """
+        quast.py {input.contigs} -o analysis/quast/{wildcards.assembler}
+        ln -s report.html {output.report}
+        """

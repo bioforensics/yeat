@@ -62,3 +62,29 @@ rule unicycler:
             filename = Path(gfa).stem
             shell("Bandage image {gfa} analysis/bandage/unicycler/{filename}.jpg")
         shell("touch {output[0]}")
+
+
+rule flye:
+    output:
+        "analysis/bandage/flye/.done"
+    input:
+        glob("analysis/flye/30-contigger/*.gfa"),
+        glob("analysis/flye/40-polishing/*.gfa"),
+        glob("analysis/flye/*.gfa")
+    run:
+        for gfa in input:
+            filename = Path(gfa).stem
+            shell("Bandage image {gfa} analysis/bandage/flye/{filename}.jpg")
+        shell("touch {output[0]}")
+
+
+rule canu:
+    output:
+        "analysis/bandage/canu/.done"
+    input:
+        glob("analysis/canu/unitigging/4-unitigger/*.gfa")
+    run:
+        for gfa in input:
+            filename = Path(gfa).stem
+            shell("Bandage image {gfa} analysis/bandage/canu/{filename}.jpg")
+        shell("touch {output[0]}")

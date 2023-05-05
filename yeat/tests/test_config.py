@@ -8,7 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 import pytest
-from yeat.config import AssemblerConfig, AssemblyConfigurationError
+from yeat.cli.config import AssemblerConfig, AssemblyConfigurationError
 from yeat.tests import data_file
 
 

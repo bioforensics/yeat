@@ -14,10 +14,30 @@ from pathlib import Path
 from random import randint
 
 
+
+def get_expected_files():
+    mylist = []
+    for label in config["labels"]:
+        assembler = config["assemblers"][label]
+        mylist.append(f"analysis/quast/{label}/{assembler}/sample_report.html")
+    
+    for sample_name, fastq_files in config["data"].items():
+        read1 = fastq_files[0].stem
+        read2 = fastq_files[1].stem
+        mylist += expand("seq/fastqc/{sample}_{reads}_fastqc.html", sample=[*config["data"]], reads=["read1", "read2"])
+    return mylist
+
+
+print(config)
+print(get_expected_files())
+assert 0
+
+
 rule all:
     input:
-        expand("analysis/quast/{assembler}/{sample}_report.html", assembler=config["assemblers"], sample=config["sample"]),
-        expand("seq/fastqc/{sample}_{reads}_fastqc.html", sample=config["sample"], reads=["R1", "R2"])
+        #update "sample"
+        # expand("analysis/quast/{label}/{assembler}/{sample}_report.html", assembler=config["assemblers"], sample=config["sample"]),
+        # expand("seq/fastqc/{sample}_{reads}_fastqc.html", sample=config["sample"], reads=["R1", "R2"])
 
 
 rule copyinput:
@@ -128,61 +148,61 @@ rule downsample:
 
 rule spades:
     output:
-        contigs="analysis/spades/{sample}_contigs.fasta"
+        contigs="analysis/{label}/spades/{sample}_contigs.fasta"
     input:
         read1="seq/downsample/{sample}.R1.fq.gz",
         read2="seq/downsample/{sample}.R2.fq.gz"
     threads: 128
     params:
-        extra_args=config["extra_args"]
+        extra_args=lambda wildcards: config["labels"][wildcards.label].extra_args
     shell:
         """
-        spades.py -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/spades {params.extra_args[spades]}
+        spades.py -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/{wildcards.label}/spades {params.extra_args}
         ln -s scaffolds.fasta {output.contigs}
         """
 
 
 rule megahit:
     output:
-        contigs="analysis/megahit/{sample}_contigs.fasta"
+        contigs="analysis/{label}/megahit/{sample}_contigs.fasta"
     input:
         read1="seq/downsample/{sample}.R1.fq.gz",
         read2="seq/downsample/{sample}.R2.fq.gz"
     threads: 128
     params:
-        extra_args=config["extra_args"]
+        extra_args=lambda wildcards: config["labels"][whildcards.label].extra_args
     shell:
         """
-        megahit -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/megahit-temp {params.extra_args[megahit]}
-        mv analysis/megahit-temp/* analysis/megahit
-        rm -r analysis/megahit-temp
+        megahit -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/{wildcards.label}/megahit-temp {params.extra_args}
+        mv analysis/{wildcards.label}/megahit-temp/* analysis/{wildcards.label}/megahit
+        rm -r analysis/{wildcards.label}/megahit-temp
         ln -s final.contigs.fa {output.contigs}
         """
 
 
 rule unicycler:
     output:
-        contigs="analysis/unicycler/{sample}_contigs.fasta"
+        contigs="analysis/{label}/unicycler/{sample}_contigs.fasta"
     input:
         read1="seq/downsample/{sample}.R1.fq.gz",
         read2="seq/downsample/{sample}.R2.fq.gz"
     threads: 128
     params:
-        extra_args=config["extra_args"]
+        extra_args=lambda wildcards: config["labels"][wildcards.label].extra_args
     shell:
         """
-        unicycler -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/unicycler {params.extra_args[unicycler]}
+        unicycler -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/{wildcards.label}/unicycler {params.extra_args}
         ln -s assembly.fasta {output.contigs}
         """
 
 
 rule quast:
     output:
-        report="analysis/quast/{assembler}/{sample}_report.html"
+        report="analysis/quast/{label}/{assembler}/{sample}_report.html"
     input:
-        contigs="analysis/{assembler}/{sample}_contigs.fasta"
+        contigs="analysis/{label}/{assembler}/{sample}_contigs.fasta"
     shell:
         """
-        quast.py {input.contigs} -o analysis/quast/{wildcards.assembler}
+        quast.py {input.contigs} -o analysis/quast/{wildcards.label}
         ln -s report.html {output.report}
         """

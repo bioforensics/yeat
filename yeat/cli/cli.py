@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import downsample
+from . import downsample, samples
 from .config import AssemblerConfig
 from argparse import Action, ArgumentParser
 import json
@@ -19,10 +19,12 @@ from yeat.workflows import workflows
 
 CONFIG_TEMPLATE = [
     dict(
+        label="spades",
         algorithm="spades",
         extra_args="--meta",
     ),
     dict(
+        label="megahit",
         algorithm="megahit",
         extra_args="--min-count 5 --min-contig-len 300",
     ),
@@ -37,17 +39,12 @@ class InitAction(Action):
 
 
 def options(parser):
+    parser.add_argument("-v", "--version", action="version", version=f"YEAT v{yeat.__version__}")
     parser.add_argument(
         "--init",
         action=InitAction,
         nargs=0,
         help="print a template assembly config file to the terminal (stdout) and exit",
-    )
-    parser.add_argument(
-        "-n",
-        "--dry-run",
-        action="store_true",
-        help="construct workflow DAG and print a summary but do not execute",
     )
     parser.add_argument(
         "-o",
@@ -58,13 +55,6 @@ def options(parser):
         help="output directory; default is current working directory",
     )
     parser.add_argument(
-        "--sample",
-        type=str,
-        metavar="S",
-        default="sample",
-        help="specify a unique sample name S for storing assembly results in the working directory; by default S=sample",
-    )
-    parser.add_argument(
         "-t",
         "--threads",
         type=int,
@@ -72,37 +62,43 @@ def options(parser):
         default=1,
         help="execute workflow with T threads; by default T=1",
     )
-    parser.add_argument("-v", "--version", action="version", version=f"YEAT v{yeat.__version__}")
-
-
-def read_input_types(parser):
-    read_input_options = parser.add_argument_group("input read options")
-    mx = read_input_options.add_mutually_exclusive_group(required=True)
-    mx.add_argument(
-        "--paired",
-        metavar=("READ1", "READ2"),
-        type=str,
-        nargs=2,
-        help="paired-end reads in FASTQ format",
+    parser.add_argument(
+        "-n",
+        "--dry-run",
+        action="store_true",
+        help="construct workflow DAG and print a summary but do not execute",
     )
-    mx.add_argument("--pacbio", metavar="READ", type=str, help="PacBio HiFi-reads in FASTQ format")
+
+
+def required(parser):
+    required = parser.add_argument_group("required arguments")
+    mx = required.add_mutually_exclusive_group(required=True)
+    mx.add_argument("--paired", action="store_true", help="paired-end reads in FASTQ format")
+    mx.add_argument("--pacbio", action="store_true", help="PacBio HiFi-reads in FASTQ format")
+    required.add_argument(
+        "--samples", type=str, required=True, nargs="+", help="text file or strings"
+    )
+    required.add_argument(
+        "--files", type=str, required=True, nargs="+", help="directory or file paths"
+    )
+    required.add_argument("config", type=str, help="config file")
 
 
 def get_parser(exit_on_error=True):
     parser = ArgumentParser(exit_on_error=exit_on_error)
     options(parser)
     downsample.options(parser)
-    read_input_types(parser)
-    parser.add_argument("config", type=str, help="config file")
+    required(parser)
     return parser
 
 
 def main(args=None):
     if args is None:
         args = get_parser().parse_args()
+    files_by_samplename = samples.get_files_by_samplename(args.files, args.samples)
     assembly_configs = AssemblerConfig.parse_json(open(args.config))
-    workflows.run_workflow(args, assembly_configs)
-    if not args.dry_run:
-        bandage.run_bandage(
-            assembly_configs=assembly_configs, outdir=args.outdir, cores=args.threads
-        )
+    workflows.run_workflow(args, files_by_samplename, assembly_configs)
+    # if not args.dry_run:
+    #     bandage.run_bandage(
+    #         assembly_configs=assembly_configs, outdir=args.outdir, cores=args.threads
+    #     )

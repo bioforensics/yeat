@@ -21,7 +21,7 @@ def check_positive(value):
 
 
 def options(parser):
-    short = parser.add_argument_group("downsample options")
+    short = parser.add_argument_group("downsample arguments")
     short.add_argument(
         "-c",
         "--coverage",

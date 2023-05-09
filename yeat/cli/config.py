@@ -12,7 +12,7 @@ from warnings import warn
 
 
 ALGORITHMS = ("spades", "megahit", "unicycler", "flye", "canu")
-KEYS = ["algorithm", "extra_args"]
+KEYS = ["label", "algorithm", "extra_args"]
 
 
 class AssemblyConfigurationError(ValueError):
@@ -20,7 +20,8 @@ class AssemblyConfigurationError(ValueError):
 
 
 class AssemblerConfig:
-    def __init__(self, algorithm, extra_args=""):
+    def __init__(self, label, algorithm, extra_args=""):
+        self.label = label
         if algorithm not in ALGORITHMS:
             raise AssemblyConfigurationError(f"Unsupported assembly algorithm '{algorithm}'")
         self.algorithm = algorithm
@@ -28,16 +29,16 @@ class AssemblerConfig:
 
     @classmethod
     def from_json(cls, data):
-        return cls(data["algorithm"], data["extra_args"])
+        return cls(data["label"], data["algorithm"], data["extra_args"])
 
     @staticmethod
     def parse_json(instream):
         configdata = json.load(instream)
         for entry in configdata:
             AssemblerConfig.validate(entry)
-        algorithms = [entry["algorithm"] for entry in configdata]
-        if len(algorithms) > len(set(algorithms)):
-            message = "Duplicate assembly configuration: please check config file"
+        labels = [entry["label"] for entry in configdata]
+        if len(labels) > len(set(labels)):
+            message = "Duplicate assembly labels: please check config file"
             raise AssemblyConfigurationError(message)
         configlist = [AssemblerConfig.from_json(entry) for entry in configdata]
         return configlist

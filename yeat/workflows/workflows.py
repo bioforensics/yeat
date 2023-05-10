@@ -13,7 +13,7 @@ from snakemake import snakemake
 
 
 def run_paired(
-    files_by_samplename,
+    assembly_samples,
     assembly_configs,
     outdir=".",
     cores=1,
@@ -24,14 +24,17 @@ def run_paired(
     seed=None,
 ):
     snakefile = resource_filename("yeat", "workflows/snakefiles/Paired")
+    samples = {k: v.sample for k, v in assembly_samples.items()}
     labels = [config.label for config in assembly_configs]
     assemblers = {config.label: config.algorithm for config in assembly_configs}
     extra_args = {config.label: config.extra_args for config in assembly_configs}
+    label_to_samples = {config.label: config.samples for config in assembly_configs}
     config = dict(
-        data=files_by_samplename,
+        samples=samples,
         labels=labels,
         assemblers=assemblers,
         extra_args=extra_args,
+        label_to_samples=label_to_samples,
         threads=cores,
         downsample=downsample,
         coverage=coverage,
@@ -54,9 +57,7 @@ def check_canu_required_params(extra_args, cores):
         )
 
 
-def run_pacbio(
-    files_by_samplename, assembly_configs, outdir=".", cores=1, dryrun="dry"
-):
+def run_pacbio(files_by_samplename, assembly_configs, outdir=".", cores=1, dryrun="dry"):
     snakefile = resource_filename("yeat", "workflows/snakefiles/Pacbio")
     fastq = Path(fastq).resolve()
     if not fastq.is_file():
@@ -65,9 +66,7 @@ def run_pacbio(
     extra_args = {config.algorithm: config.extra_args for config in assembly_configs}
     if "canu" in assemblers:
         check_canu_required_params(extra_args["canu"], cores)
-    config = dict(
-        fastq=fastq, assemblers=assemblers, extra_args=extra_args, threads=cores
-    )
+    config = dict(fastq=fastq, assemblers=assemblers, extra_args=extra_args, threads=cores)
     success = snakemake(
         snakefile, config=config, cores=cores, dryrun=dryrun, printshellcmds=True, workdir=outdir
     )
@@ -75,11 +74,32 @@ def run_pacbio(
         raise RuntimeError("Snakemake Failed")
 
 
-def run_workflow(args, files_by_samplename, assembly_configs):
-    if args.paired:
+def get_assembly_samples(samples, config):
+    assembly_samples = {}
+    for assembly in config:
+        assembly_samples = assembly_samples | dict(
+            (k, samples[k]) for k in assembly.samples if k in samples
+        )
+    return assembly_samples
+
+
+PAIRED = ["spades", "megahit", "unicycler"]
+PACBIO = ["canu", "flye"]
+
+
+def run_workflows(args, samples, assembly_configs):
+    paired_configs = []
+    pacbio_configs = []
+    for assembly in assembly_configs:
+        if assembly.algorithm in PAIRED:
+            paired_configs.append(assembly)
+        elif assembly.algorithm in PACBIO:
+            pacbio_configs.append(assembly)
+    if paired_configs:
+        assembly_samples = get_assembly_samples(samples, paired_configs)
         run_paired(
-            files_by_samplename,
-            assembly_configs=assembly_configs,
+            assembly_samples,
+            paired_configs,
             outdir=args.outdir,
             cores=args.threads,
             dryrun=args.dry_run,
@@ -88,15 +108,16 @@ def run_workflow(args, files_by_samplename, assembly_configs):
             genomesize=args.genome_size,
             seed=args.seed,
         )
-    # elif args.pacbio:
-    #     run_pacbio(
-    #         files_by_samplename,
-    #         assembly_configs=assembly_configs,
-    #         outdir=args.outdir,
-    #         cores=args.threads,
-    #         dryrun=args.dry_run,
-    #         # coverage=args.coverage,
-    #         # downsample=args.downsample,
-    #         # genomesize=args.genome_size,
-    #         # seed=args.seed,
-    #     )
+    elif pacbio_configs:
+        assembly_samples = get_assembly_samples(samples, pacbio_configs)
+        run_pacbio(
+            assembly_samples,
+            pacbio_configs,
+            outdir=args.outdir,
+            cores=args.threads,
+            dryrun=args.dry_run,
+            # coverage=args.coverage,
+            # downsample=args.downsample,
+            # genomesize=args.genome_size,
+            # seed=args.seed,
+        )

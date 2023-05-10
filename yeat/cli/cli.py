@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import downsample, samples
+from . import downsample
 from .config import AssemblerConfig
 from argparse import Action, ArgumentParser
 import json
@@ -17,18 +17,33 @@ from yeat.bandage import bandage
 from yeat.workflows import workflows
 
 
-CONFIG_TEMPLATE = [
-    dict(
-        label="spades",
-        algorithm="spades",
-        extra_args="--meta",
-    ),
-    dict(
-        label="megahit",
-        algorithm="megahit",
-        extra_args="--min-count 5 --min-contig-len 300",
-    ),
-]
+CONFIG_TEMPLATE = {
+    "samples": {
+        "sample1": ["path_to_read1", "path_to_read2"],
+        "sample2": ["path_to_read1", "path_to_read2"],
+        "sample3": ["path_to_read"],
+    },
+    "assemblers": [
+        {
+            "label": "spades-meta",
+            "algorithm": "spades",
+            "extra_args": "--meta",
+            "samples": ["sample1"],
+        },
+        {
+            "label": "megahit-mins",
+            "algorithm": "megahit",
+            "extra_args": "--min-count 5 --min-contig-len 300",
+            "samples": ["sample1", "sample2"],
+        },
+        {
+            "label": "pacbio-hifi",
+            "algorithm": "canu",
+            "extra_args": "genomeSize=4.8m",
+            "samples": ["sample3"],
+        },
+    ],
+}
 
 
 class InitAction(Action):
@@ -70,34 +85,19 @@ def options(parser):
     )
 
 
-def required(parser):
-    required = parser.add_argument_group("required arguments")
-    mx = required.add_mutually_exclusive_group(required=True)
-    mx.add_argument("--paired", action="store_true", help="paired-end reads in FASTQ format")
-    mx.add_argument("--pacbio", action="store_true", help="PacBio HiFi-reads in FASTQ format")
-    required.add_argument(
-        "--samples", type=str, required=True, nargs="+", help="text file or strings"
-    )
-    required.add_argument(
-        "--files", type=str, required=True, nargs="+", help="directory or file paths"
-    )
-    required.add_argument("config", type=str, help="config file")
-
-
 def get_parser(exit_on_error=True):
     parser = ArgumentParser(exit_on_error=exit_on_error)
     options(parser)
     downsample.options(parser)
-    required(parser)
+    parser.add_argument("config", type=str, help="config file")
     return parser
 
 
 def main(args=None):
     if args is None:
         args = get_parser().parse_args()
-    files_by_samplename = samples.get_files_by_samplename(args.files, args.samples)
-    assembly_configs = AssemblerConfig.parse_json(open(args.config))
-    workflows.run_workflow(args, files_by_samplename, assembly_configs)
+    samples, assembly_configs = AssemblerConfig.parse_json(open(args.config))
+    workflows.run_workflows(args, samples, assembly_configs)
     # if not args.dry_run:
     #     bandage.run_bandage(
     #         assembly_configs=assembly_configs, outdir=args.outdir, cores=args.threads

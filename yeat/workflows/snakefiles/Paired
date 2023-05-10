@@ -14,39 +14,27 @@ from pathlib import Path
 from random import randint
 
 
-
 def get_expected_files():
     mylist = []
     for label in config["labels"]:
         assembler = config["assemblers"][label]
-        mylist.append(f"analysis/quast/{label}/{assembler}/sample_report.html")
-    
-    for sample_name, fastq_files in config["data"].items():
-        read1 = fastq_files[0].stem
-        read2 = fastq_files[1].stem
-        mylist += expand("seq/fastqc/{sample}_{reads}_fastqc.html", sample=[*config["data"]], reads=["read1", "read2"])
+        for sample in config["label_to_samples"][label]:
+            mylist.append(f"analysis/quast/{sample}/{label}/{assembler}/{sample}_report.html")
+    mylist += expand("seq/fastqc/{sample}/{sample}_{reads}_fastqc.html", sample=[*config["samples"]], reads=["R1", "R2"])
     return mylist
-
-
-print(config)
-print(get_expected_files())
-assert 0
 
 
 rule all:
     input:
-        #update "sample"
-        # expand("analysis/quast/{label}/{assembler}/{sample}_report.html", assembler=config["assemblers"], sample=config["sample"]),
-        # expand("seq/fastqc/{sample}_{reads}_fastqc.html", sample=config["sample"], reads=["R1", "R2"])
+        get_expected_files()
 
 
 rule copyinput:
     output:
-        read1="seq/input/{sample}_R1.fq.gz",
-        read2="seq/input/{sample}_R2.fq.gz"
-    input:
-        read1=config["read1"],
-        read2=config["read2"]
+        read1="seq/input/{sample}/{sample}_R1.fq.gz",
+        read2="seq/input/{sample}/{sample}_R2.fq.gz"
+    input: 
+        lambda wildcards: config["samples"][wildcards.sample]
     run:
         for inreads, outreads in zip(input, output):
             if inreads.endswith(".gz"):
@@ -57,39 +45,39 @@ rule copyinput:
 
 rule fastqc:
     output:
-        out1="seq/fastqc/{sample}_R1_fastqc.html",
-        out2="seq/fastqc/{sample}_R2_fastqc.html"
+        out1="seq/fastqc/{sample}/{sample}_R1_fastqc.html",
+        out2="seq/fastqc/{sample}/{sample}_R2_fastqc.html"
     input:
-        read1="seq/input/{sample}_R1.fq.gz",
-        read2="seq/input/{sample}_R2.fq.gz"
+        read1="seq/input/{sample}/{sample}_R1.fq.gz",
+        read2="seq/input/{sample}/{sample}_R2.fq.gz"
     threads: 128
     shell:
         """
-        fastqc {input.read1} {input.read2} --threads {threads} -o seq/fastqc/
+        fastqc {input.read1} {input.read2} --threads {threads} -o seq/fastqc/{wildcards.sample}
         """
 
 
 rule fastp:
     output:
-        out1="seq/fastp/{sample}.R1.fq.gz",
-        out2="seq/fastp/{sample}.R2.fq.gz"
+        out1="seq/fastp/{sample}/{sample}.R1.fq.gz",
+        out2="seq/fastp/{sample}/{sample}.R2.fq.gz"
     input:
-        read1="seq/input/{sample}_R1.fq.gz",
-        read2="seq/input/{sample}_R2.fq.gz"
+        read1="seq/input/{sample}/{sample}_R1.fq.gz",
+        read2="seq/input/{sample}/{sample}_R2.fq.gz"
     shell:
         """
         fastp -i {input.read1} -I {input.read2} -o {output.out1} -O {output.out2} \
-            --html seq/fastp/fastp.html --json seq/fastp/fastp.json \
-            2> seq/fastp/report.txt
+            --html seq/fastp/{wildcards.sample}/fastp.html --json seq/fastp/{wildcards.sample}/fastp.json \
+            2> seq/fastp/{wildcards.sample}/report.txt
         """
 
 
 rule mash:
     output:
-        sketch="seq/mash/{sample}.R1.fq.gz.msh",
-        mash_report="seq/mash/{sample}.report.tsv"
+        sketch="seq/mash/{sample}/{sample}.R1.fq.gz.msh",
+        mash_report="seq/mash/{sample}/{sample}.report.tsv"
     input:
-        read1="seq/fastp/{sample}.R1.fq.gz"
+        read1="seq/fastp/{sample}/{sample}.R1.fq.gz"
     shell:
         """
         mash sketch {input.read1} -o {output.sketch}
@@ -99,21 +87,21 @@ rule mash:
 
 rule downsample:
     output:
-        sub1="seq/downsample/{sample}.R1.fq.gz",
-        sub2="seq/downsample/{sample}.R2.fq.gz"
+        sub1="seq/downsample/{sample}/{sample}.R1.fq.gz",
+        sub2="seq/downsample/{sample}/{sample}.R2.fq.gz"
     input:
-        read1="seq/fastp/{sample}.R1.fq.gz",
-        read2="seq/fastp/{sample}.R2.fq.gz",
-        mash_report="seq/mash/{sample}.report.tsv"
+        read1="seq/fastp/{sample}/{sample}.R1.fq.gz",
+        read2="seq/fastp/{sample}/{sample}.R2.fq.gz",
+        mash_report="seq/mash/{sample}/{sample}.report.tsv"
     params:
         coverage=config["coverage"],
         downsample=config["downsample"],
-        fastp_report="seq/fastp/fastp.json",
+        fastp_report="seq/fastp/{sample}/fastp.json",
         genome_size=config["genomesize"],
         seed=config["seed"]
     run:
         if params.downsample == -1:
-            p = Path("seq/downsample")
+            p = Path("seq/{wildcards.sample}/downsample")
             p.mkdir(parents=True, exist_ok=True)
             copyfile(input.read1, output.sub1)
             copyfile(input.read2, output.sub2)
@@ -141,68 +129,68 @@ rule downsample:
         print(f"[yeat] target depth of coverage: {params.coverage}x")
         print(f"[yeat] number of reads to sample: {down}")
         print(f"[yeat] random seed for sampling: {seed}")
-        shell("seqtk sample -s {seed} {input.read1} {down} > seq/downsample/{wildcards.sample}.R1.fq")
-        shell("seqtk sample -s {seed} {input.read2} {down} > seq/downsample/{wildcards.sample}.R2.fq")
-        shell("gzip -f seq/downsample/*")
+        shell("seqtk sample -s {seed} {input[0]} {down} > seq/downsample/{wildcards.sample}/{wildcards.sample}.R1.fq")
+        shell("seqtk sample -s {seed} {input[1]} {down} > seq/downsample/{wildcards.sample}/{wildcards.sample}.R2.fq")
+        shell("gzip -f seq/downsample/{wildcards.sample}/*")
 
 
 rule spades:
     output:
-        contigs="analysis/{label}/spades/{sample}_contigs.fasta"
+        contigs="analysis/{sample}/{label}/spades/{sample}_contigs.fasta"
     input:
-        read1="seq/downsample/{sample}.R1.fq.gz",
-        read2="seq/downsample/{sample}.R2.fq.gz"
+        read1="seq/downsample/{sample}/{sample}.R1.fq.gz",
+        read2="seq/downsample/{sample}/{sample}.R2.fq.gz"
     threads: 128
     params:
-        extra_args=lambda wildcards: config["labels"][wildcards.label].extra_args
+        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        spades.py -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/{wildcards.label}/spades {params.extra_args}
+        spades.py -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/{wildcards.sample}/{wildcards.label}/spades {params.extra_args}
         ln -s scaffolds.fasta {output.contigs}
         """
 
 
 rule megahit:
     output:
-        contigs="analysis/{label}/megahit/{sample}_contigs.fasta"
+        contigs="analysis/{sample}/{label}/megahit/{sample}_contigs.fasta"
     input:
-        read1="seq/downsample/{sample}.R1.fq.gz",
-        read2="seq/downsample/{sample}.R2.fq.gz"
+        read1="seq/downsample/{sample}/{sample}.R1.fq.gz",
+        read2="seq/downsample/{sample}/{sample}.R2.fq.gz"
     threads: 128
     params:
-        extra_args=lambda wildcards: config["labels"][whildcards.label].extra_args
+        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        megahit -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/{wildcards.label}/megahit-temp {params.extra_args}
-        mv analysis/{wildcards.label}/megahit-temp/* analysis/{wildcards.label}/megahit
-        rm -r analysis/{wildcards.label}/megahit-temp
+        megahit -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/{wildcards.sample}/{wildcards.label}/megahit-temp {params.extra_args}
+        mv analysis/{wildcards.sample}/{wildcards.label}/megahit-temp/* analysis/{wildcards.sample}/{wildcards.label}/megahit
+        rm -r analysis/{wildcards.sample}/{wildcards.label}/megahit-temp
         ln -s final.contigs.fa {output.contigs}
         """
 
 
 rule unicycler:
     output:
-        contigs="analysis/{label}/unicycler/{sample}_contigs.fasta"
+        contigs="analysis/{sample}/{label}/unicycler/{sample}_contigs.fasta"
     input:
-        read1="seq/downsample/{sample}.R1.fq.gz",
-        read2="seq/downsample/{sample}.R2.fq.gz"
+        read1="seq/downsample/{sample}/{sample}.R1.fq.gz",
+        read2="seq/downsample/{sample}/{sample}.R2.fq.gz"
     threads: 128
     params:
-        extra_args=lambda wildcards: config["labels"][wildcards.label].extra_args
+        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        unicycler -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/{wildcards.label}/unicycler {params.extra_args}
+        unicycler -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/{wildcards.sample}/{wildcards.label}/unicycler {params.extra_args}
         ln -s assembly.fasta {output.contigs}
         """
 
 
 rule quast:
     output:
-        report="analysis/quast/{label}/{assembler}/{sample}_report.html"
+        report="analysis/quast/{sample}/{label}/{assembler}/{sample}_report.html"
     input:
-        contigs="analysis/{label}/{assembler}/{sample}_contigs.fasta"
+        contigs="analysis/{sample}/{label}/{assembler}/{sample}_contigs.fasta"
     shell:
         """
-        quast.py {input.contigs} -o analysis/quast/{wildcards.label}
+        quast.py {input.contigs} -o analysis/quast/{wildcards.sample}/{wildcards.label}/{wildcards.assembler}
         ln -s report.html {output.report}
         """

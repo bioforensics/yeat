@@ -10,73 +10,82 @@
 from shutil import copyfile
 
 
+def get_expected_files():
+    mylist = []
+    for label in config["labels"]:
+        assembler = config["assemblers"][label]
+        for sample in config["label_to_samples"][label]:
+            mylist.append(f"analysis/{sample}/{label}/{assembler}/quast/{sample}_report.html")
+    mylist += expand("seq/fastqc/{sample}/{sample}_fastqc.html", sample=[*config["samples"]])
+    return mylist
+
+
 rule all:
     input:
-        expand("analysis/quast/{assembler}/{sample}_report.html", assembler=config["assemblers"], sample=config["sample"]),
-        expand("seq/fastqc/{sample}_fastqc.html", sample=config["sample"])
+        get_expected_files()
 
 
 rule copyinput:
     output:
-        read="seq/input/{sample}.fq.gz"
+        read="seq/input/{sample}/{sample}.fq.gz"
     input:
-        read=config["fastq"]
+        lambda wildcards: config["samples"][wildcards.sample]
     run:
-        if input.read.endswith(".gz"):
-            copyfile(input.read, output.read)
+        if input[0].endswith(".gz"):
+            copyfile(input[0], output.read)
         else:
-            shell(f"gzip -c {input.read} > {output.read}")
+            shell(f"gzip -c {input[0]} > {output.read}")
 
 
 rule fastqc:
     output:
-        out="seq/fastqc/{sample}_fastqc.html"
+        out="seq/fastqc/{sample}/{sample}_fastqc.html"
     input:
-        read="seq/input/{sample}.fq.gz"
+        read="seq/input/{sample}/{sample}.fq.gz"
     threads: 128
     shell:
         """
-        fastqc {input.read} --threads {threads} -o seq/fastqc/
+        fastqc {input.read} --threads {threads} -o seq/fastqc/{wildcards.sample}
         """
 
 
 rule flye:
     output:
-        contigs="analysis/flye/{sample}_contigs.fasta"
+        contigs="analysis/{sample}/{label}/flye/{sample}_contigs.fasta"
     input:
-        read="seq/input/{sample}.fq.gz"
+        read="seq/input/{sample}/{sample}.fq.gz"
     threads: 128
     params:
-        extra_args=config["extra_args"]
+        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        flye --pacbio-hifi {input.read} -t {threads} -o analysis/flye {params.extra_args[flye]}
+        flye --pacbio-hifi {input.read} -t {threads} -o analysis/{wildcards.sample}/{wildcards.label}/flye {params.extra_args}
         ln -s assembly.fasta {output.contigs}
         """
 
 
 rule canu:
     output:
-        contigs="analysis/canu/{sample}_contigs.fasta"
+        contigs="analysis/{sample}/{label}/canu/{sample}_contigs.fasta"
     input:
-        read="seq/input/{sample}.fq.gz"
+        read="seq/input/{sample}/{sample}.fq.gz"
     threads: 128
     params:
-        extra_args=config["extra_args"]
+        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        canu -pacbio-hifi {input.read} maxThreads={threads} -p {wildcards.sample} -d analysis/canu {params.extra_args[canu]}
+        canu -pacbio-hifi {input.read} maxThreads={threads} -p {wildcards.sample} -d analysis/{wildcards.sample}/{wildcards.label}/canu {params.extra_args}
         ln -s {wildcards.sample}.contigs.fasta {output.contigs}
         """
 
 
 rule quast:
     output:
-        report="analysis/quast/{assembler}/{sample}_report.html"
+        report="analysis/{sample}/{label}/{assembler}/quast/{sample}_report.html"
     input:
-        contigs="analysis/{assembler}/{sample}_contigs.fasta"
+        contigs="analysis/{sample}/{label}/{assembler}/{sample}_contigs.fasta"
     shell:
         """
-        quast.py {input.contigs} -o analysis/quast/{wildcards.assembler}
+        quast.py {input.contigs} -o analysis/{wildcards.sample}/{wildcards.label}/{wildcards.assembler}/quast
         ln -s report.html {output.report}
         """

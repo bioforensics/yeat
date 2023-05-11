@@ -14,8 +14,8 @@ import pytest
 import shutil
 import subprocess
 from unittest.mock import patch
-from yeat.bandage import bandage
 from yeat.tests import data_file
+from yeat.workflows import bandage
 
 
 @pytest.mark.bandage

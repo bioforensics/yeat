@@ -7,9 +7,14 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+from . import bandage
 from pathlib import Path
 from pkg_resources import resource_filename
 from snakemake import snakemake
+
+
+PAIRED = ["spades", "megahit", "unicycler"]
+PACBIO = ["canu", "flye"]
 
 
 def run_paired(
@@ -57,16 +62,23 @@ def check_canu_required_params(extra_args, cores):
         )
 
 
-def run_pacbio(files_by_samplename, assembly_configs, outdir=".", cores=1, dryrun="dry"):
+def run_pacbio(assembly_samples, assembly_configs, outdir=".", cores=1, dryrun="dry"):
     snakefile = resource_filename("yeat", "workflows/snakefiles/Pacbio")
-    fastq = Path(fastq).resolve()
-    if not fastq.is_file():
-        raise FileNotFoundError(f"No such file: '{fastq}'")
-    assemblers = [config.algorithm for config in assembly_configs]
-    extra_args = {config.algorithm: config.extra_args for config in assembly_configs}
+    samples = {k: v.sample for k, v in assembly_samples.items()}
+    labels = [config.label for config in assembly_configs]
+    assemblers = {config.label: config.algorithm for config in assembly_configs}
+    extra_args = {config.label: config.extra_args for config in assembly_configs}
+    label_to_samples = {config.label: config.samples for config in assembly_configs}
     if "canu" in assemblers:
         check_canu_required_params(extra_args["canu"], cores)
-    config = dict(fastq=fastq, assemblers=assemblers, extra_args=extra_args, threads=cores)
+    config = dict(
+        samples=samples,
+        labels=labels,
+        assemblers=assemblers,
+        extra_args=extra_args,
+        label_to_samples=label_to_samples,
+        threads=cores,
+    )
     success = snakemake(
         snakefile, config=config, cores=cores, dryrun=dryrun, printshellcmds=True, workdir=outdir
     )
@@ -81,10 +93,6 @@ def get_assembly_samples(samples, config):
             (k, samples[k]) for k in assembly.samples if k in samples
         )
     return assembly_samples
-
-
-PAIRED = ["spades", "megahit", "unicycler"]
-PACBIO = ["canu", "flye"]
 
 
 def run_workflows(args, samples, assembly_configs):
@@ -120,4 +128,8 @@ def run_workflows(args, samples, assembly_configs):
             # downsample=args.downsample,
             # genomesize=args.genome_size,
             # seed=args.seed,
+        )
+    if not args.dry_run:
+        bandage.run_bandage(
+            samples, assembly_configs=assembly_configs, outdir=args.outdir, cores=args.threads
         )

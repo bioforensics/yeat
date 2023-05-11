@@ -13,8 +13,7 @@ from argparse import Action, ArgumentParser
 import json
 import sys
 import yeat
-from yeat.bandage import bandage
-from yeat.workflows import workflows
+from yeat.workflows import bandage, workflows
 
 
 CONFIG_TEMPLATE = {
@@ -98,7 +97,3 @@ def main(args=None):
         args = get_parser().parse_args()
     samples, assembly_configs = AssemblerConfig.parse_json(open(args.config))
     workflows.run_workflows(args, samples, assembly_configs)
-    # if not args.dry_run:
-    #     bandage.run_bandage(
-    #         assembly_configs=assembly_configs, outdir=args.outdir, cores=args.threads
-    #     )

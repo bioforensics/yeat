@@ -8,10 +8,10 @@
 # -------------------------------------------------------------------------------------------------
 
 import json
-from shutil import copyfile
 import pandas as pd
 from pathlib import Path
 from random import randint
+from shutil import copyfile
 
 
 def get_expected_files():
@@ -19,7 +19,7 @@ def get_expected_files():
     for label in config["labels"]:
         assembler = config["assemblers"][label]
         for sample in config["label_to_samples"][label]:
-            mylist.append(f"analysis/quast/{sample}/{label}/{assembler}/{sample}_report.html")
+            mylist.append(f"analysis/{sample}/{label}/{assembler}/quast/{sample}_report.html")
     mylist += expand("seq/fastqc/{sample}/{sample}_{reads}_fastqc.html", sample=[*config["samples"]], reads=["R1", "R2"])
     return mylist
 
@@ -186,11 +186,11 @@ rule unicycler:
 
 rule quast:
     output:
-        report="analysis/quast/{sample}/{label}/{assembler}/{sample}_report.html"
+        report="analysis/{sample}/{label}/{assembler}/quast/{sample}_report.html"
     input:
         contigs="analysis/{sample}/{label}/{assembler}/{sample}_contigs.fasta"
     shell:
         """
-        quast.py {input.contigs} -o analysis/quast/{wildcards.sample}/{wildcards.label}/{wildcards.assembler}
+        quast.py {input.contigs} -o analysis/{wildcards.sample}/{wildcards.label}/{wildcards.assembler}/quast
         ln -s report.html {output.report}
         """

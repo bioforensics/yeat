@@ -13,7 +13,7 @@ from argparse import Action, ArgumentParser
 import json
 import sys
 import yeat
-from yeat.workflows import bandage, workflows
+from yeat.workflows import workflows
 
 
 CONFIG_TEMPLATE = {

@@ -30,11 +30,11 @@ def test_env_path_has_no_path_to_bandage(capsys):
     assert "No such file or directory: 'Bandage'" in out
 
 
-@patch("yeat.bandage.bandage.check_bandage")
+@patch("yeat.workflows.bandage.check_bandage")
 def test_no_bandage_warning(function_mock):
     function_mock.return_value = False
     with pytest.warns(UserWarning, match=r"Unable to run Bandage; skipping Bandage"):
-        bandage.run_bandage(assembly_configs=[])
+        bandage.run_bandage(assembly_samples=[], assembly_configs=[])
 
 
 @pytest.mark.bandage

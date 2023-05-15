@@ -60,6 +60,7 @@ def check_canu_required_params(extra_args, cores):
         raise ValueError(
             "Canu requires at least 4 avaliable cores; increase `--threads` to 4 or more"
         )
+        # check and override the cores
 
 
 def run_pacbio(assembly_samples, assembly_configs, outdir=".", cores=1, dryrun="dry"):
@@ -116,7 +117,7 @@ def run_workflows(args, samples, assembly_configs):
             genomesize=args.genome_size,
             seed=args.seed,
         )
-    elif pacbio_configs:
+    if pacbio_configs:
         assembly_samples = get_assembly_samples(samples, pacbio_configs)
         run_pacbio(
             assembly_samples,

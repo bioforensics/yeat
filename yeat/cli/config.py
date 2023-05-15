@@ -63,7 +63,11 @@ class Sample:
             read = Path(fastq).resolve()
             if not read.is_file():
                 raise FileNotFoundError(f"No such file: '{read}'")
-            sample.append(str(read))
+            if str(read) in sample:
+                message = f"Found duplicate read sample: `{read}`"
+                raise AssemblyConfigurationError(message)
+            else:
+                sample.append(str(read))
         self.sample = sample
 
     @classmethod

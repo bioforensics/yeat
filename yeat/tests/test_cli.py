@@ -27,9 +27,6 @@ def test_invalid_custom_coverage_negative(coverage):
     arglist = [
         "--coverage",
         coverage,
-        "--paired",
-        data_file("short_reads_1.fastq.gz"),
-        data_file("short_reads_2.fastq.gz"),
         data_file("megahit.cfg"),
     ]
     with pytest.raises(ArgumentError, match=rf"{coverage} is not a positive integer"):
@@ -41,9 +38,6 @@ def test_invalid_custom_coverage_noninteger(coverage):
     arglist = [
         "--coverage",
         coverage,
-        "--paired",
-        data_file("short_reads_1.fastq.gz"),
-        data_file("short_reads_2.fastq.gz"),
         data_file("megahit.cfg"),
     ]
     with pytest.raises(ArgumentError, match=rf"{coverage} is not an integer"):

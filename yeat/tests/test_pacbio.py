@@ -7,11 +7,10 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-import multiprocessing
 from pathlib import Path
 import pytest
 from yeat import cli, workflows
-from yeat.tests import data_file
+from yeat.tests import data_file, get_core_count
 
 
 def test_pacbio_hifi_assemblers_dry_run(tmp_path):
@@ -54,7 +53,7 @@ def test_check_canu_required_params_errors(extra_args, cores, expected):
 )
 def test_pacbio_hifi_read_assemblers(algorithm, label, expected, capsys, tmp_path):
     wd = str(tmp_path)
-    cores = str(multiprocessing.cpu_count())
+    cores = str(get_core_count())
     arglist = [
         "--outdir",
         wd,

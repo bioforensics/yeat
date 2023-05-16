@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Config file to enable:
     - Support for multi-input samples (#43)
-    - Running multiple assembly algorithm by labels (#43)
+    - Running multiple assembly algorithm with labels (#43)
 
 
 ## [0.2] 2022-11-09

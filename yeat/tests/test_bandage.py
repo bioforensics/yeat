@@ -23,6 +23,13 @@ def test_check_bandage():
     assert bandage.check_bandage()
 
 
+@pytest.mark.bandage
+@patch("subprocess.run")
+def test_bandage_subprocess_failed(function_mock):
+    function_mock.return_value = subprocess.CompletedProcess(["Bandage", "--help"], 1)
+    assert bandage.check_bandage() == False
+
+
 @patch.dict(os.environ, {"PATH": "ROUGE"})
 def test_env_path_has_no_path_to_bandage(capsys):
     bandage.check_bandage()
@@ -34,7 +41,7 @@ def test_env_path_has_no_path_to_bandage(capsys):
 def test_no_bandage_warning(function_mock):
     function_mock.return_value = False
     with pytest.warns(UserWarning, match=r"Unable to run Bandage; skipping Bandage"):
-        bandage.run_bandage(assembly_samples=[], assembly_configs=[])
+        bandage.run_bandage(assembly_configs=[])
 
 
 @pytest.mark.bandage
@@ -58,13 +65,3 @@ def test_convert_contig_to_fastg(tmp_path):
     command = f"megahit_toolkit contig2fastg 29 {contig} > {fastg}"
     subprocess.run(command, shell=True, check=True)
     assert fastg.exists()
-
-
-@patch("subprocess.run")
-def test_subprocess_failed(function_mock):
-    function_mock.return_value = subprocess.CompletedProcess(["Bandage", "--help"], 1)
-    assert bandage.check_bandage() == False
-
-
-def test_check_bandage_passed():
-    assert bandage.check_bandage() == True

@@ -12,7 +12,7 @@ from pathlib import Path
 from warnings import warn
 
 
-ALGORITHMS = ("spades", "megahit", "unicycler", "flye", "canu")
+ALGORITHMS = ["spades", "megahit", "unicycler", "flye", "canu"]
 KEYS1 = ["samples", "assemblers"]
 KEYS2 = ["label", "algorithm", "extra_args", "samples"]
 
@@ -83,7 +83,3 @@ class Assembler:
     @classmethod
     def from_json(cls, data):
         return cls(data["label"], data["algorithm"], data["samples"], data["extra_args"])
-
-
-# test for not enough samples. for example, assembler wants sample1 and sample2 but user didn't put in sample2 in
-# sample section

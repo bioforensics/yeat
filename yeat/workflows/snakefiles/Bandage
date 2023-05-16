@@ -13,12 +13,12 @@ import re
 
 
 def get_expected_files():
-    mylist = []
+    inputlist = []
     for label in config["labels"]:
         assembler = config["assemblers"][label]
         for sample in config["label_to_samples"][label]:
-            mylist.append(f"analysis/{sample}/{label}/{assembler}/bandage/.done")
-    return mylist
+            inputlist.append(f"analysis/{sample}/{label}/{assembler}/bandage/.done")
+    return inputlist
 
 
 rule all:
@@ -31,8 +31,8 @@ rule spades:
         "analysis/{sample}/{label}/spades/bandage/.done"
     input:
         lambda wildcards:
-            glob(f"analysis/{wildcards.sample}/{wildcards.label}/spades/*.gfa") +
-            glob(f"analysis/{wildcards.sample}/{wildcards.label}/spades/*.fastg")
+            glob(f"analysis/{wildcards.sample}/{wildcards.label}/spades/*.gfa")
+            + glob(f"analysis/{wildcards.sample}/{wildcards.label}/spades/*.fastg")
     run:
         for gfa in input:
             filename = Path(gfa).stem
@@ -79,9 +79,9 @@ rule flye:
         "analysis/{sample}/{label}/flye/bandage/.done"
     input:
         lambda wildcards: 
-            glob(f"analysis/{wildcards.sample}/{wildcards.label}/flye/30-contigger/*.gfa") +
-            glob(f"analysis/{wildcards.sample}/{wildcards.label}/flye/40-polishing/*.gfa") +
-            glob(f"analysis/{wildcards.sample}/{wildcards.label}/flye/*.gfa")
+            glob(f"analysis/{wildcards.sample}/{wildcards.label}/flye/30-contigger/*.gfa")
+            + glob(f"analysis/{wildcards.sample}/{wildcards.label}/flye/40-polishing/*.gfa")
+            + glob(f"analysis/{wildcards.sample}/{wildcards.label}/flye/*.gfa")
     run:
         for gfa in input:
             filename = Path(gfa).stem

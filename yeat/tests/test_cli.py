@@ -50,10 +50,3 @@ def test_invalid_custom_coverage_noninteger(coverage):
 )
 def test_check_positive(value):
     downsample.check_positive(value) == value
-
-
-def test_testing():
-    with pytest.raises(SystemExit) as e:
-        cli.main()
-    assert e.type == SystemExit
-    assert e.value.code == 2

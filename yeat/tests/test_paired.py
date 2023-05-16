@@ -90,27 +90,6 @@ def test_multiple_paired_end_assemblers(capsys, tmp_path):
         assert observed.exists()
 
 
-# @pytest.mark.long
-# def test_run_complex_paired_end_config(capsys, tmp_path):
-#     wd = str(tmp_path)
-#     arglist = [
-#         "--outdir",
-#         wd,
-#         data_file("configs/paired.cfg"),
-#     ]
-#     args = cli.get_parser().parse_args(arglist)
-#     cli.main(args)
-#     analysis_dir = Path(wd).resolve() / "analysis"
-#     expected = [
-#         analysis_dir / "sample1" / "default_spades" / "spades" / "contigs.fasta",
-#         analysis_dir / "sample2" / "default_spades" / "spades" / "contigs.fasta",
-#         analysis_dir / "sample2" / "default_megahit" / "megahit" / "final.contigs.fa",
-#         analysis_dir / "sample1" / "Shigella_sonnei_plasmids" / "unicycler" / "assembly.fasta",
-#     ]
-#     for observed in expected:
-#         assert observed.exists()
-
-
 @pytest.mark.long
 @pytest.mark.parametrize(
     "downsample,num_contigs,largest_contig,total_len",

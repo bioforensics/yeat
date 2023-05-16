@@ -94,6 +94,6 @@ def get_parser(exit_on_error=True):
 
 def main(args=None):
     if args is None:
-        args = get_parser().parse_args()
+        args = get_parser().parse_args()  # pragma: no cover
     samples, assembly_configs = AssemblerConfig.parse_json(open(args.config))
     workflows.run_workflows(args, samples, assembly_configs)

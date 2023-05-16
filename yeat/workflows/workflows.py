@@ -8,7 +8,6 @@
 # -------------------------------------------------------------------------------------------------
 
 from . import bandage
-from pathlib import Path
 from pkg_resources import resource_filename
 from snakemake import snakemake
 
@@ -60,7 +59,6 @@ def check_canu_required_params(extra_args, cores):
         raise ValueError(
             "Canu requires at least 4 avaliable cores; increase `--threads` to 4 or more"
         )
-        # check and override the cores
 
 
 def run_pacbio(assembly_samples, assembly_configs, outdir=".", cores=1, dryrun="dry"):
@@ -125,12 +123,6 @@ def run_workflows(args, samples, assembly_configs):
             outdir=args.outdir,
             cores=args.threads,
             dryrun=args.dry_run,
-            # coverage=args.coverage,
-            # downsample=args.downsample,
-            # genomesize=args.genome_size,
-            # seed=args.seed,
         )
     if not args.dry_run:
-        bandage.run_bandage(
-            samples, assembly_configs=assembly_configs, outdir=args.outdir, cores=args.threads
-        )
+        bandage.run_bandage(assembly_configs, outdir=args.outdir, cores=args.threads)

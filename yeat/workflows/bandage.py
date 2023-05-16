@@ -25,7 +25,7 @@ def check_bandage():
     return True
 
 
-def run_bandage(assembly_samples, assembly_configs, outdir=".", cores=1):
+def run_bandage(assembly_configs, outdir=".", cores=1):
     if not check_bandage():
         warnings.warn("Unable to run Bandage; skipping Bandage")
         return

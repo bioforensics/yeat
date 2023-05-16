@@ -15,13 +15,13 @@ from shutil import copyfile
 
 
 def get_expected_files():
-    mylist = []
+    inputlist = []
     for label in config["labels"]:
         assembler = config["assemblers"][label]
         for sample in config["label_to_samples"][label]:
-            mylist.append(f"analysis/{sample}/{label}/{assembler}/quast/{sample}_report.html")
-    mylist += expand("seq/fastqc/{sample}/{sample}_{reads}_fastqc.html", sample=[*config["samples"]], reads=["R1", "R2"])
-    return mylist
+            inputlist.append(f"analysis/{sample}/{label}/{assembler}/quast/{sample}_report.html")
+    inputlist += expand("seq/fastqc/{sample}/{sample}_{reads}_fastqc.html", sample=[*config["samples"]], reads=["R1", "R2"])
+    return inputlist
 
 
 rule all:

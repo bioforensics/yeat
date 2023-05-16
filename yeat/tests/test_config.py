@@ -60,7 +60,7 @@ def test_valid_config_entry():
 def test_missing_key_in_config_entry(key):
     data = json.load(open(data_file("configs/paired.cfg")))
     del data["assemblers"][0][key]
-    pattern = fr"Missing assembly configuration setting\(s\) '{key}'"
+    pattern = rf"Missing assembly configuration setting\(s\) '{key}'"
     with pytest.raises(AssemblyConfigurationError, match=pattern):
         AssemblerConfig.validate(data["assemblers"][0], KEYS2)
 
@@ -82,13 +82,13 @@ def test_unsupported_key_in_config_entry():
     ],
 )
 def test_sample_read_file_not_found(reads, badfile):
-    pattern = fr"No such file: '.*{reads[badfile]}'"
+    pattern = rf"No such file: '.*{reads[badfile]}'"
     with pytest.raises(FileNotFoundError, match=pattern):
         Sample(reads)
 
 
-def test_same_with_duplicate_reads():
+def test_sample_with_duplicate_reads():
     reads = [data_file("short_reads_1.fastq.gz"), data_file("short_reads_1.fastq.gz")]
-    pattern = fr"Found duplicate read sample: '.*short_reads_1.fastq.gz'"
+    pattern = rf"Found duplicate read sample: '.*short_reads_1.fastq.gz'"
     with pytest.raises(AssemblyConfigurationError, match=pattern):
         Sample(reads)

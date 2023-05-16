@@ -11,7 +11,7 @@ from argparse import ArgumentError
 import json
 import pytest
 from yeat import cli
-from yeat.cli import InitAction
+from yeat.cli import InitAction, downsample
 from yeat.tests import data_file
 
 
@@ -42,3 +42,18 @@ def test_invalid_custom_coverage_noninteger(coverage):
     ]
     with pytest.raises(ArgumentError, match=rf"{coverage} is not an integer"):
         args = cli.get_parser(exit_on_error=False).parse_args(arglist)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [1, 10, 100],
+)
+def test_check_positive(value):
+    downsample.check_positive(value) == value
+
+
+def test_testing():
+    with pytest.raises(SystemExit) as e:
+        cli.main()
+    assert e.type == SystemExit
+    assert e.value.code == 2

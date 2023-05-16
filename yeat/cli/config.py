@@ -28,10 +28,6 @@ class AssemblerConfig:
         AssemblerConfig.validate(configdata, KEYS1)
         for assembler in configdata["assemblers"]:
             AssemblerConfig.validate(assembler, KEYS2)
-        samples = [sample for sample in configdata["samples"]]
-        if len(samples) > len(set(samples)):
-            message = "Duplicate sample names: please check config file"
-            raise AssemblyConfigurationError(message)
         labels = [assembler["label"] for assembler in configdata["assemblers"]]
         if len(labels) > len(set(labels)):
             message = "Duplicate assembly labels: please check config file"
@@ -64,7 +60,7 @@ class Sample:
             if not read.is_file():
                 raise FileNotFoundError(f"No such file: '{read}'")
             if str(read) in sample:
-                message = f"Found duplicate read sample: `{read}`"
+                message = f"Found duplicate read sample: '{read}'"
                 raise AssemblyConfigurationError(message)
             else:
                 sample.append(str(read))

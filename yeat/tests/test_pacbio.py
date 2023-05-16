@@ -48,7 +48,7 @@ def test_check_canu_required_params_errors(extra_args, cores, expected):
 @pytest.mark.parametrize(
     "algorithm,label,expected",
     [
-        ("canu", "canu-default", "sample.contigs.fasta"),
+        ("canu", "canu-default", "sample1.contigs.fasta"),
         ("flye", "flye-default", "assembly.fasta"),
     ],
 )

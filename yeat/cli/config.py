@@ -12,9 +12,9 @@ from pathlib import Path
 from warnings import warn
 
 
-ALGORITHMS = ["spades", "megahit", "unicycler", "flye", "canu"]
-KEYS1 = ["samples", "assemblers"]
-KEYS2 = ["label", "algorithm", "extra_args", "samples"]
+ALGORITHMS = ("spades", "megahit", "unicycler", "flye", "canu")
+KEYS1 = ("samples", "assemblers")
+KEYS2 = ("label", "algorithm", "extra_args", "samples")
 
 
 class AssemblyConfigurationError(ValueError):
@@ -22,26 +22,38 @@ class AssemblyConfigurationError(ValueError):
 
 
 class AssemblerConfig:
-    @staticmethod
-    def parse_json(instream):
-        configdata = json.load(instream)
-        AssemblerConfig.validate(configdata, KEYS1)
-        for assembler in configdata["assemblers"]:
-            AssemblerConfig.validate(assembler, KEYS2)
-        labels = [assembler["label"] for assembler in configdata["assemblers"]]
-        if len(labels) > len(set(labels)):
-            message = "Duplicate assembly labels: please check config file"
-            raise AssemblyConfigurationError(message)
-        sampledict = {}
-        for key, value in configdata["samples"].items():
-            sampledict[key] = Sample.from_json(value)
-        assemblerlist = [Assembler.from_json(assembler) for assembler in configdata["assemblers"]]
-        return sampledict, assemblerlist
+    def __init__(self, samples, assembly_configs):
+        self.samples = {k: v.sample for k, v in samples.items()}
+        self.labels = [config.label for config in assembly_configs]
+        self.assemblers = {config.label: config.algorithm for config in assembly_configs}
+        self.extra_args = {config.label: config.extra_args for config in assembly_configs}
+        self.label_to_samples = {config.label: config.samples for config in assembly_configs}
 
-    @staticmethod
-    def validate(config, keystemp):
-        missingkeys = set(keystemp) - set(config.keys())
-        extrakeys = set(config.keys()) - set(keystemp)
+        # paired_configs = []
+        # pacbio_configs = []
+        # for assembly in assembly_configs:
+        #     if assembly.algorithm in PAIRED:
+        #         paired_configs.append(assembly)
+        #     elif assembly.algorithm in PACBIO:
+        #         pacbio_configs.append(assembly)
+
+    @classmethod
+    def from_json(cls, instream):
+        data = json.load(instream)
+        print(data)
+        assert 0
+        samples = []
+        assemblers = []
+        config = cls(samples, assemblers)
+        return config
+
+    def validate():
+        print("in this function")
+        pass
+
+    def check_keys(data, keys):
+        missingkeys = set(keys) - set(data.keys())
+        extrakeys = set(data.keys()) - set(keys)
         if len(missingkeys) > 0:
             keystr = ",".join(sorted(missingkeys))
             message = f"Missing assembly configuration setting(s) '{keystr}'"
@@ -50,6 +62,23 @@ class AssemblerConfig:
             keystr = ",".join(sorted(extrakeys))
             message = f"Ignoring unsupported configuration key(s) '{keystr}'"
             warn(message)
+
+
+#     @staticmethod
+#     def parse_json(instream):
+#         configdata = json.load(instream)
+#         AssemblerConfig.validate(configdata, KEYS1)
+#         for assembler in configdata["assemblers"]:
+#             AssemblerConfig.validate(assembler, KEYS2)
+#         labels = [assembler["label"] for assembler in configdata["assemblers"]]
+#         if len(labels) > len(set(labels)):
+#             message = "Duplicate assembly labels: please check config file"
+#             raise AssemblyConfigurationError(message)
+#         sampledict = {}
+#         for key, value in configdata["samples"].items():
+#             sampledict[key] = Sample.from_json(value)
+#         assemblerlist = [Assembler.from_json(assembler) for assembler in configdata["assemblers"]]
+#         return sampledict, assemblerlist
 
 
 class Sample:

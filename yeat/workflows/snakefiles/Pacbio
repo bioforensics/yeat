@@ -31,10 +31,11 @@ rule copyinput:
     input:
         lambda wildcards: config["samples"][wildcards.sample]
     run:
-        if input[0].endswith(".gz"):
-            copyfile(input[0], output.read)
-        else:
-            shell(f"gzip -c {input[0]} > {output.read}")
+        for inread in input:
+            if inread.endswith(".gz"):
+                copyfile(inread, output.read)
+            else:
+                shell(f"gzip -c {inread} > {output.read}")
 
 
 rule fastqc:

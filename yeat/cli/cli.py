@@ -13,7 +13,7 @@ from argparse import Action, ArgumentParser
 import json
 import sys
 import yeat
-from yeat.workflows import workflows
+from yeat import workflows
 
 
 CONFIG_TEMPLATE = {
@@ -95,5 +95,5 @@ def get_parser(exit_on_error=True):
 def main(args=None):
     if args is None:
         args = get_parser().parse_args()  # pragma: no cover
-    samples, assembly_configs = AssemblerConfig.parse_json(open(args.config))
-    workflows.run_workflows(args, samples, assembly_configs)
+    config = AssemblerConfig.from_json(open(args.config))
+    # workflows.run_workflows(args, config)

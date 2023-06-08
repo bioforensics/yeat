@@ -12,9 +12,11 @@ from pathlib import Path
 from warnings import warn
 
 
-ALGORITHMS = ("spades", "megahit", "unicycler", "flye", "canu")
 KEYS1 = ("samples", "assemblers")
 KEYS2 = ("label", "algorithm", "extra_args", "samples")
+PAIRED = ("spades", "megahit", "unicycler")
+PACBIO = ("canu", "flye")
+ALGORITHMS = PAIRED + PACBIO
 
 
 class AssemblyConfigurationError(ValueError):
@@ -22,36 +24,28 @@ class AssemblyConfigurationError(ValueError):
 
 
 class AssemblerConfig:
-    def __init__(self, samples, assembly_configs):
-        self.samples = {k: v.sample for k, v in samples.items()}
-        self.labels = [config.label for config in assembly_configs]
-        self.assemblers = {config.label: config.algorithm for config in assembly_configs}
-        self.extra_args = {config.label: config.extra_args for config in assembly_configs}
-        self.label_to_samples = {config.label: config.samples for config in assembly_configs}
-
-        # paired_configs = []
-        # pacbio_configs = []
-        # for assembly in assembly_configs:
-        #     if assembly.algorithm in PAIRED:
-        #         paired_configs.append(assembly)
-        #     elif assembly.algorithm in PACBIO:
-        #         pacbio_configs.append(assembly)
+    def __init__(self, data, threads):
+        self.data = data
+        self.validate()
+        self.threads = threads
+        self.create_data_objects()
+        self.batch()
 
     @classmethod
-    def from_json(cls, instream):
-        data = json.load(instream)
-        print(data)
-        assert 0
-        samples = []
-        assemblers = []
-        config = cls(samples, assemblers)
-        return config
+    def from_json(cls, infile, threads):
+        data = json.load(open(infile))
+        return cls(data, threads)
 
-    def validate():
-        print("in this function")
-        pass
+    def validate(self):
+        self.check_keys(self.data, KEYS1)
+        for assembler in self.data["assemblers"]:
+            self.check_keys(assembler, KEYS2)
+        labels = [assembler["label"] for assembler in self.data["assemblers"]]
+        if len(labels) > len(set(labels)):
+            message = "Duplicate assembly labels: please check config file"
+            raise AssemblyConfigurationError(message)
 
-    def check_keys(data, keys):
+    def check_keys(self, data, keys):
         missingkeys = set(keys) - set(data.keys())
         extrakeys = set(data.keys()) - set(keys)
         if len(missingkeys) > 0:
@@ -63,22 +57,61 @@ class AssemblerConfig:
             message = f"Ignoring unsupported configuration key(s) '{keystr}'"
             warn(message)
 
+    def create_data_objects(self):
+        self.samples = {}
+        for key, value in self.data["samples"].items():
+            self.samples[key] = Sample.from_sample(value)
+        self.assemblers = [
+            Assembler.from_assembler(assembler, self.threads)
+            for assembler in self.data["assemblers"]
+        ]
 
-#     @staticmethod
-#     def parse_json(instream):
-#         configdata = json.load(instream)
-#         AssemblerConfig.validate(configdata, KEYS1)
-#         for assembler in configdata["assemblers"]:
-#             AssemblerConfig.validate(assembler, KEYS2)
-#         labels = [assembler["label"] for assembler in configdata["assemblers"]]
-#         if len(labels) > len(set(labels)):
-#             message = "Duplicate assembly labels: please check config file"
-#             raise AssemblyConfigurationError(message)
-#         sampledict = {}
-#         for key, value in configdata["samples"].items():
-#             sampledict[key] = Sample.from_json(value)
-#         assemblerlist = [Assembler.from_json(assembler) for assembler in configdata["assemblers"]]
-#         return sampledict, assemblerlist
+    def batch(self):
+        paired_assemblers = []
+        pacbio_assemblers = []
+        for assembler in self.assemblers:
+            if assembler.algorithm in PAIRED:
+                paired_assemblers.append(assembler)
+            elif assembler.algorithm in PACBIO:
+                pacbio_assemblers.append(assembler)
+        self.batch = {
+            "paired": {
+                "samples": self.get_batch_samples(paired_assemblers),
+                "assemblers": paired_assemblers,
+            },
+            "pacbio": {
+                "samples": self.get_batch_samples(pacbio_assemblers),
+                "assemblers": pacbio_assemblers,
+            },
+        }
+
+    def get_batch_samples(self, assemblers):
+        samples = {}
+        for assembler in assemblers:
+            samples = samples | dict(
+                (key, self.samples[key]) for key in assembler.samples if key in self.samples
+            )
+        return samples
+
+    def to_dict(self, args, readtype):
+        if readtype == "all":
+            samples = self.samples
+            assemblers = self.assemblers
+        else:
+            samples = self.batch[readtype]["samples"]
+            assemblers = self.batch[readtype]["assemblers"]
+        return dict(
+            samples={key: value.sample for key, value in samples.items()},
+            labels=[assembler.label for assembler in assemblers],
+            assemblers={assembler.label: assembler.algorithm for assembler in assemblers},
+            extra_args={assembler.label: assembler.extra_args for assembler in assemblers},
+            label_to_samples={assembler.label: assembler.samples for assembler in assemblers},
+            threads=args.threads,
+            downsample=args.downsample,
+            coverage=args.coverage,
+            genomesize=args.genome_size,
+            seed=args.seed,
+        )
 
 
 class Sample:
@@ -96,19 +129,30 @@ class Sample:
         self.sample = sample
 
     @classmethod
-    def from_json(cls, data):
+    def from_sample(cls, data):
         return cls(data)
 
 
 class Assembler:
-    def __init__(self, label, algorithm, samples, extra_args=""):
+    def __init__(self, label, algorithm, samples, extra_args, threads):
         self.label = label
         if algorithm not in ALGORITHMS:
             raise AssemblyConfigurationError(f"Unsupported assembly algorithm '{algorithm}'")
         self.algorithm = algorithm
         self.samples = samples
         self.extra_args = extra_args
+        self.threads = threads
+        if algorithm == "canu":
+            self.check_canu_required_params()
 
     @classmethod
-    def from_json(cls, data):
-        return cls(data["label"], data["algorithm"], data["samples"], data["extra_args"])
+    def from_assembler(cls, data, threads):
+        return cls(data["label"], data["algorithm"], data["samples"], data["extra_args"], threads)
+
+    def check_canu_required_params(self):
+        if "genomeSize=" not in self.extra_args:
+            raise ValueError("Missing required input argument from config: 'genomeSize'")
+        if self.threads < 4:
+            raise ValueError(
+                "Canu requires at least 4 avaliable cores; increase `--threads` to 4 or more"
+            )

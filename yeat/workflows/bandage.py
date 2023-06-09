@@ -29,10 +29,10 @@ def run_bandage(args, config):
     if not check_bandage():
         warnings.warn("Unable to run Bandage; skipping Bandage")
         return
-    data = config.to_dict(args, "all")
     snakefile = resource_filename("yeat", "workflows/snakefiles/Bandage")
+    data = config.to_dict(args, "all")
     success = snakemake(
-        snakefile, config=data, cores=args.cores, printshellcmds=True, workdir=args.outdir
+        snakefile, config=data, cores=args.threads, printshellcmds=True, workdir=args.outdir
     )
     if not success:
         raise RuntimeError("Snakemake Failed")

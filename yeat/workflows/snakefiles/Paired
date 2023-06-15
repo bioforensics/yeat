@@ -120,7 +120,7 @@ rule downsample:
             down = int((genome_size * params.coverage) / (2 * avg_read_length))
         else:
             down = params.downsample
-        if params.seed == None:
+        if params.seed == "None":
             seed = randint(1, 2**16-1)
         else:
             seed = params.seed

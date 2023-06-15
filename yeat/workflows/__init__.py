@@ -14,7 +14,7 @@ from snakemake import snakemake
 
 def run_paired(args, config):
     snakefile = resource_filename("yeat", "workflows/snakefiles/Paired")
-    data = config.to_dict(args, "paired")
+    data = config.to_dict(args, readtype="paired")
     success = snakemake(
         snakefile,
         config=data,
@@ -29,7 +29,7 @@ def run_paired(args, config):
 
 def run_pacbio(args, config):
     snakefile = resource_filename("yeat", "workflows/snakefiles/Pacbio")
-    data = config.to_dict(args, "pacbio")
+    data = config.to_dict(args, readtype="pacbio")
     success = snakemake(
         snakefile,
         config=data,

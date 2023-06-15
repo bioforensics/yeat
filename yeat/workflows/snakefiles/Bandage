@@ -53,7 +53,7 @@ rule megahit:
         lambda wildcards: get_and_filter_contig_files(wildcards.sample, wildcards.label)
     run:
         for fa in input:
-            kmer = re.findall(r'\d+', fa)[0]
+            kmer = re.findall(r'k\d+.contigs.fa', fa)[0].split(".")[0][1:]
             filename = Path(fa).stem
             fastg = f"analysis/{wildcards.sample}/{wildcards.label}/megahit/intermediate_contigs/{filename}.fastg"
             shell("megahit_toolkit contig2fastg {kmer} {fa} > {fastg}")
@@ -70,7 +70,7 @@ rule unicycler:
     run:
         for gfa in input:
             filename = Path(gfa).stem
-            shell("Bandage image {gfa} analysis/{wildcards.sample}/{wildcards.label}/unicycler/{filename}.jpg")
+            shell("Bandage image {gfa} analysis/{wildcards.sample}/{wildcards.label}/unicycler/bandage/{filename}.jpg")
         shell("touch {output[0]}")
 
 

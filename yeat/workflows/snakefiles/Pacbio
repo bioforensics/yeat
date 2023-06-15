@@ -33,10 +33,11 @@ rule copyinput:
         lambda wildcards: config["samples"][wildcards.sample]
     run:
         for i, inread in enumerate(input):
+            outread = f"seq/input/{wildcards.sample}/{wildcards.sample}_{i}.fq.gz"
             if inread.endswith(".gz"):
-                copyfile(inread, f"seq/input/{wildcards.sample}/{wildcards.sample}_{i}.fq.gz")
+                copyfile(inread, outread)
             else:
-                shell(f"gzip -c {inread} > {wildcards.sample}_{i}.fq.gz")
+                shell(f"gzip -c {inread} > {outread}")
         shell("touch {output[0]}")
 
 
@@ -47,11 +48,12 @@ rule fastqc:
         "seq/input/{sample}/.done"
     threads: 128
     params:
-        copied_files=lambda wildcards: glob(f"seq/input/{wildcards.sample}/*.fq.gz")
-    run:
-        for read in params.copied_files:
-            shell(f"fastqc {read} --threads {threads} -o seq/fastqc/{wildcards.sample}")
-        shell("touch {output[0]}")
+        reads=lambda wildcards: glob(f"seq/input/{wildcards.sample}/*.fq.gz")
+    shell:
+        """
+        fastqc {params.reads} --threads {threads} -o seq/fastqc/{wildcards.sample}
+        touch {output[0]}
+        """
 
 
 rule flye:
@@ -61,12 +63,13 @@ rule flye:
         "seq/input/{sample}/.done"
     threads: 128
     params:
-        copied_files=lambda wildcards: glob(f"seq/input/{wildcards.sample}/*.fq.gz"),
+        reads=lambda wildcards: glob(f"seq/input/{wildcards.sample}/*.fq.gz"),
         extra_args=lambda wildcards: config["extra_args"][wildcards.label]
-    run:
-        reads = ' '.join(params.copied_files)
-        shell(f"flye --pacbio-hifi {reads} -t {threads} -o analysis/{wildcards.sample}/{wildcards.label}/flye {params.extra_args}")
-        shell("ln -s assembly.fasta {output.contigs}")
+    shell:
+        """
+        flye --pacbio-hifi {params.reads} -t {threads} -o analysis/{wildcards.sample}/{wildcards.label}/flye {params.extra_args}
+        ln -s assembly.fasta {output.contigs}
+        """
 
 
 rule canu:
@@ -76,12 +79,13 @@ rule canu:
         "seq/input/{sample}/.done"
     threads: 128
     params:
-        copied_files=lambda wildcards: glob(f"seq/input/{wildcards.sample}/*.fq.gz"),
+        reads=lambda wildcards: glob(f"seq/input/{wildcards.sample}/*.fq.gz"),
         extra_args=lambda wildcards: config["extra_args"][wildcards.label]
-    run:
-        reads = ' '.join(params.copied_files)
-        shell(f"canu -pacbio-hifi {reads} maxThreads={threads} -p {wildcards.sample} -d analysis/{wildcards.sample}/{wildcards.label}/canu {params.extra_args}")
-        shell("ln -s {wildcards.sample}.contigs.fasta {output.contigs}")  
+    shell:
+        """
+        canu -pacbio-hifi {params.reads} maxThreads={threads} -p {wildcards.sample} -d analysis/{wildcards.sample}/{wildcards.label}/canu {params.extra_args}
+        ln -s {wildcards.sample}.contigs.fasta {output.contigs}
+        """
 
 
 rule quast:

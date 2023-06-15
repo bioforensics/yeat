@@ -28,7 +28,7 @@ class AssemblerConfig:
         self.data = data
         self.validate()
         self.threads = threads
-        self.create_data_objects()
+        self.create_sample_and_assembler_objects()
         self.batch()
 
     @classmethod
@@ -57,13 +57,12 @@ class AssemblerConfig:
             message = f"Ignoring unsupported configuration key(s) '{keystr}'"
             warn(message)
 
-    def create_data_objects(self):
+    def create_sample_and_assembler_objects(self):
         self.samples = {}
         for key, value in self.data["samples"].items():
-            self.samples[key] = Sample.from_sample(value)
+            self.samples[key] = Sample.from_data(value)
         self.assemblers = [
-            Assembler.from_assembler(assembler, self.threads)
-            for assembler in self.data["assemblers"]
+            Assembler.from_data(assembler, self.threads) for assembler in self.data["assemblers"]
         ]
 
     def batch(self):
@@ -93,7 +92,7 @@ class AssemblerConfig:
             )
         return samples
 
-    def to_dict(self, args, readtype):
+    def to_dict(self, args, readtype="all"):
         if readtype == "all":
             samples = self.samples
             assemblers = self.assemblers
@@ -124,12 +123,11 @@ class Sample:
             if str(read) in sample:
                 message = f"Found duplicate read sample: '{read}'"
                 raise AssemblyConfigurationError(message)
-            else:
-                sample.append(str(read))
+            sample.append(str(read))
         self.sample = sample
 
     @classmethod
-    def from_sample(cls, data):
+    def from_data(cls, data):
         return cls(data)
 
 
@@ -146,7 +144,7 @@ class Assembler:
             self.check_canu_required_params()
 
     @classmethod
-    def from_assembler(cls, data, threads):
+    def from_data(cls, data, threads):
         return cls(data["label"], data["algorithm"], data["samples"], data["extra_args"], threads)
 
     def check_canu_required_params(self):

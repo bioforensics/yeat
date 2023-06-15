@@ -41,7 +41,7 @@ def test_env_path_has_no_path_to_bandage(capsys):
 def test_no_bandage_warning(function_mock):
     function_mock.return_value = False
     with pytest.warns(UserWarning, match=r"Unable to run Bandage; skipping Bandage"):
-        bandage.run_bandage(assembly_configs=[])
+        bandage.run_bandage(None, None)
 
 
 @pytest.mark.bandage

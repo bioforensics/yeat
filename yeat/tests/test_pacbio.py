@@ -9,7 +9,7 @@
 
 from pathlib import Path
 import pytest
-from yeat import cli, workflows
+from yeat import cli
 from yeat.tests import data_file, get_core_count
 
 
@@ -25,22 +25,6 @@ def test_pacbio_hifi_assemblers_dry_run(tmp_path):
     ]
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
-
-
-@pytest.mark.parametrize(
-    "extra_args,cores,expected",
-    [
-        ("", 4, r"Missing required input argument from config: 'genomeSize'"),
-        (
-            "genomeSize=4.8m",
-            1,
-            r"Canu requires at least 4 avaliable cores; increase `--threads` to 4 or more",
-        ),
-    ],
-)
-def test_check_canu_required_params_errors(extra_args, cores, expected):
-    with pytest.raises(ValueError, match=expected):
-        workflows.check_canu_required_params(extra_args, cores)
 
 
 @pytest.mark.hifi

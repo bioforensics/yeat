@@ -10,14 +10,8 @@
 import json
 from pathlib import Path
 import pytest
-from yeat.cli.config import (
-    Assembler,
-    AssemblerConfig,
-    AssemblyConfigurationError,
-    Sample,
-    KEYS1,
-    KEYS2,
-)
+from yeat import cli
+from yeat.cli.config import Assembler, AssemblerConfig, AssemblyConfigurationError, Sample
 from yeat.tests import data_file
 
 
@@ -25,35 +19,26 @@ def test_unsupported_assembly_algorithm():
     algorithm = "unsupported_algorithm"
     pattern = rf"Unsupported assembly algorithm '{algorithm}'"
     with pytest.raises(ValueError, match=pattern):
-        Assembler("label1", algorithm, ["sample1"])
+        Assembler("label1", algorithm, [], "", 1)
 
 
 def test_duplicate_assembly_labels(tmp_path):
     wd = str(tmp_path)
     data = json.load(open(data_file("configs/paired.cfg")))
     data["assemblers"].append(data["assemblers"][0])
-    print(data["assemblers"])
     cfg = str(Path(wd).resolve() / "paired.cfg")
     json.dump(data, open(cfg, "w"))
     pattern = r"Duplicate assembly labels: please check config file"
     with pytest.raises(ValueError, match=pattern):
-        AssemblerConfig.parse_json(open(cfg))
+        AssemblerConfig.from_json(cfg, 1)
 
 
-def test_parse_json():
-    f = open(data_file("configs/paired.cfg"))
-    samples, algorithms = AssemblerConfig.parse_json(f)
-    for sample_name, reads in samples.items():
-        assert len(reads.sample) == 2
-    assemblers = [assembler.algorithm for assembler in algorithms]
+def test_valid_config():
+    cfg = data_file("configs/paired.cfg")
+    config = AssemblerConfig.from_json(cfg, 1)
+    assert len(config.samples) == 2
+    assemblers = [assembler.algorithm for assembler in config.assemblers]
     assert assemblers == ["spades", "megahit", "unicycler"]
-
-
-def test_valid_config_entry():
-    data = json.load(open(data_file("configs/paired.cfg")))
-    AssemblerConfig.validate(data, KEYS1)
-    for assembler in data["assemblers"]:
-        AssemblerConfig.validate(assembler, KEYS2)
 
 
 @pytest.mark.parametrize("key,", ["label", "algorithm", "extra_args", "samples"])
@@ -62,7 +47,7 @@ def test_missing_key_in_config_entry(key):
     del data["assemblers"][0][key]
     pattern = rf"Missing assembly configuration setting\(s\) '{key}'"
     with pytest.raises(AssemblyConfigurationError, match=pattern):
-        AssemblerConfig.validate(data["assemblers"][0], KEYS2)
+        AssemblerConfig(data, 1)
 
 
 def test_unsupported_key_in_config_entry():
@@ -70,7 +55,7 @@ def test_unsupported_key_in_config_entry():
     data["assemblers"][0]["not"] = "supported"
     pattern = r"Ignoring unsupported configuration key\(s\) 'not'"
     with pytest.warns(match=pattern):
-        AssemblerConfig.validate(data["assemblers"][0], KEYS2)
+        AssemblerConfig(data, 1)
 
 
 @pytest.mark.parametrize(
@@ -92,3 +77,47 @@ def test_sample_with_duplicate_reads():
     pattern = rf"Found duplicate read sample: '.*short_reads_1.fastq.gz'"
     with pytest.raises(AssemblyConfigurationError, match=pattern):
         Sample(reads)
+
+
+@pytest.mark.parametrize(
+    "extra_args,cores,expected",
+    [
+        ("", 4, r"Missing required input argument from config: 'genomeSize'"),
+        (
+            "genomeSize=4.8m",
+            1,
+            r"Canu requires at least 4 avaliable cores; increase `--threads` to 4 or more",
+        ),
+    ],
+)
+def test_check_canu_required_params_errors(extra_args, cores, expected):
+    with pytest.raises(ValueError, match=expected):
+        Assembler("label1", "canu", [], extra_args, cores)
+
+
+@pytest.mark.parametrize(
+    "cfg,readtype,subsamples,sublabels",
+    [
+        (
+            data_file("configs/flye_unicycler.cfg"),
+            "all",
+            ["sample1", "sample2"],
+            ["flye-default", "spades-default"],
+        ),
+        (data_file("configs/flye_unicycler.cfg"), "pacbio", ["sample1"], ["flye-default"]),
+        (data_file("configs/flye_unicycler.cfg"), "paired", ["sample2"], ["spades-default"]),
+    ],
+)
+def test_to_dict(cfg, readtype, subsamples, sublabels):
+    args = cli.get_parser().parse_args([cfg])
+    config = AssemblerConfig.from_json(args.config, args.threads)
+    observed = config.to_dict(args, readtype)
+    for sample in subsamples:
+        assert sample in observed["samples"]
+    for label in sublabels:
+        assert label in observed["labels"]
+        assert label in observed["assemblers"]
+        assert observed["assemblers"][label] in label
+    assert len(observed["samples"]) == len(subsamples)
+    assert len(observed["labels"]) == len(sublabels)
+    assert len(observed["assemblers"]) == len(sublabels)

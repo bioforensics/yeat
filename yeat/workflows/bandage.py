@@ -35,4 +35,4 @@ def run_bandage(args, config):
         snakefile, config=data, cores=args.threads, printshellcmds=True, workdir=args.outdir
     )
     if not success:
-        raise RuntimeError("Snakemake Failed")
+        raise RuntimeError("Snakemake Failed")  # pragma: no cover

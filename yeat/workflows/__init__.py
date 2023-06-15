@@ -24,7 +24,7 @@ def run_paired(args, config):
         workdir=args.outdir,
     )
     if not success:
-        raise RuntimeError("Snakemake Failed")
+        raise RuntimeError("Snakemake Failed")  # pragma: no cover
 
 
 def run_pacbio(args, config):
@@ -39,7 +39,7 @@ def run_pacbio(args, config):
         workdir=args.outdir,
     )
     if not success:
-        raise RuntimeError("Snakemake Failed")
+        raise RuntimeError("Snakemake Failed")  # pragma: no cover
 
 
 def run_workflows(args, config):

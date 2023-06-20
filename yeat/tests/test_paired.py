@@ -63,12 +63,8 @@ def test_multiple_spades(capsys, tmp_path):
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
     analysis_dir = Path(wd).resolve() / "analysis"
-    expected = [
-        analysis_dir / "sample1" / "spades-default" / "spades" / "contigs.fasta",
-        analysis_dir / "sample1" / "spades-meta" / "spades" / "contigs.fasta",
-    ]
-    for observed in expected:
-        assert observed.exists()
+    assert (analysis_dir / "sample1" / "spades-default" / "spades" / "contigs.fasta").exists()
+    assert (analysis_dir / "sample1" / "spades-meta" / "spades" / "contigs.fasta").exists()
 
 
 @pytest.mark.long
@@ -82,12 +78,10 @@ def test_multiple_paired_end_assemblers(capsys, tmp_path):
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
     analysis_dir = Path(wd).resolve() / "analysis"
-    expected = [
-        analysis_dir / "sample1" / "unicycler-default" / "unicycler" / "assembly.fasta",
-        analysis_dir / "sample1" / "spades-meta" / "spades" / "contigs.fasta",
-    ]
-    for observed in expected:
-        assert observed.exists()
+    assert (
+        analysis_dir / "sample1" / "unicycler-default" / "unicycler" / "assembly.fasta"
+    ).exists()
+    assert (analysis_dir / "sample1" / "spades-meta" / "spades" / "contigs.fasta").exists()
 
 
 @pytest.mark.long

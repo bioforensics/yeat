@@ -12,8 +12,6 @@ from pathlib import Path
 from warnings import warn
 
 
-KEYS1 = ("samples", "assemblers")
-KEYS2 = ("label", "algorithm", "extra_args", "samples")
 PAIRED = ("spades", "megahit", "unicycler")
 PACBIO = ("canu", "flye")
 ALGORITHMS = PAIRED + PACBIO
@@ -37,9 +35,9 @@ class AssemblerConfig:
         return cls(data, threads)
 
     def validate(self):
-        self.check_keys(self.data, KEYS1)
+        self.check_keys(self.data, ("samples", "assemblers"))
         for assembler in self.data["assemblers"]:
-            self.check_keys(assembler, KEYS2)
+            self.check_keys(assembler, ("label", "algorithm", "extra_args", "samples"))
         labels = [assembler["label"] for assembler in self.data["assemblers"]]
         if len(labels) > len(set(labels)):
             message = "Duplicate assembly labels: please check config file"
@@ -60,7 +58,7 @@ class AssemblerConfig:
     def create_sample_and_assembler_objects(self):
         self.samples = {}
         for key, value in self.data["samples"].items():
-            self.samples[key] = Sample.from_data(value)
+            self.samples[key] = Sample(value)
         self.assemblers = [
             Assembler.from_data(assembler, self.threads) for assembler in self.data["assemblers"]
         ]
@@ -125,10 +123,6 @@ class Sample:
                 raise AssemblyConfigurationError(message)
             sample.append(str(read))
         self.sample = sample
-
-    @classmethod
-    def from_data(cls, data):
-        return cls(data)
 
 
 class Assembler:

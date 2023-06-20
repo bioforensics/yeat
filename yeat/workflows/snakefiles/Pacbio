@@ -83,7 +83,7 @@ rule canu:
         extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        canu -pacbio-hifi {params.reads} maxThreads={threads} -p {wildcards.sample} -d analysis/{wildcards.sample}/{wildcards.label}/canu {params.extra_args}
+        canu -pacbio-hifi {params.reads} maxThreads={threads} -p {wildcards.sample} -d analysis/{wildcards.sample}/{wildcards.label}/canu {params.extra_args} useGrid=false
         ln -s {wildcards.sample}.contigs.fasta {output.contigs}
         """
 

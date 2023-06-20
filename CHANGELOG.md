@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for Bandage (#34)
 - Support for basic PacBio HiFi-reads assembly with Flye and Canu (#37)
 
+### Changed
+- Config file to enable:
+    - Support for multi-input samples (#43)
+    - Running multiple assembly algorithm with labels (#43)
+
+
 ## [0.2] 2022-11-09
 
 ### Added

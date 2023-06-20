@@ -25,12 +25,14 @@ def check_bandage():
     return True
 
 
-def run_bandage(assembly_configs, outdir=".", cores=1):
+def run_bandage(args, config):
     if not check_bandage():
         warnings.warn("Unable to run Bandage; skipping Bandage")
         return
-    config = dict(assemblers=[config.algorithm for config in assembly_configs])
-    snakefile = resource_filename("yeat", "bandage/Snakefile")
-    success = snakemake(snakefile, config=config, cores=cores, printshellcmds=True, workdir=outdir)
+    snakefile = resource_filename("yeat", "workflows/snakefiles/Bandage")
+    data = config.to_dict(args)
+    success = snakemake(
+        snakefile, config=data, cores=args.threads, printshellcmds=True, workdir=args.outdir
+    )
     if not success:
-        raise RuntimeError("Snakemake Failed")
+        raise RuntimeError("Snakemake Failed")  # pragma: no cover

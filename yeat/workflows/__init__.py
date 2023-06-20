@@ -7,4 +7,45 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from .workflows import *
+from . import bandage
+from pkg_resources import resource_filename
+from snakemake import snakemake
+
+
+def run_paired(args, config):
+    snakefile = resource_filename("yeat", "workflows/snakefiles/Paired")
+    data = config.to_dict(args, readtype="paired")
+    success = snakemake(
+        snakefile,
+        config=data,
+        cores=args.threads,
+        dryrun=args.dry_run,
+        printshellcmds=True,
+        workdir=args.outdir,
+    )
+    if not success:
+        raise RuntimeError("Snakemake Failed")  # pragma: no cover
+
+
+def run_pacbio(args, config):
+    snakefile = resource_filename("yeat", "workflows/snakefiles/Pacbio")
+    data = config.to_dict(args, readtype="pacbio")
+    success = snakemake(
+        snakefile,
+        config=data,
+        cores=args.threads,
+        dryrun=args.dry_run,
+        printshellcmds=True,
+        workdir=args.outdir,
+    )
+    if not success:
+        raise RuntimeError("Snakemake Failed")  # pragma: no cover
+
+
+def run_workflows(args, config):
+    if config.batch["paired"]["assemblers"]:
+        run_paired(args, config)
+    if config.batch["pacbio"]["assemblers"]:
+        run_pacbio(args, config)
+    if not args.dry_run:
+        bandage.run_bandage(args, config)

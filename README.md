@@ -41,5 +41,5 @@ make hifidata
 ## Usage:
 
 ```
-$ yeat --outdir {path} --sample {name} (--paired {read1} {read2} | --pacbio {read}) {config}
+$ yeat --outdir {path} {config}
 ```

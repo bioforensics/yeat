@@ -1,6 +1,6 @@
 # YEAT
 
-YEAT, **Y**our **E**verday **A**ssembly **T**ool, is an update to [`asm_tools`](https://github.com/bioforensics/asm_tools). It uses a Snakemake workflow to preprocess, downsample, and assemble paired-end fastq files with various assemblers such as SPAdes, MEGAHIT, and Unicycler.
+YEAT, **Y**our **E**verday **A**ssembly **T**ool, is an update to [`asm_tools`](https://github.com/bioforensics/asm_tools). It uses a Snakemake workflow to preprocess paired-end and pacbio-hifi fastq reads with various assemblers such as SPAdes, MEGAHIT, Unicycler, Canu, and Flye.
 
 ## Installation
 

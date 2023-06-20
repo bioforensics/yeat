@@ -25,7 +25,6 @@ setup(
     url='https://github.com/bioforensics/yeat',
     packages=[
         "yeat",
-        "yeat.bandage",
         "yeat.cli",
         "yeat.tests",
         "yeat.workflows",

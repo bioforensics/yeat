@@ -48,8 +48,8 @@ def test_individual_paired_end_assemblers(algorithm, label, expected, capsys, tm
     ]
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
-    observed = Path(wd).resolve() / "analysis" / "sample1" / label / algorithm / expected
-    assert observed.exists()
+    analysis_dir = Path(wd).resolve() / "analysis"
+    assert (analysis_dir / "sample1" / label / algorithm / expected).exists()
 
 
 @pytest.mark.long

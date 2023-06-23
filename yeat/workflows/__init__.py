@@ -42,10 +42,27 @@ def run_pacbio(args, config):
         raise RuntimeError("Snakemake Failed")  # pragma: no cover
 
 
+def run_oxford(args, config):
+    snakefile = resource_filename("yeat", "workflows/snakefiles/Oxford")
+    data = config.to_dict(args, readtype="oxford")
+    success = snakemake(
+        snakefile,
+        config=data,
+        cores=args.threads,
+        dryrun=args.dry_run,
+        printshellcmds=True,
+        workdir=args.outdir,
+    )
+    if not success:
+        raise RuntimeError("SnakemakeFaild") # pragma: no cover
+
+
 def run_workflows(args, config):
     if config.batch["paired"]["assemblers"]:
         run_paired(args, config)
     if config.batch["pacbio"]["assemblers"]:
         run_pacbio(args, config)
+    if config.batch["oxford"]["assemblers"]:
+        run_oxford(args, config)
     if not args.dry_run:
         bandage.run_bandage(args, config)

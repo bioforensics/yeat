@@ -1,0 +1,101 @@
+# -------------------------------------------------------------------------------------------------
+# Copyright (c) 2023, DHS. This file is part of YEAT: http://github.com/bioforensics/yeat
+#
+# This software was prepared for the Department of Homeland Security (DHS) by the Battelle National
+# Biodefense Institute, LLC (BNBI) as part of contract HSHQDC-15-C-00064 to manage and operate the
+# National Biodefense Analysis and Countermeasures Center (NBACC), a Federally Funded Research and
+# Development Center.
+# -------------------------------------------------------------------------------------------------
+
+
+from glob import glob
+from shutil import copyfile
+
+
+def get_expected_files():
+    inputlist = []
+    for label in config["labels"]:
+        assembler = config["assemblers"][label]
+        for sample in config["label_to_samples"][label]:
+            inputlist.append(f"analysis/{sample}/{label}/{assembler}/quast/{sample}_report.html")
+    inputlist += expand("seq/fastqc/{sample}/.done", sample=[*config["samples"]])
+    return inputlist
+
+
+rule all:
+    input:
+        get_expected_files()
+
+
+rule copyinput:
+    output:
+        "seq/input/{sample}/.done"
+    input:
+        lambda wildcards: config["samples"][wildcards.sample]
+    run:
+        for i, inread in enumerate(input):
+            outread = f"seq/input/{wildcards.sample}/{wildcards.sample}_{i}.fq.gz"
+            if inread.endswith(".gz"):
+                copyfile(inread, outread)
+            else:
+                shell(f"gzip -c {inread} > {outread}")
+        shell("touch {output[0]}")
+
+
+rule fastqc:
+    output:
+        "seq/fastqc/{sample}/.done"
+    input:
+        "seq/input/{sample}/.done"
+    threads: 128
+    params:
+        reads=lambda wildcards: glob(f"seq/input/{wildcards.sample}/*.fq.gz")
+    shell:
+        """
+        fastqc {params.reads} --threads {threads} -o seq/fastqc/{wildcards.sample}
+        touch {output[0]}
+        """
+
+
+rule flye:
+    output:
+        contigs="analysis/{sample}/{label}/flye/{sample}_contigs.fasta"
+    input:
+        "seq/input/{sample}/.done"
+    threads: 128
+    params:
+        reads=lambda wildcards: glob(f"seq/input/{wildcards.sample}/*.fq.gz"),
+        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+    shell:
+        """
+        flye --pacbio-hifi {params.reads} -t {threads} -o analysis/{wildcards.sample}/{wildcards.label}/flye {params.extra_args}
+        ln -s assembly.fasta {output.contigs}
+        """
+
+
+rule canu:
+    output:
+        contigs="analysis/{sample}/{label}/canu/{sample}_contigs.fasta"
+    input:
+        "seq/input/{sample}/.done"
+    threads: 128
+    params:
+        reads=lambda wildcards: glob(f"seq/input/{wildcards.sample}/*.fq.gz"),
+        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+    shell:
+        """
+        canu -nanopore {params.reads} maxThreads={threads} -p {wildcards.sample} -d analysis/{wildcards.sample}/{wildcards.label}/canu {params.extra_args} useGrid=false
+        ln -s {wildcards.sample}.contigs.fasta {output.contigs}
+        """
+
+
+rule quast:
+    output:
+        report="analysis/{sample}/{label}/{assembler}/quast/{sample}_report.html"
+    input:
+        contigs="analysis/{sample}/{label}/{assembler}/{sample}_contigs.fasta"
+    shell:
+        """
+        quast.py {input.contigs} -o analysis/{wildcards.sample}/{wildcards.label}/{wildcards.assembler}/quast
+        ln -s report.html {output.report}
+        """

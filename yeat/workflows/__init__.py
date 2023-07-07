@@ -54,7 +54,7 @@ def run_oxford(args, config):
         workdir=args.outdir,
     )
     if not success:
-        raise RuntimeError("SnakemakeFaild") # pragma: no cover
+        raise RuntimeError("Snakemake Failed")  # pragma: no cover
 
 
 def run_workflows(args, config):

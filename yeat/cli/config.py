@@ -15,12 +15,14 @@ from warnings import warn
 PAIRED = ("spades", "megahit", "unicycler")
 PACBIO = ("canu", "flye", "hifiasm", "hifiasm-meta")
 OXFORD = ("canu", "flye")
-ALGORITHMS = PAIRED + PACBIO
+HYBRID = ("unicycler", "trycycler")
+ALGORITHMS = set(PAIRED + PACBIO + OXFORD + HYBRID)
 
 SHORT_READS = ("paired", "single", "interleaved")
 PACBIO_READS = ("pacbio-raw", "pacbio-corr", "pacbio-hifi")
 OXFORD_READS = ("nano-raw", "nano-corr", "nano-hq")
-READ_TYPES = SHORT_READS + PACBIO_READS + OXFORD_READS 
+LONG_READS = PACBIO_READS + OXFORD_READS
+READ_TYPES = SHORT_READS + LONG_READS
 
 
 class AssemblyConfigurationError(ValueError):
@@ -40,26 +42,26 @@ class AssemblerConfig:
         data = json.load(open(infile))
         return cls(data, threads)
 
-    def validate(self):
-        self.check_keys(self.data, ("samples", "assemblers"))
-        for assembler in self.data["assemblers"]:
-            self.check_keys(assembler, ("label", "algorithm", "extra_args", "samples"))
-        labels = [assembler["label"] for assembler in self.data["assemblers"]]
-        if len(labels) > len(set(labels)):
-            message = "Duplicate assembly labels: please check config file"
-            raise AssemblyConfigurationError(message)
+    # def validate(self):
+    #     self.check_keys(self.data, ("samples", "assemblers"))
+    #     for assembler in self.data["assemblers"]:
+    #         self.check_keys(assembler, ("label", "algorithm", "extra_args", "samples"))
+    #     labels = [assembler["label"] for assembler in self.data["assemblers"]]
+    #     if len(labels) > len(set(labels)):
+    #         message = "Duplicate assembly labels: please check config file"
+    #         raise AssemblyConfigurationError(message)
 
-    def check_keys(self, data, keys):
-        missingkeys = set(keys) - set(data.keys())
-        extrakeys = set(data.keys()) - set(keys)
-        if len(missingkeys) > 0:
-            keystr = ",".join(sorted(missingkeys))
-            message = f"Missing assembly configuration setting(s) '{keystr}'"
-            raise AssemblyConfigurationError(message)
-        if len(extrakeys) > 0:
-            keystr = ",".join(sorted(extrakeys))
-            message = f"Ignoring unsupported configuration key(s) '{keystr}'"
-            warn(message)
+    # def check_keys(self, data, keys):
+    #     missingkeys = set(keys) - set(data.keys())
+    #     extrakeys = set(data.keys()) - set(keys)
+    #     if len(missingkeys) > 0:
+    #         keystr = ",".join(sorted(missingkeys))
+    #         message = f"Missing assembly configuration setting(s) '{keystr}'"
+    #         raise AssemblyConfigurationError(message)
+    #     if len(extrakeys) > 0:
+    #         keystr = ",".join(sorted(extrakeys))
+    #         message = f"Ignoring unsupported configuration key(s) '{keystr}'"
+    #         warn(message)
 
     def create_sample_and_assembler_objects(self):
         self.samples = {}
@@ -69,19 +71,11 @@ class AssemblerConfig:
             Assembler(assembler, self.threads) for assembler in self.data["assemblers"]
         ]
 
-    def determine_assembler_workflow(self, assembler):
-        for sample in assembler.samples:
-            if self.samples[sample].type in ("short"):
-                self.paired_assemblers.append(assembler)
-            elif self.samples[sample].type in ("pacbio-raw", "pacbio-corr", "pacbio-hifi"):
-                self.pacbio_assemblers.append(assembler)
-            elif self.samples[sample].type in ("nano-raw", "nano-corr", "nano-hq"):
-                self.oxford_assemblers.append(assembler)
-
     def batch(self):
         self.paired_assemblers = []
         self.pacbio_assemblers = []
         self.oxford_assemblers = []
+        self.hybrid_assemblers = []
         for assembler in self.assemblers:
             self.determine_assembler_workflow(assembler)
         self.batch = {
@@ -96,8 +90,31 @@ class AssemblerConfig:
             "oxford": {
                 "samples": self.get_batch_samples(self.oxford_assemblers),
                 "assemblers": self.oxford_assemblers,
-            }
+            },
+            "hybrid": {
+                "samples": self.get_batch_samples(self.hybrid_assemblers),
+                "assemblers": self.hybrid_assemblers,
+            },
         }
+        print(self.batch)
+        assert 0
+
+    def determine_assembler_workflow(self, assembler):
+        readtypes = set()
+        for sample in assembler.samples:
+            readtypes.update(set(self.samples[sample].data.keys()))
+        if (
+            assembler.algorithm in HYBRID
+            and readtypes.intersection(SHORT_READS)
+            and readtypes.intersection(LONG_READS)
+        ):
+            self.hybrid_assemblers.append(assembler)
+        elif assembler.algorithm in PAIRED and readtypes.intersection(SHORT_READS):
+            self.paired_assemblers.append(assembler)
+        elif assembler.algorithm in PACBIO and readtypes.intersection(PACBIO_READS):
+            self.pacbio_assemblers.append(assembler)
+        elif assembler.algorithm in OXFORD and readtypes.intersection(OXFORD_READS):
+            self.oxford_assemblers.append(assembler)
 
     def get_batch_samples(self, assemblers):
         samples = {}
@@ -114,8 +131,8 @@ class AssemblerConfig:
         else:
             samples = self.batch[readtype]["samples"]
             assemblers = self.batch[readtype]["assemblers"]
-        return dict(
-            samples={key: value.sample for key, value in samples.items()},
+        temp = dict(
+            samples={key: value.data for key, value in samples.items()},
             labels=[assembler.label for assembler in assemblers],
             assemblers={assembler.label: assembler.algorithm for assembler in assemblers},
             extra_args={assembler.label: assembler.extra_args for assembler in assemblers},
@@ -126,30 +143,34 @@ class AssemblerConfig:
             genomesize=args.genome_size,
             seed=args.seed,
         )
+        print(temp)
+        return temp
 
 
 class Sample:
     def __init__(self, data):
-        for key, value in data.items():
-            #check the key and make sure that type is in READ_TYPES
-            self.type = key
-            sample = []
+        self.data = data
+        self.validate_reads()
+
+    def validate_reads(self):
+        for key, value in self.data.items():
+            reads = []
             for fastq in value:
                 read = Path(fastq).resolve()
                 if not read.is_file():
                     raise FileNotFoundError(f"No such file: '{read}'")
-                if str(read) in sample:
-                    message = f"Found duplicate read sample: '{read}'"
-                    raise AssemblyConfigurationError(message)
-                sample.append(str(read))
-            self.sample = sample
+                if read in reads:
+                    raise AssemblyConfigurationError(f"Found duplicate read sample: '{read}'")
+                reads.append(read)
 
 
 class Assembler:
     def __init__(self, data, threads):
         self.label = data["label"]
         if data["algorithm"] not in ALGORITHMS:
-            raise AssemblyConfigurationError(f"Unsupported assembly algorithm '{data['algorithm`']}'")
+            raise AssemblyConfigurationError(
+                f"Unsupported assembly algorithm '{data['algorithm`']}'"
+            )
         self.algorithm = data["algorithm"]
         self.samples = data["samples"]
         self.extra_args = data["extra_args"]

@@ -13,10 +13,9 @@ from warnings import warn
 
 
 PAIRED = ("spades", "megahit", "unicycler")
-PACBIO = ("canu", "flye", "hifiasm", "hifiasm-meta")
+PACBIO = ("canu", "flye")
 OXFORD = ("canu", "flye")
-HYBRID = ("unicycler", "trycycler")
-ALGORITHMS = set(PAIRED + PACBIO + OXFORD + HYBRID)
+ALGORITHMS = set(PAIRED + PACBIO + OXFORD)
 
 SHORT_READS = ("paired", "single", "interleaved")
 PACBIO_READS = ("pacbio-raw", "pacbio-corr", "pacbio-hifi")
@@ -75,7 +74,6 @@ class AssemblerConfig:
         self.paired_assemblers = []
         self.pacbio_assemblers = []
         self.oxford_assemblers = []
-        self.hybrid_assemblers = []
         for assembler in self.assemblers:
             self.determine_assembler_workflow(assembler)
         self.batch = {
@@ -91,25 +89,13 @@ class AssemblerConfig:
                 "samples": self.get_batch_samples(self.oxford_assemblers),
                 "assemblers": self.oxford_assemblers,
             },
-            "hybrid": {
-                "samples": self.get_batch_samples(self.hybrid_assemblers),
-                "assemblers": self.hybrid_assemblers,
-            },
         }
-        print(self.batch)
-        assert 0
 
     def determine_assembler_workflow(self, assembler):
         readtypes = set()
         for sample in assembler.samples:
             readtypes.update(set(self.samples[sample].data.keys()))
-        if (
-            assembler.algorithm in HYBRID
-            and readtypes.intersection(SHORT_READS)
-            and readtypes.intersection(LONG_READS)
-        ):
-            self.hybrid_assemblers.append(assembler)
-        elif assembler.algorithm in PAIRED and readtypes.intersection(SHORT_READS):
+        if assembler.algorithm in PAIRED and readtypes.intersection(SHORT_READS):
             self.paired_assemblers.append(assembler)
         elif assembler.algorithm in PACBIO and readtypes.intersection(PACBIO_READS):
             self.pacbio_assemblers.append(assembler)
@@ -131,7 +117,7 @@ class AssemblerConfig:
         else:
             samples = self.batch[readtype]["samples"]
             assemblers = self.batch[readtype]["assemblers"]
-        temp = dict(
+        return dict(
             samples={key: value.data for key, value in samples.items()},
             labels=[assembler.label for assembler in assemblers],
             assemblers={assembler.label: assembler.algorithm for assembler in assemblers},
@@ -143,8 +129,6 @@ class AssemblerConfig:
             genomesize=args.genome_size,
             seed=args.seed,
         )
-        print(temp)
-        return temp
 
 
 class Sample:

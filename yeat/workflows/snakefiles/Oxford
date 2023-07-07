@@ -7,7 +7,6 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-
 from glob import glob
 from shutil import copyfile
 
@@ -30,7 +29,6 @@ rule all:
 def get_input_files(sample):
     reads = []
     for key, value in sample.items():
-        print(key, value)
         reads += value
     return reads
 
@@ -65,7 +63,7 @@ rule copyinput:
 #         """
 
 
-def get_readtype(sample):
+def get_readtype_flag(sample):
     readtypes = list(config["samples"][sample].keys())
     if readtypes[0] == "nano-raw":
         return "--nano-raw"
@@ -82,12 +80,12 @@ rule flye:
         "seq/input/{sample}/.done"
     threads: 128
     params:
-        readtype=lambda wildcards: get_readtype(wildcards.sample),
+        readtype_flag=lambda wildcards: get_readtype_flag(wildcards.sample),
         reads=lambda wildcards: glob(f"seq/input/{wildcards.sample}/*.fq.gz"),
         extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        flye {params.readtype} {params.reads} -t {threads} -o analysis/{wildcards.sample}/{wildcards.label}/flye {params.extra_args}
+        flye {params.readtype_flag} {params.reads} -t {threads} -o analysis/{wildcards.sample}/{wildcards.label}/flye {params.extra_args}
         ln -s assembly.fasta {output.contigs}
         """
 

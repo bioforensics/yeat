@@ -26,11 +26,18 @@ rule all:
         get_expected_files()
 
 
+def get_input_files(sample):
+    reads = []
+    for key, value in sample.items():
+        reads += value
+    return reads
+
+
 rule copyinput:
     output:
         "seq/input/{sample}/.done"
     input:
-        lambda wildcards: config["samples"][wildcards.sample]
+        lambda wildcards: get_input_files(config["samples"][wildcards.sample])
     run:
         for i, inread in enumerate(input):
             outread = f"seq/input/{wildcards.sample}/{wildcards.sample}_{i}.fq.gz"
@@ -56,6 +63,22 @@ rule fastqc:
         """
 
 
+def get_readtype_flag(sample, algorithm):
+    readtypes = list(config["samples"][sample].keys())
+    if algorithm == "flye":
+        if readtypes[0] == "pacbio-raw":
+            return "--pacbio-raw"
+        elif readtypes[0] == "pacbio-corr":
+            return "--pacbio-corr"
+        elif readtypes[0] == "pacbio-hifi":
+            return "--pacbio-hifi"
+    elif algorithm == "canu":
+        if readtypes[0] in ["pacbio-raw", "pacbio-corr"]:
+            return "-pacbio"
+        elif readtypes[0] == "pacbio-hifi":
+            return "-pacbio-hifi"
+
+
 rule flye:
     output:
         contigs="analysis/{sample}/{label}/flye/{sample}_contigs.fasta"
@@ -63,11 +86,12 @@ rule flye:
         "seq/input/{sample}/.done"
     threads: 128
     params:
+        readtype_flag=lambda wildcards: get_readtype_flag(wildcards.sample, "flye"),
         reads=lambda wildcards: glob(f"seq/input/{wildcards.sample}/*.fq.gz"),
         extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        flye --pacbio-hifi {params.reads} -t {threads} -o analysis/{wildcards.sample}/{wildcards.label}/flye {params.extra_args}
+        flye {params.readtype_flag} {params.reads} -t {threads} -o analysis/{wildcards.sample}/{wildcards.label}/flye {params.extra_args}
         ln -s assembly.fasta {output.contigs}
         """
 
@@ -79,11 +103,12 @@ rule canu:
         "seq/input/{sample}/.done"
     threads: 128
     params:
+        readtype_flag=lambda wildcards: get_readtype_flag(wildcards.sample, "canu"),
         reads=lambda wildcards: glob(f"seq/input/{wildcards.sample}/*.fq.gz"),
         extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        canu -pacbio-hifi {params.reads} maxThreads={threads} -p {wildcards.sample} -d analysis/{wildcards.sample}/{wildcards.label}/canu {params.extra_args} useGrid=false
+        canu {params.readtype_flag} {params.reads} maxThreads={threads} -p {wildcards.sample} -d analysis/{wildcards.sample}/{wildcards.label}/canu {params.extra_args} useGrid=false
         ln -s {wildcards.sample}.contigs.fasta {output.contigs}
         """
 

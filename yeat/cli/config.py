@@ -17,7 +17,7 @@ PACBIO = ("canu", "flye")
 OXFORD = ("canu", "flye")
 ALGORITHMS = set(PAIRED + PACBIO + OXFORD)
 
-SHORT_READS = ("paired", "single", "interleaved")
+SHORT_READS = tuple("paired")
 PACBIO_READS = ("pacbio-raw", "pacbio-corr", "pacbio-hifi")
 OXFORD_READS = ("nano-raw", "nano-corr", "nano-hq")
 LONG_READS = PACBIO_READS + OXFORD_READS

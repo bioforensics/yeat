@@ -31,7 +31,7 @@ class AssemblyConfigurationError(ValueError):
 class AssemblerConfig:
     def __init__(self, data, threads):
         self.data = data
-        # self.validate()
+        self.validate()
         self.threads = threads
         self.create_sample_and_assembler_objects()
         self.batch()
@@ -41,26 +41,39 @@ class AssemblerConfig:
         data = json.load(open(infile))
         return cls(data, threads)
 
-    # def validate(self):
-    #     self.check_keys(self.data, ("samples", "assemblers"))
-    #     for assembler in self.data["assemblers"]:
-    #         self.check_keys(assembler, ("label", "algorithm", "extra_args", "samples"))
-    #     labels = [assembler["label"] for assembler in self.data["assemblers"]]
-    #     if len(labels) > len(set(labels)):
-    #         message = "Duplicate assembly labels: please check config file"
-    #         raise AssemblyConfigurationError(message)
+    def validate(self):
+        self.check_keys(self.data, ("samples", "assemblers"))
+        self.check_sample_keys()
+        for assembler in self.data["assemblers"]:
+            self.check_keys(assembler, ("label", "algorithm", "extra_args", "samples"))
+        labels = [assembler["label"] for assembler in self.data["assemblers"]]
+        if len(labels) > len(set(labels)):
+            message = "Duplicate assembly labels: please check config file"
+            raise AssemblyConfigurationError(message)
 
-    # def check_keys(self, data, keys):
-    #     missingkeys = set(keys) - set(data.keys())
-    #     extrakeys = set(data.keys()) - set(keys)
-    #     if len(missingkeys) > 0:
-    #         keystr = ",".join(sorted(missingkeys))
-    #         message = f"Missing assembly configuration setting(s) '{keystr}'"
-    #         raise AssemblyConfigurationError(message)
-    #     if len(extrakeys) > 0:
-    #         keystr = ",".join(sorted(extrakeys))
-    #         message = f"Ignoring unsupported configuration key(s) '{keystr}'"
-    #         warn(message)
+    def check_keys(self, data, keys):
+        missingkeys = set(keys) - set(data.keys())
+        extrakeys = set(data.keys()) - set(keys)
+        if missingkeys:
+            keystr = ",".join(sorted(missingkeys))
+            message = f"Missing assembly configuration setting(s) '{keystr}'"
+            raise AssemblyConfigurationError(message)
+        if extrakeys:
+            keystr = ",".join(sorted(extrakeys))
+            message = f"Ignoring unsupported configuration key(s) '{keystr}'"
+            warn(message)
+
+    def check_sample_keys(self):
+        for key, value in self.data["samples"].items():
+            sample_readtypes = value.keys()
+            if len(sample_readtypes) > 1:
+                message = f"Multiple read types in sample '{key}'"
+                raise AssemblyConfigurationError(message)
+            extrakeys = set(sample_readtypes) - set(READ_TYPES)
+            if extrakeys:
+                keystr = ",".join(sorted(extrakeys))
+                message = f"Unsupported read type '{keystr}'"
+                raise AssemblyConfigurationError(message)
 
     def create_sample_and_assembler_objects(self):
         self.samples = {}

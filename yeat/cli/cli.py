@@ -18,9 +18,9 @@ from yeat import workflows
 
 CONFIG_TEMPLATE = {
     "samples": {
-        "sample1": ["path_to_read1", "path_to_read2"],
-        "sample2": ["path_to_read1", "path_to_read2"],
-        "sample3": ["path_to_read"],
+        "sample1": {"paired": ["path_to_read1", "path_to_read2"]},
+        "sample2": {"paired": ["path_to_read1", "path_to_read2"]},
+        "sample3": {"nano-corr": ["path_to_read"]},
     },
     "assemblers": [
         {

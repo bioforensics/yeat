@@ -14,19 +14,16 @@ from random import randint
 from shutil import copyfile
 
 
-def get_expected_files():
-    inputlist = []
-    for label in config["labels"]:
-        assembler = config["assemblers"][label]
-        for sample in config["label_to_samples"][label]:
-            inputlist.append(f"analysis/{sample}/{label}/{assembler}/quast/{sample}_report.html")
-    inputlist += expand("seq/fastqc/{sample}/{sample}_{reads}_fastqc.html", sample=[*config["samples"]], reads=["R1", "R2"])
-    return inputlist
+module helper:
+    snakefile: "__init__.py"
+    config: config
+
+use rule * from helper
 
 
 rule all:
     input:
-        get_expected_files()
+        helper.get_expected_files(short_qc=True)
 
 
 rule copyinput:
@@ -34,7 +31,7 @@ rule copyinput:
         read1="seq/input/{sample}/{sample}_R1.fq.gz",
         read2="seq/input/{sample}/{sample}_R2.fq.gz"
     input: 
-        lambda wildcards: config["samples"][wildcards.sample]
+        lambda wildcards: config["samples"][wildcards.sample]["paired"]
     run:
         for inreads, outreads in zip(input, output):
             if inreads.endswith(".gz"):
@@ -51,9 +48,11 @@ rule fastqc:
         read1="seq/input/{sample}/{sample}_R1.fq.gz",
         read2="seq/input/{sample}/{sample}_R2.fq.gz"
     threads: 128
+    params:
+        outdir=lambda wildcards: f"seq/fastqc/{wildcards.sample}"
     shell:
         """
-        fastqc {input.read1} {input.read2} --threads {threads} -o seq/fastqc/{wildcards.sample}
+        fastqc {input.read1} {input.read2} --threads {threads} -o {params.outdir}
         """
 
 
@@ -142,10 +141,11 @@ rule spades:
         read2="seq/downsample/{sample}/{sample}.R2.fq.gz"
     threads: 128
     params:
+        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/spades",
         extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        spades.py -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/{wildcards.sample}/{wildcards.label}/spades {params.extra_args}
+        spades.py -1 {input.read1} -2 {input.read2} -t {threads} -o {params.outdir} {params.extra_args}
         ln -s scaffolds.fasta {output.contigs}
         """
 
@@ -158,12 +158,14 @@ rule megahit:
         read2="seq/downsample/{sample}/{sample}.R2.fq.gz"
     threads: 128
     params:
+        temp_dir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/megahit-temp",
+        actual_dir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/megahit",
         extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        megahit -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/{wildcards.sample}/{wildcards.label}/megahit-temp {params.extra_args}
-        mv analysis/{wildcards.sample}/{wildcards.label}/megahit-temp/* analysis/{wildcards.sample}/{wildcards.label}/megahit
-        rm -r analysis/{wildcards.sample}/{wildcards.label}/megahit-temp
+        megahit -1 {input.read1} -2 {input.read2} -t {threads} -o {params.temp_dir} {params.extra_args}
+        mv {params.temp_dir}/* {params.actual_dir}
+        rm -r {params.temp_dir}
         ln -s final.contigs.fa {output.contigs}
         """
 
@@ -176,10 +178,11 @@ rule unicycler:
         read2="seq/downsample/{sample}/{sample}.R2.fq.gz"
     threads: 128
     params:
+        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/unicycler",
         extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        unicycler -1 {input.read1} -2 {input.read2} -t {threads} -o analysis/{wildcards.sample}/{wildcards.label}/unicycler {params.extra_args}
+        unicycler -1 {input.read1} -2 {input.read2} -t {threads} -o {params.outdir} {params.extra_args}
         ln -s assembly.fasta {output.contigs}
         """
 
@@ -189,8 +192,10 @@ rule quast:
         report="analysis/{sample}/{label}/{assembler}/quast/{sample}_report.html"
     input:
         contigs="analysis/{sample}/{label}/{assembler}/{sample}_contigs.fasta"
+    params:
+        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/{wildcards.assembler}/quast"
     shell:
         """
-        quast.py {input.contigs} -o analysis/{wildcards.sample}/{wildcards.label}/{wildcards.assembler}/quast
+        quast.py {input.contigs} -o {params.outdir}
         ln -s report.html {output.report}
         """

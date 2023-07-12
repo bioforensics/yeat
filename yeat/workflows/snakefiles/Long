@@ -1,0 +1,63 @@
+# -------------------------------------------------------------------------------------------------
+# Copyright (c) 2023, DHS. This file is part of YEAT: http://github.com/bioforensics/yeat
+#
+# This software was prepared for the Department of Homeland Security (DHS) by the Battelle National
+# Biodefense Institute, LLC (BNBI) as part of contract HSHQDC-15-C-00064 to manage and operate the
+# National Biodefense Analysis and Countermeasures Center (NBACC), a Federally Funded Research and
+# Development Center.
+# -------------------------------------------------------------------------------------------------
+
+from shutil import copyfile
+
+
+def get_sample_reads(sample):
+    reads = []
+    for key, value in sample.items():
+        reads += value
+    return reads
+
+
+rule copyinput:
+    output:
+        compressed_reads="seq/input/{sample}/combined-reads.fq.gz"
+    input:
+        reads=lambda wildcards: get_sample_reads(config["samples"][wildcards.sample])
+    params:
+        combined_reads=lambda wildcards: f"seq/input/{wildcards.sample}/combined-reads.fq"
+    run:
+        for i, inread in enumerate(input):
+            outread = f"seq/input/{wildcards.sample}/reads{i}.fq"
+            if inread.endswith(".gz"):
+                shell("unzip -c {inread} > {outread}")
+            else:
+                copyfile(inread, outread)
+        shell("cat seq/input/{wildcards.sample}/*.fq > {params.combined}")
+        shell("gzip {params.combined}")
+
+
+rule fastqc:
+    output:
+        report="seq/input/{sample}/fastqc/combined-reads_fastqc.html"
+    input:
+        reads="seq/input/{sample}/combined-reads.fq.gz"
+    threads: 128
+    params:
+        outdir=lambda wildcards: f"seq/input/{wildcards.sample}/fastqc"
+    shell:
+        """
+        fastqc {input.reads} --threads {threads} -o {params.outdir}
+        """
+
+
+rule quast:
+    output:
+        report="analysis/{sample}/{label}/{assembler}/quast/{sample}_report.html"
+    input:
+        contigs="analysis/{sample}/{label}/{assembler}/{sample}_contigs.fasta"
+    params:
+        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/{wildcards.assembler}/quast"
+    shell:
+        """
+        quast.py {input.contigs} -o {params.outdir}
+        ln -s report.html {output.report}
+        """

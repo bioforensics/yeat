@@ -7,7 +7,6 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from glob import glob
 from shutil import copyfile
 
 
@@ -17,7 +16,8 @@ def get_expected_files():
         assembler = config["assemblers"][label]
         for sample in config["label_to_samples"][label]:
             inputlist.append(f"analysis/{sample}/{label}/{assembler}/quast/{sample}_report.html")
-    # inputlist += expand("seq/fastqc/{sample}/.done", sample=[*config["samples"]])
+    inputlist += expand("seq/input/{sample}/highQuality-reads.fq.gz", sample=[*config["samples"]])
+    inputlist += expand("seq/input/{sample}/qc/{quality}_LengthvsQualityScatterPlot_dot.pdf", sample=[*config["samples"]], quality=["raw", "filtered"])
     return inputlist
 
 
@@ -26,7 +26,7 @@ rule all:
         get_expected_files()
 
 
-def get_input_files(sample):
+def get_sample_reads(sample):
     reads = []
     for key, value in sample.items():
         reads += value
@@ -35,32 +35,49 @@ def get_input_files(sample):
 
 rule copyinput:
     output:
-        "seq/input/{sample}/.done"
+        "seq/input/{sample}/combined-reads.fq.gz"
     input:
-        lambda wildcards: get_input_files(config["samples"][wildcards.sample])
+        lambda wildcards: get_sample_reads(config["samples"][wildcards.sample])
+    params:
+        lambda wildcards: f"seq/input/{wildcards.sample}/combined-reads.fq"
     run:
         for i, inread in enumerate(input):
-            outread = f"seq/input/{wildcards.sample}/{wildcards.sample}_{i}.fq.gz"
+            outread = f"seq/input/{wildcards.sample}/read{i}.fq"
             if inread.endswith(".gz"):
-                copyfile(inread, outread)
+                shell("unzip -c {inread} > {outread}")
             else:
-                shell(f"gzip -c {inread} > {outread}")
-        shell("touch {output[0]}")
+                copyfile(inread, outread)
+        shell("cat seq/input/{wildcards.sample}/*.fq > {params[0]}")
+        shell("gzip {params[0]}")
 
 
-# rule fastqc:
-#     output:
-#         "seq/fastqc/{sample}/.done"
-#     input:
-#         "seq/input/{sample}/.done"
-#     threads: 128
-#     params:
-#         reads=lambda wildcards: glob(f"seq/input/{wildcards.sample}/*.fq.gz")
-#     shell:
-#         """
-#         fastqc {params.reads} --threads {threads} -o seq/fastqc/{wildcards.sample}
-#         touch {output[0]}
-#         """
+rule nanofilt:
+    output:
+        "seq/input/{sample}/highQuality-reads.fq.gz"
+    input:
+        "seq/input/{sample}/combined-reads.fq.gz"
+    threads: 128
+    shell:
+        """
+        # add support to customize nanofilt
+        gunzip -c {input[0]} | Nanofilt -q 10 | gzip > {output[0]}
+        """
+
+
+rule nanoplot:
+    output:
+        "seq/input/{sample}/qc/{quality}_LengthvsQualityScatterPlot_dot.pdf"
+    input:
+        "seq/input/{sample}/combined-reads.fq.gz",
+        "seq/input/{sample}/highQuality-reads.fq.gz"
+    threads: 128
+    params:
+        qc_dir="seq/input/{sample}/qc"
+    shell:
+        """
+        NanoPlot -t {threads} --fastq {input[0]} -o {params.qc_dir} --N50 -p raw_ --title "{wildcards.sample} Raw" -f pdf --plots dot
+        NanoPlot -t {threads} --fastq {input[1]} -o {params.qc_dir} --N50 -p filtered_ --title "{wildcards.sample} Filtered" -f pdf --plots dot
+        """
 
 
 def get_readtype_flag(sample):
@@ -77,15 +94,14 @@ rule flye:
     output:
         contigs="analysis/{sample}/{label}/flye/{sample}_contigs.fasta"
     input:
-        "seq/input/{sample}/.done"
+        "seq/input/{sample}/highQuality-reads.fq.gz"
     threads: 128
     params:
         readtype_flag=lambda wildcards: get_readtype_flag(wildcards.sample),
-        reads=lambda wildcards: glob(f"seq/input/{wildcards.sample}/*.fq.gz"),
         extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        flye {params.readtype_flag} {params.reads} -t {threads} -o analysis/{wildcards.sample}/{wildcards.label}/flye {params.extra_args}
+        flye {params.readtype_flag} {input[0]} -t {threads} -o analysis/{wildcards.sample}/{wildcards.label}/flye {params.extra_args}
         ln -s assembly.fasta {output.contigs}
         """
 
@@ -94,14 +110,13 @@ rule canu:
     output:
         contigs="analysis/{sample}/{label}/canu/{sample}_contigs.fasta"
     input:
-        "seq/input/{sample}/.done"
+        "seq/input/{sample}/highQuality-reads.fq.gz"
     threads: 128
     params:
-        reads=lambda wildcards: glob(f"seq/input/{wildcards.sample}/*.fq.gz"),
         extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        canu -nanopore {params.reads} maxThreads={threads} -p {wildcards.sample} -d analysis/{wildcards.sample}/{wildcards.label}/canu {params.extra_args} useGrid=false
+        canu -nanopore {input[0]} maxThreads={threads} -p {wildcards.sample} -d analysis/{wildcards.sample}/{wildcards.label}/canu {params.extra_args} useGrid=false
         ln -s {wildcards.sample}.contigs.fasta {output.contigs}
         """
 

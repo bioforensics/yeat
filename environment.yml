@@ -22,3 +22,5 @@ dependencies:
     - versioneer>=0.21
     - canu>=2.2
     - flye>=2.9
+    - nanofilt>=2.3
+    - nanoplot>=1.20

@@ -19,11 +19,11 @@ def get_sample_reads(sample):
 
 rule copyinput:
     output:
-        compressed_reads="seq/input/{sample}/combined-reads.fq.gz"
+        compressed="seq/input/{sample}/combined-reads.fq.gz"
     input:
         reads=lambda wildcards: get_sample_reads(config["samples"][wildcards.sample])
     params:
-        combined_reads=lambda wildcards: f"seq/input/{wildcards.sample}/combined-reads.fq"
+        combined=lambda wildcards: f"seq/input/{wildcards.sample}/combined-reads.fq"
     run:
         for i, inread in enumerate(input):
             outread = f"seq/input/{wildcards.sample}/reads{i}.fq"

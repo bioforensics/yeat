@@ -33,7 +33,7 @@ rule nanofilt:
         inreads="seq/input/{sample}/combined-reads.fq.gz"
     threads: 128
     params:
-        filer="-q 10"
+        filter="-q 10"
     shell:
         """
         gunzip -c {input.inreads} | Nanofilt {params.filter} | gzip > {output.outreads}

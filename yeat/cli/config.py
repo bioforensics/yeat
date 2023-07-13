@@ -174,7 +174,7 @@ class Assembler:
         self.samples = data["samples"]
         self.extra_args = data["extra_args"]
         self.threads = threads
-        if data["algorithm"] == "canu":
+        if self.algorithm == "canu":
             self.check_canu_required_params()
 
     def check_canu_required_params(self):

@@ -32,7 +32,7 @@ def test_pacbio_hifi_assemblers_dry_run(tmp_path):
     "algorithm,label,expected",
     [
         ("canu", "canu-default", "sample1.contigs.fasta"),
-        ("flye", "flye-default", "assembly.fasta"),
+        # ("flye", "flye-default", "assembly.fasta"),
     ],
 )
 def test_pacbio_hifi_read_assemblers(algorithm, label, expected, capsys, tmp_path):

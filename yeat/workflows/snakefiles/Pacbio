@@ -27,18 +27,18 @@ use rule * from long_workflow
 
 
 def get_readtype_flag(sample, algorithm):
-    readtypes = list(config["samples"][sample].keys())
+    readtype = config["sample_readtype"][sample]
     if algorithm == "flye":
-        if readtypes[0] == "pacbio-raw":
+        if readtype == "pacbio-raw":
             return "--pacbio-raw"
-        elif readtypes[0] == "pacbio-corr":
+        elif readtype == "pacbio-corr":
             return "--pacbio-corr"
-        elif readtypes[0] == "pacbio-hifi":
+        elif readtype == "pacbio-hifi":
             return "--pacbio-hifi"
     elif algorithm == "canu":
-        if readtypes[0] in ["pacbio-raw", "pacbio-corr"]:
+        if readtype in ["pacbio-raw", "pacbio-corr"]:
             return "-pacbio"
-        elif readtypes[0] == "pacbio-hifi":
+        elif readtype == "pacbio-hifi":
             return "-pacbio-hifi"
 
 

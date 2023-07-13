@@ -16,10 +16,15 @@ from yeat.tests import data_file
 
 
 def test_unsupported_assembly_algorithm():
-    algorithm = "unsupported_algorithm"
-    pattern = rf"Unsupported assembly algorithm '{algorithm}'"
+    assembler = {
+        "label": "unsuported_algorithm",
+        "algorithm": "unsupported_alogrithm",
+        "extra_args": "",
+        "samples": ["sample1"],
+    }
+    pattern = rf"Unsupported assembly algorithm '{assembler['algorithm']}'"
     with pytest.raises(ValueError, match=pattern):
-        Assembler("label1", algorithm, [], "", 1)
+        Assembler(assembler, 1)
 
 
 def test_duplicate_assembly_labels(tmp_path):
@@ -67,16 +72,17 @@ def test_unsupported_key_in_config_entry():
     ],
 )
 def test_sample_read_file_not_found(reads, badfile):
+    sample = {"paired": reads}
     pattern = rf"No such file: '.*{reads[badfile]}'"
     with pytest.raises(FileNotFoundError, match=pattern):
-        Sample(reads)
+        Sample(sample)
 
 
 def test_sample_with_duplicate_reads():
-    reads = [data_file("short_reads_1.fastq.gz"), data_file("short_reads_1.fastq.gz")]
+    sample = {"paired": [data_file("short_reads_1.fastq.gz"), data_file("short_reads_1.fastq.gz")]}
     pattern = rf"Found duplicate read sample: '.*short_reads_1.fastq.gz'"
     with pytest.raises(AssemblyConfigurationError, match=pattern):
-        Sample(reads)
+        Sample(sample)
 
 
 @pytest.mark.parametrize(
@@ -91,8 +97,14 @@ def test_sample_with_duplicate_reads():
     ],
 )
 def test_check_canu_required_params_errors(extra_args, cores, expected):
+    assembler = {
+        "label": "label1",
+        "algorithm": "canu",
+        "extra_args": extra_args,
+        "samples": ["sample1"],
+    }
     with pytest.raises(ValueError, match=expected):
-        Assembler("label1", "canu", [], extra_args, cores)
+        Assembler(assembler, cores)
 
 
 @pytest.mark.parametrize(

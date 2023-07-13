@@ -107,7 +107,7 @@ class AssemblerConfig:
     def determine_assembler_workflow(self, assembler):
         readtypes = set()
         for sample in assembler.samples:
-            readtypes.update(set(self.samples[sample].data.keys()))
+            readtypes.update({self.samples[sample].readtype})
         if assembler.algorithm in PAIRED and readtypes.intersection(SHORT_READS):
             self.paired_assemblers.append(assembler)
         elif assembler.algorithm in PACBIO and readtypes.intersection(PACBIO_READS):
@@ -131,11 +131,12 @@ class AssemblerConfig:
             samples = self.batch[readtype]["samples"]
             assemblers = self.batch[readtype]["assemblers"]
         return dict(
-            samples={key: value.data for key, value in samples.items()},
+            samples={label: sample.to_string() for label, sample in samples.items()},
             labels=[assembler.label for assembler in assemblers],
             assemblers={assembler.label: assembler.algorithm for assembler in assemblers},
             extra_args={assembler.label: assembler.extra_args for assembler in assemblers},
             label_to_samples={assembler.label: assembler.samples for assembler in assemblers},
+            sample_readtype={label: sample.readtype for label, sample in samples.items()},
             threads=args.threads,
             downsample=args.downsample,
             coverage=args.coverage,
@@ -146,19 +147,20 @@ class AssemblerConfig:
 
 class Sample:
     def __init__(self, data):
-        self.data = data
+        for key, value in data.items():
+            self.readtype = key
+            self.reads = [Path(fastq).resolve() for fastq in value]
         self.validate_reads()
 
     def validate_reads(self):
-        for key, value in self.data.items():
-            reads = []
-            for fastq in value:
-                read = Path(fastq).resolve()
-                if not read.is_file():
-                    raise FileNotFoundError(f"No such file: '{read}'")
-                if read in reads:
-                    raise AssemblyConfigurationError(f"Found duplicate read sample: '{read}'")
-                reads.append(read)
+        for read in self.reads:
+            if not read.is_file():
+                raise FileNotFoundError(f"No such file: '{read}'")
+            if self.reads.count(read) > 1:
+                raise AssemblyConfigurationError(f"Found duplicate read sample: '{read}'")
+
+    def to_string(self):
+        return [str(read) for read in self.reads]
 
 
 class Assembler:
@@ -166,7 +168,7 @@ class Assembler:
         self.label = data["label"]
         if data["algorithm"] not in ALGORITHMS:
             raise AssemblyConfigurationError(
-                f"Unsupported assembly algorithm '{data['algorithm`']}'"
+                f"Unsupported assembly algorithm '{data['algorithm']}'"
             )
         self.algorithm = data["algorithm"]
         self.samples = data["samples"]

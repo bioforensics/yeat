@@ -31,7 +31,7 @@ rule copyinput:
         read1="seq/input/{sample}/{sample}_R1.fq.gz",
         read2="seq/input/{sample}/{sample}_R2.fq.gz"
     input: 
-        lambda wildcards: config["samples"][wildcards.sample]["paired"]
+        lambda wildcards: config["samples"][wildcards.sample]
     run:
         for inreads, outreads in zip(input, output):
             if inreads.endswith(".gz"):

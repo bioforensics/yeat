@@ -57,12 +57,12 @@ rule nanoplot:
 
 
 def get_readtype_flag(sample):
-    readtypes = list(config["samples"][sample].keys())
-    if readtypes[0] == "nano-raw":
+    readtype = config["sample_readtype"][sample]
+    if readtype == "nano-raw":
         return "--nano-raw"
-    elif readtypes[0] == "nano-corr":
+    elif readtype == "nano-corr":
         return "--nano-corr"
-    elif readtypes[0] == "nano-hq":
+    elif readtype == "nano-hq":
         return "--nano-hq"
 
 

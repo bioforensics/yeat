@@ -96,46 +96,12 @@ $ yeat --outdir {path} {config}
                 "sample2"
             ]
         },
-        {
-            "label": "default-megahit",
-            "algorithm": "megahit",
-            "extra_args": "",
-            "samples": [
-                "sample1",
-                "sample2"
-            ]
-        },
-        {
-            "label": "default-unicycler",
-            "algorithm": "unicycler",
-            "extra_args": "",
-            "samples": [
-                "sample1",
-                "sample2"
-            ]
-        },
 	    {
             "label": "hicanu",
             "algorithm": "canu",
             "extra_args": "genomeSize=4.6m",
             "samples": [
                 "sample3"
-            ]
-        },
-        {
-            "label": "hiflye",
-            "algorithm": "flye",
-            "extra_args": "",
-            "samples": [
-                "sample3"
-            ]
-        },
-        {
-            "label": "nanocanu",
-            "algorithm": "canu",
-            "extra_args": "genomeSize=4.8m maxInputCoverage=100",
-            "samples": [
-                "sample4"
             ]
         },
         {

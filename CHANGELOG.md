@@ -5,15 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+- Input fastq read support:
+    - Pacbio raw and corrected reads (#47)
+    - Oxford Nanopore raw, corrected, and HAC (#47)
+
+
 ## [0.3] 2023-05-20
 
 ### Added
 - Support for Bandage (#34)
-- Long-read assembly algorithms:
-    - Flye and Canu (#37)
-- Input read support:
-    - Pacbio raw, corrected, and Hifi-reads (#37, #47)
-    - Oxford Nanopore raw, corrected, and HAC (#47)
+- Support for basic PacBio HiFi-reads assembly with Flye and Canu (#37)
 
 ### Changed
 - Config file to enable:

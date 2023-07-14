@@ -9,7 +9,7 @@ help: Makefile
 
 ## test:        run automated test suite
 test:
-	pytest --cov=yeat -m 'not long and not bandage and not hifi'
+	pytest --cov=yeat -m 'not long and not bandage and not hifi and not nano'
 
 ## testlong:    run only long-running automated tests
 testlong:

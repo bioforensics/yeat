@@ -16,8 +16,8 @@ def get_expected_files(short_qc=False, pacbio_qc=False, nanopore=False):
     if short_qc:
         inputlist += expand("seq/fastqc/{sample}/{sample}_{reads}_fastqc.html", sample=[*config["samples"]], reads=["R1", "R2"])
     if pacbio_qc:
-        inputlist += expand("seq/input/{sample}/fastqc/combined-reads_fastqc.html", sample=[*config["samples"]])
+        inputlist += expand("seq/fastqc/{sample}/combined-reads_fastqc.html", sample=[*config["samples"]])
     if nanopore:
-        inputlist += expand("seq/input/{sample}/highQuality-reads.fq.gz", sample=[*config["samples"]])
-        inputlist += expand("seq/input/{sample}/nanoplot/{quality}_LengthvsQualityScatterPlot_dot.pdf", sample=[*config["samples"]], quality=["raw", "filtered"])
+        inputlist += expand("seq/nanofilt/{sample}/highQuality-reads.fq.gz", sample=[*config["samples"]])
+        inputlist += expand("seq/nanoplot/{sample}/{quality}_LengthvsQualityScatterPlot_dot.pdf", sample=[*config["samples"]], quality=["raw", "filtered"])
     return inputlist

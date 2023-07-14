@@ -28,7 +28,7 @@ use rule * from long_workflow
 
 rule nanofilt:
     output:
-        outreads="seq/input/{sample}/highQuality-reads.fq.gz"
+        outreads="seq/nanofilt/{sample}/highQuality-reads.fq.gz"
     input:
         inreads="seq/input/{sample}/combined-reads.fq.gz"
     threads: 128
@@ -42,10 +42,10 @@ rule nanofilt:
 
 rule nanoplot:
     output:
-        reports="seq/input/{sample}/nanoplot/{quality}_LengthvsQualityScatterPlot_dot.pdf"
+        reports="seq/nanoplot/{sample}/{quality}_LengthvsQualityScatterPlot_dot.pdf"
     input:
         raw_reads="seq/input/{sample}/combined-reads.fq.gz",
-        filtered_reads="seq/input/{sample}/highQuality-reads.fq.gz"
+        filtered_reads="seq/nanofilt/{sample}/highQuality-reads.fq.gz"
     threads: 128
     params:
         outdir="seq/input/{sample}/nanoplot"
@@ -70,7 +70,7 @@ rule flye:
     output:
         contigs="analysis/{sample}/{label}/flye/{sample}_contigs.fasta"
     input:
-        reads="seq/input/{sample}/highQuality-reads.fq.gz"
+        reads="seq/nanofilt/{sample}/highQuality-reads.fq.gz"
     threads: 128
     params:
         readtype_flag=lambda wildcards: get_readtype_flag(wildcards.sample),
@@ -87,7 +87,7 @@ rule canu:
     output:
         contigs="analysis/{sample}/{label}/canu/{sample}_contigs.fasta"
     input:
-        reads="seq/input/{sample}/highQuality-reads.fq.gz"
+        reads="seq/nanofilt/{sample}/highQuality-reads.fq.gz"
     threads: 128
     params:
         outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/canu",

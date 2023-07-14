@@ -45,7 +45,7 @@ make nanodata
 $ yeat --outdir {path} {config}
 ```
 
-### Supported Input Reads with Assembler Algorithms
+### Supported Input Reads with Assembly Algorithms
 
 | Readtype  | Algorithm |
 | ------------- | ------------- |
@@ -65,32 +65,50 @@ $ yeat --outdir {path} {config}
     "samples": {
         "sample1": {
             "paired": [
-                "/Users/dane.jo/Desktop/test1/data/short1.fq.gz",
-                "/Users/dane.jo/Desktop/test1/data/short2.fq.gz"
+                "yeat/tests/data/short_reads_1.fastq.gz",
+                "yeat/tests/data/short_reads_2.fastq.gz"
             ]
         },
         "sample2": {
             "paired": [
-                "/Users/dane.jo/Desktop/test1/data/Animal_289_R1.fq.gz",
-                "/Users/dane.jo/Desktop/test1/data/Animal_289_R2.fq.gz"
+                "yeat/tests/data/Animal_289_R1.fastq.gz",
+                "yeat/tests/data/Animal_289_R2.fastq.gz"
             ]
         },
         "sample3": {
             "pacbio-hifi": [
-                "/Users/dane.jo/Desktop/test1/data/ecoli.fastq.gz"
+                "yeat/tests/data/ecoli.fastq.gz"
             ]
         },
         "sample4": {
             "nano-hq": [
-                "/Users/dane.jo/Desktop/test1/data/ecolk12mg1655_R10_3_guppy_345_HAC.fastq.gz"
+                "yeat/tests/data/ecolk12mg1655_R10_3_guppy_345_HAC.fastq.gz"
             ]
         }
     },
     "assemblers": [
         {
-            "label": "spades-meta",
+            "label": "default-spades",
             "algorithm": "spades",
-            "extra_args": "--meta",
+            "extra_args": "",
+            "samples": [
+                "sample1",
+                "sample2"
+            ]
+        },
+        {
+            "label": "default-megahit",
+            "algorithm": "megahit",
+            "extra_args": "",
+            "samples": [
+                "sample1",
+                "sample2"
+            ]
+        },
+        {
+            "label": "default-unicycler",
+            "algorithm": "unicycler",
+            "extra_args": "",
             "samples": [
                 "sample1",
                 "sample2"
@@ -110,6 +128,14 @@ $ yeat --outdir {path} {config}
             "extra_args": "",
             "samples": [
                 "sample3"
+            ]
+        },
+        {
+            "label": "nanocanu",
+            "algorithm": "canu",
+            "extra_args": "genomeSize=4.8m maxInputCoverage=100",
+            "samples": [
+                "sample4"
             ]
         },
         {

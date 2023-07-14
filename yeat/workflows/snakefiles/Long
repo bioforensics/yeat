@@ -30,12 +30,12 @@ rule copyinput:
 
 rule fastqc:
     output:
-        report="seq/input/{sample}/fastqc/combined-reads_fastqc.html"
+        report="seq/fastqc/{sample}/combined-reads_fastqc.html"
     input:
         reads="seq/input/{sample}/combined-reads.fq.gz"
     threads: 128
     params:
-        outdir=lambda wildcards: f"seq/input/{wildcards.sample}/fastqc"
+        outdir=lambda wildcards: f"seq/fastqc/{wildcards.sample}"
     shell:
         """
         fastqc {input.reads} --threads {threads} -o {params.outdir}

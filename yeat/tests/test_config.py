@@ -133,3 +133,37 @@ def test_to_dict(cfg, readtype, subsamples, sublabels):
     assert len(observed["samples"]) == len(subsamples)
     assert len(observed["labels"]) == len(sublabels)
     assert len(observed["assemblers"]) == len(sublabels)
+
+
+def test_multiple_readtypes_in_sample():
+    data = json.load(open(data_file("configs/oxford.cfg")))
+    data["samples"]["sample1"]["extra_readtype"] = ["long_read.fastq"]
+    pattern = r"Multiple read types in sample 'sample1'"
+    with pytest.raises(ValueError, match=pattern):
+        AssemblerConfig(data, 1)
+
+
+def test_unsupported_readtype_in_sample():
+    data = json.load(open(data_file("configs/oxford.cfg")))
+    del data["samples"]["sample1"]["nano-hq"]
+    data["samples"]["sample1"]["not"] = ["supported"]
+    pattern = r"Unsupported read type 'not'"
+    with pytest.raises(ValueError, match=pattern):
+        AssemblerConfig(data, 1)
+
+
+def test_batch():
+    data = json.load(open(data_file("configs/all_assemblers.cfg")))
+    config = AssemblerConfig(data, 4)
+    paired_samples = [sample for sample in config.batch["paired"]["samples"]]
+    paired_algorithms = [assembler.algorithm for assembler in config.batch["paired"]["assemblers"]]
+    assert paired_samples == ["sample1", "sample2"]
+    assert paired_algorithms == ["spades", "megahit", "unicycler"]
+    pacbio_samples = [sample for sample in config.batch["pacbio"]["samples"]]
+    pacbio_algorithms = [assembler.algorithm for assembler in config.batch["pacbio"]["assemblers"]]
+    assert pacbio_samples == ["sample3"]
+    assert pacbio_algorithms == ["canu", "flye"]
+    oxford_samples = [sample for sample in config.batch["oxford"]["samples"]]
+    oxford_algorithms = [assembler.algorithm for assembler in config.batch["oxford"]["assemblers"]]
+    assert oxford_samples == ["sample4"]
+    assert oxford_algorithms == ["canu", "flye"]

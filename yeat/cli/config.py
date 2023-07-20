@@ -14,7 +14,14 @@ from warnings import warn
 
 PAIRED = ("spades", "megahit", "unicycler")
 PACBIO = ("canu", "flye")
-ALGORITHMS = PAIRED + PACBIO
+OXFORD = ("canu", "flye")
+ALGORITHMS = set(PAIRED + PACBIO + OXFORD)
+
+SHORT_READS = ("paired",)
+PACBIO_READS = ("pacbio-raw", "pacbio-corr", "pacbio-hifi")
+OXFORD_READS = ("nano-raw", "nano-corr", "nano-hq")
+LONG_READS = PACBIO_READS + OXFORD_READS
+READ_TYPES = SHORT_READS + LONG_READS
 
 
 class AssemblyConfigurationError(ValueError):
@@ -36,6 +43,7 @@ class AssemblerConfig:
 
     def validate(self):
         self.check_keys(self.data, ("samples", "assemblers"))
+        self.check_sample_keys()
         for assembler in self.data["assemblers"]:
             self.check_keys(assembler, ("label", "algorithm", "extra_args", "samples"))
         labels = [assembler["label"] for assembler in self.data["assemblers"]]
@@ -46,41 +54,66 @@ class AssemblerConfig:
     def check_keys(self, data, keys):
         missingkeys = set(keys) - set(data.keys())
         extrakeys = set(data.keys()) - set(keys)
-        if len(missingkeys) > 0:
+        if missingkeys:
             keystr = ",".join(sorted(missingkeys))
             message = f"Missing assembly configuration setting(s) '{keystr}'"
             raise AssemblyConfigurationError(message)
-        if len(extrakeys) > 0:
+        if extrakeys:
             keystr = ",".join(sorted(extrakeys))
             message = f"Ignoring unsupported configuration key(s) '{keystr}'"
             warn(message)
+
+    def check_sample_keys(self):
+        for key, value in self.data["samples"].items():
+            sample_readtypes = value.keys()
+            if len(sample_readtypes) > 1:
+                message = f"Multiple read types in sample '{key}'"
+                raise AssemblyConfigurationError(message)
+            extrakeys = set(sample_readtypes) - set(READ_TYPES)
+            if extrakeys:
+                keystr = ",".join(sorted(extrakeys))
+                message = f"Unsupported read type '{keystr}'"
+                raise AssemblyConfigurationError(message)
 
     def create_sample_and_assembler_objects(self):
         self.samples = {}
         for key, value in self.data["samples"].items():
             self.samples[key] = Sample(value)
         self.assemblers = [
-            Assembler.from_data(assembler, self.threads) for assembler in self.data["assemblers"]
+            Assembler(assembler, self.threads) for assembler in self.data["assemblers"]
         ]
 
     def batch(self):
-        paired_assemblers = []
-        pacbio_assemblers = []
+        self.paired_assemblers = []
+        self.pacbio_assemblers = []
+        self.oxford_assemblers = []
         for assembler in self.assemblers:
-            if assembler.algorithm in PAIRED:
-                paired_assemblers.append(assembler)
-            elif assembler.algorithm in PACBIO:
-                pacbio_assemblers.append(assembler)
+            self.determine_assembler_workflow(assembler)
         self.batch = {
             "paired": {
-                "samples": self.get_batch_samples(paired_assemblers),
-                "assemblers": paired_assemblers,
+                "samples": self.get_batch_samples(self.paired_assemblers),
+                "assemblers": self.paired_assemblers,
             },
             "pacbio": {
-                "samples": self.get_batch_samples(pacbio_assemblers),
-                "assemblers": pacbio_assemblers,
+                "samples": self.get_batch_samples(self.pacbio_assemblers),
+                "assemblers": self.pacbio_assemblers,
+            },
+            "oxford": {
+                "samples": self.get_batch_samples(self.oxford_assemblers),
+                "assemblers": self.oxford_assemblers,
             },
         }
+
+    def determine_assembler_workflow(self, assembler):
+        readtypes = set()
+        for sample in assembler.samples:
+            readtypes.update({self.samples[sample].readtype})
+        if assembler.algorithm in PAIRED and readtypes.intersection(SHORT_READS):
+            self.paired_assemblers.append(assembler)
+        elif assembler.algorithm in PACBIO and readtypes.intersection(PACBIO_READS):
+            self.pacbio_assemblers.append(assembler)
+        elif assembler.algorithm in OXFORD and readtypes.intersection(OXFORD_READS):
+            self.oxford_assemblers.append(assembler)
 
     def get_batch_samples(self, assemblers):
         samples = {}
@@ -98,11 +131,12 @@ class AssemblerConfig:
             samples = self.batch[readtype]["samples"]
             assemblers = self.batch[readtype]["assemblers"]
         return dict(
-            samples={key: value.sample for key, value in samples.items()},
+            samples={label: sample.to_string() for label, sample in samples.items()},
             labels=[assembler.label for assembler in assemblers],
             assemblers={assembler.label: assembler.algorithm for assembler in assemblers},
             extra_args={assembler.label: assembler.extra_args for assembler in assemblers},
             label_to_samples={assembler.label: assembler.samples for assembler in assemblers},
+            sample_readtype={label: sample.readtype for label, sample in samples.items()},
             threads=args.threads,
             downsample=args.downsample,
             coverage=args.coverage,
@@ -113,33 +147,35 @@ class AssemblerConfig:
 
 class Sample:
     def __init__(self, data):
-        sample = []
-        for fastq in data:
-            read = Path(fastq).resolve()
+        for key, value in data.items():
+            self.readtype = key
+            self.reads = [Path(fastq).resolve() for fastq in value]
+        self.validate_reads()
+
+    def validate_reads(self):
+        for read in self.reads:
             if not read.is_file():
                 raise FileNotFoundError(f"No such file: '{read}'")
-            if str(read) in sample:
-                message = f"Found duplicate read sample: '{read}'"
-                raise AssemblyConfigurationError(message)
-            sample.append(str(read))
-        self.sample = sample
+            if self.reads.count(read) > 1:
+                raise AssemblyConfigurationError(f"Found duplicate read sample: '{read}'")
+
+    def to_string(self):
+        return [str(read) for read in self.reads]
 
 
 class Assembler:
-    def __init__(self, label, algorithm, samples, extra_args, threads):
-        self.label = label
-        if algorithm not in ALGORITHMS:
-            raise AssemblyConfigurationError(f"Unsupported assembly algorithm '{algorithm}'")
-        self.algorithm = algorithm
-        self.samples = samples
-        self.extra_args = extra_args
+    def __init__(self, data, threads):
+        self.label = data["label"]
+        if data["algorithm"] not in ALGORITHMS:
+            raise AssemblyConfigurationError(
+                f"Unsupported assembly algorithm '{data['algorithm']}'"
+            )
+        self.algorithm = data["algorithm"]
+        self.samples = data["samples"]
+        self.extra_args = data["extra_args"]
         self.threads = threads
-        if algorithm == "canu":
+        if self.algorithm == "canu":
             self.check_canu_required_params()
-
-    @classmethod
-    def from_data(cls, data, threads):
-        return cls(data["label"], data["algorithm"], data["samples"], data["extra_args"], threads)
 
     def check_canu_required_params(self):
         if "genomeSize=" not in self.extra_args:

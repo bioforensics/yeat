@@ -9,7 +9,7 @@ help: Makefile
 
 ## test:        run automated test suite
 test:
-	pytest --cov=yeat -m 'not long and not bandage and not hifi'
+	pytest --cov=yeat -m 'not long and not bandage and not hifi and not nano'
 
 ## testlong:    run only long-running automated tests
 testlong:
@@ -23,6 +23,10 @@ testbandage:
 testhifi:
 	pytest --cov=yeat -m 'hifi and not long and not bandage'
 
+## testnano:    run only Oxford Nanopore-reads automated tests
+testnano:
+	pytest --cov=yeat -m 'nano and not long and not bandage'
+
 ## testall:     run all tests but bandage required tests
 testall:
 	pytest --cov=yeat -m 'not bandage'
@@ -31,6 +35,11 @@ testall:
 hifidata:
 	curl -L -o yeat/tests/data/ecoli.fastq https://sra-pub-src-1.s3.amazonaws.com/SRR10971019/m54316_180808_005743.fastq.1
 	gzip yeat/tests/data/ecoli.fastq
+
+## nanodata:    download Oxford Nanopore test data for test suite
+nanodata:
+	curl -L -o yeat/tests/data/ecolk12mg1655_R10_3_guppy_345_HAC.fastq https://figshare.com/ndownloader/files/21623145
+	gzip yeat/tests/data/ecolk12mg1655_R10_3_guppy_345_HAC.fastq
 
 ## style:       check code style vs Black
 style:

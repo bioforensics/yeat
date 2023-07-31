@@ -5,3 +5,5 @@ __pycache__/
 sandbox/
 build/*
 yeat/tests/data/ecoli.fastq.gz
+yeat/tests/data/ecolk12mg1655_R10_3_guppy_345_HAC.fastq.gz
+yeat/tests/data/zymoD6331std-ecoli-ten-percent.fq.gz

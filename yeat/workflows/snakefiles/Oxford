@@ -1,0 +1,99 @@
+# -------------------------------------------------------------------------------------------------
+# Copyright (c) 2023, DHS. This file is part of YEAT: http://github.com/bioforensics/yeat
+#
+# This software was prepared for the Department of Homeland Security (DHS) by the Battelle National
+# Biodefense Institute, LLC (BNBI) as part of contract HSHQDC-15-C-00064 to manage and operate the
+# National Biodefense Analysis and Countermeasures Center (NBACC), a Federally Funded Research and
+# Development Center.
+# -------------------------------------------------------------------------------------------------
+
+module helper:
+    snakefile: "__init__.py"
+    config: config
+
+use rule * from helper
+
+
+rule all:
+    input:
+        helper.get_expected_files(nanopore=True)
+
+
+module long_workflow:
+    snakefile: "Long"
+    config: config
+
+use rule * from long_workflow
+
+
+rule nanofilt:
+    output:
+        outreads="seq/nanofilt/{sample}/highQuality-reads.fq.gz"
+    input:
+        inreads="seq/input/{sample}/combined-reads.fq.gz"
+    threads: 128
+    params:
+        filter="-q 10"
+    shell:
+        """
+        gunzip -c {input.inreads} | Nanofilt {params.filter} | gzip > {output.outreads}
+        """
+
+
+rule nanoplot:
+    output:
+        reports="seq/nanoplot/{sample}/{quality}_LengthvsQualityScatterPlot_dot.pdf"
+    input:
+        raw_reads="seq/input/{sample}/combined-reads.fq.gz",
+        filtered_reads="seq/nanofilt/{sample}/highQuality-reads.fq.gz"
+    threads: 128
+    params:
+        outdir="seq/input/{sample}/nanoplot"
+    shell:
+        """
+        NanoPlot -t {threads} --fastq {input.raw_reads} -o {params.outdir} --N50 -p raw_ --title "{wildcards.sample} Raw" -f pdf --plots dot
+        NanoPlot -t {threads} --fastq {input.filtered_reads} -o {params.outdir} --N50 -p filtered_ --title "{wildcards.sample} Filtered" -f pdf --plots dot
+        """
+
+
+def get_readtype_flag(sample):
+    readtype = config["sample_readtype"][sample]
+    if readtype == "nano-raw":
+        return "--nano-raw"
+    elif readtype == "nano-corr":
+        return "--nano-corr"
+    elif readtype == "nano-hq":
+        return "--nano-hq"
+
+
+rule flye:
+    output:
+        contigs="analysis/{sample}/{label}/flye/{sample}_contigs.fasta"
+    input:
+        reads="seq/nanofilt/{sample}/highQuality-reads.fq.gz"
+    threads: 128
+    params:
+        readtype_flag=lambda wildcards: get_readtype_flag(wildcards.sample),
+        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/flye",
+        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+    shell:
+        """
+        flye {params.readtype_flag} {input.reads} -t {threads} -o {params.outdir} {params.extra_args}
+        ln -s assembly.fasta {output.contigs}
+        """
+
+
+rule canu:
+    output:
+        contigs="analysis/{sample}/{label}/canu/{sample}_contigs.fasta"
+    input:
+        reads="seq/nanofilt/{sample}/highQuality-reads.fq.gz"
+    threads: 128
+    params:
+        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/canu",
+        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+    shell:
+        """
+        canu -nanopore {input.reads} maxThreads={threads} -p {wildcards.sample} -d {params.outdir} {params.extra_args} useGrid=false
+        ln -s {wildcards.sample}.contigs.fasta {output.contigs}
+        """

@@ -18,29 +18,35 @@ from yeat import workflows
 
 CONFIG_TEMPLATE = {
     "samples": {
-        "sample1": ["path_to_read1", "path_to_read2"],
-        "sample2": ["path_to_read1", "path_to_read2"],
-        "sample3": ["path_to_read"],
+        "sample1": {
+            "paired": [
+                "yeat/tests/data/short_reads_1.fastq.gz",
+                "yeat/tests/data/short_reads_2.fastq.gz",
+            ]
+        },
+        "sample2": {
+            "paired": [
+                "yeat/tests/data/Animal_289_R1.fastq.gz",
+                "yeat/tests/data/Animal_289_R2.fastq.gz",
+            ]
+        },
+        "sample3": {"pacbio-hifi": ["yeat/tests/data/ecoli.fastq.gz"]},
+        "sample4": {"nano-hq": ["yeat/tests/data/ecolk12mg1655_R10_3_guppy_345_HAC.fastq.gz"]},
     },
     "assemblers": [
         {
-            "label": "spades-meta",
+            "label": "default-spades",
             "algorithm": "spades",
-            "extra_args": "--meta",
-            "samples": ["sample1"],
-        },
-        {
-            "label": "megahit-mins",
-            "algorithm": "megahit",
-            "extra_args": "--min-count 5 --min-contig-len 300",
+            "extra_args": "",
             "samples": ["sample1", "sample2"],
         },
         {
-            "label": "pacbio-hifi",
+            "label": "hicanu",
             "algorithm": "canu",
-            "extra_args": "genomeSize=4.8m",
+            "extra_args": "genomeSize=4.6m",
             "samples": ["sample3"],
         },
+        {"label": "nanoflye", "algorithm": "flye", "extra_args": "", "samples": ["sample4"]},
     ],
 }
 

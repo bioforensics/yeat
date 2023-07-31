@@ -7,54 +7,67 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-module helper:
-    snakefile: "__init__.py"
-    config: config
+from glob import glob
+from shutil import copyfile
 
-use rule * from helper
+
+def get_expected_files():
+    inputlist = []
+    for label in config["labels"]:
+        assembler = config["assemblers"][label]
+        for sample in config["label_to_samples"][label]:
+            inputlist.append(f"analysis/{sample}/{label}/{assembler}/quast/{sample}_report.html")
+    inputlist += expand("seq/fastqc/{sample}/.done", sample=[*config["samples"]])
+    return inputlist
 
 
 rule all:
     input:
-        helper.get_expected_files(pacbio_qc=True)
+        get_expected_files()
 
 
-module long_workflow:
-    snakefile: "Long"
-    config: config
+rule copyinput:
+    output:
+        "seq/input/{sample}/.done"
+    input:
+        lambda wildcards: config["samples"][wildcards.sample]
+    run:
+        for i, inread in enumerate(input):
+            outread = f"seq/input/{wildcards.sample}/{wildcards.sample}_{i}.fq.gz"
+            if inread.endswith(".gz"):
+                copyfile(inread, outread)
+            else:
+                shell(f"gzip -c {inread} > {outread}")
+        shell("touch {output[0]}")
 
-use rule * from long_workflow
 
-
-def get_readtype_flag(sample, algorithm):
-    readtype = config["sample_readtype"][sample]
-    if algorithm == "flye":
-        if readtype == "pacbio-raw":
-            return "--pacbio-raw"
-        elif readtype == "pacbio-corr":
-            return "--pacbio-corr"
-        elif readtype == "pacbio-hifi":
-            return "--pacbio-hifi"
-    elif algorithm == "canu":
-        if readtype in ["pacbio-raw", "pacbio-corr"]:
-            return "-pacbio"
-        elif readtype == "pacbio-hifi":
-            return "-pacbio-hifi"
+rule fastqc:
+    output:
+        "seq/fastqc/{sample}/.done"
+    input:
+        "seq/input/{sample}/.done"
+    threads: 128
+    params:
+        reads=lambda wildcards: glob(f"seq/input/{wildcards.sample}/*.fq.gz")
+    shell:
+        """
+        fastqc {params.reads} --threads {threads} -o seq/fastqc/{wildcards.sample}
+        touch {output[0]}
+        """
 
 
 rule flye:
     output:
         contigs="analysis/{sample}/{label}/flye/{sample}_contigs.fasta"
     input:
-        "seq/input/{sample}/combined-reads.fq.gz"
+        "seq/input/{sample}/.done"
     threads: 128
     params:
-        readtype_flag=lambda wildcards: get_readtype_flag(wildcards.sample, "flye"),
-        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/flye",
+        reads=lambda wildcards: glob(f"seq/input/{wildcards.sample}/*.fq.gz"),
         extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        flye {params.readtype_flag} {input[0]} -t {threads} -o {params.outdir} {params.extra_args}
+        flye --pacbio-hifi {params.reads} -t {threads} -o analysis/{wildcards.sample}/{wildcards.label}/flye {params.extra_args}
         ln -s assembly.fasta {output.contigs}
         """
 
@@ -63,48 +76,25 @@ rule canu:
     output:
         contigs="analysis/{sample}/{label}/canu/{sample}_contigs.fasta"
     input:
-        "seq/input/{sample}/combined-reads.fq.gz"
+        "seq/input/{sample}/.done"
     threads: 128
     params:
-        readtype_flag=lambda wildcards: get_readtype_flag(wildcards.sample, "canu"),
-        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/canu",
+        reads=lambda wildcards: glob(f"seq/input/{wildcards.sample}/*.fq.gz"),
         extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        canu {params.readtype_flag} {input[0]} maxThreads={threads} -p {wildcards.sample} -d {params.outdir} {params.extra_args} useGrid=false
+        canu -pacbio-hifi {params.reads} maxThreads={threads} -p {wildcards.sample} -d analysis/{wildcards.sample}/{wildcards.label}/canu {params.extra_args} useGrid=false
         ln -s {wildcards.sample}.contigs.fasta {output.contigs}
         """
 
 
-rule hifiasm:
+rule quast:
     output:
-        contigs="analysis/{sample}/{label}/hifiasm/{sample}_contigs.fasta"
+        report="analysis/{sample}/{label}/{assembler}/quast/{sample}_report.html"
     input:
-        "seq/input/{sample}/combined-reads.fq.gz"
-    threads: 128
-    params:
-        prefix=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/hifiasm/{wildcards.sample}",
-        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+        contigs="analysis/{sample}/{label}/{assembler}/{sample}_contigs.fasta"
     shell:
         """
-        hifiasm -o {params.prefix} -t {threads} {params.extra_args} {input[0]}
-        awk '/^S/{{print ">"$2;print $3}}' {params.prefix}.bp.p_ctg.gfa > {params.prefix}.bp.p_ctg.fa
-        ln -s {wildcards.sample}.bp.p_ctg.fa {output.contigs}
-        """
-
-
-rule hifiasm_meta:
-    output:
-        contigs="analysis/{sample}/{label}/hifiasm-meta/{sample}_contigs.fasta"
-    input:
-        "seq/input/{sample}/combined-reads.fq.gz"
-    threads: 128
-    params:
-        prefix=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/hifiasm-meta/{wildcards.sample}",
-        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
-    shell:
-        """
-        hifiasm_meta -o {params.prefix} -t {threads} {params.extra_args} {input[0]}
-        awk '/^S/{{print ">"$2;print $3}}' {params.prefix}.p_ctg.gfa > {params.prefix}.p_ctg.fa
-        ln -s {wildcards.sample}.p_ctg.fa {output.contigs}
+        quast.py {input.contigs} -o analysis/{wildcards.sample}/{wildcards.label}/{wildcards.assembler}/quast
+        ln -s report.html {output.report}
         """

@@ -16,15 +16,10 @@ from yeat.tests import data_file
 
 
 def test_unsupported_assembly_algorithm():
-    assembler = {
-        "label": "unsuported_algorithm",
-        "algorithm": "unsupported_alogrithm",
-        "extra_args": "",
-        "samples": ["sample1"],
-    }
-    pattern = rf"Unsupported assembly algorithm '{assembler['algorithm']}'"
+    algorithm = "unsupported_algorithm"
+    pattern = rf"Unsupported assembly algorithm '{algorithm}'"
     with pytest.raises(ValueError, match=pattern):
-        Assembler(assembler, 1)
+        Assembler("label1", algorithm, [], "", 1)
 
 
 def test_duplicate_assembly_labels(tmp_path):
@@ -72,17 +67,16 @@ def test_unsupported_key_in_config_entry():
     ],
 )
 def test_sample_read_file_not_found(reads, badfile):
-    sample = {"paired": reads}
     pattern = rf"No such file: '.*{reads[badfile]}'"
     with pytest.raises(FileNotFoundError, match=pattern):
-        Sample(sample)
+        Sample(reads)
 
 
 def test_sample_with_duplicate_reads():
-    sample = {"paired": [data_file("short_reads_1.fastq.gz"), data_file("short_reads_1.fastq.gz")]}
+    reads = [data_file("short_reads_1.fastq.gz"), data_file("short_reads_1.fastq.gz")]
     pattern = rf"Found duplicate read sample: '.*short_reads_1.fastq.gz'"
     with pytest.raises(AssemblyConfigurationError, match=pattern):
-        Sample(sample)
+        Sample(reads)
 
 
 @pytest.mark.parametrize(
@@ -97,14 +91,8 @@ def test_sample_with_duplicate_reads():
     ],
 )
 def test_check_canu_required_params_errors(extra_args, cores, expected):
-    assembler = {
-        "label": "label1",
-        "algorithm": "canu",
-        "extra_args": extra_args,
-        "samples": ["sample1"],
-    }
     with pytest.raises(ValueError, match=expected):
-        Assembler(assembler, cores)
+        Assembler("label1", "canu", [], extra_args, cores)
 
 
 @pytest.mark.parametrize(
@@ -133,37 +121,3 @@ def test_to_dict(cfg, readtype, subsamples, sublabels):
     assert len(observed["samples"]) == len(subsamples)
     assert len(observed["labels"]) == len(sublabels)
     assert len(observed["assemblers"]) == len(sublabels)
-
-
-def test_multiple_readtypes_in_sample():
-    data = json.load(open(data_file("configs/oxford.cfg")))
-    data["samples"]["sample1"]["extra_readtype"] = ["long_read.fastq"]
-    pattern = r"Multiple read types in sample 'sample1'"
-    with pytest.raises(ValueError, match=pattern):
-        AssemblerConfig(data, 1)
-
-
-def test_unsupported_readtype_in_sample():
-    data = json.load(open(data_file("configs/oxford.cfg")))
-    del data["samples"]["sample1"]["nano-hq"]
-    data["samples"]["sample1"]["not"] = ["supported"]
-    pattern = r"Unsupported read type 'not'"
-    with pytest.raises(ValueError, match=pattern):
-        AssemblerConfig(data, 1)
-
-
-def test_batch():
-    data = json.load(open(data_file("configs/all_assemblers.cfg")))
-    config = AssemblerConfig(data, 4)
-    paired_samples = [sample for sample in config.batch["paired"]["samples"]]
-    paired_algorithms = [assembler.algorithm for assembler in config.batch["paired"]["assemblers"]]
-    assert paired_samples == ["sample1", "sample2"]
-    assert paired_algorithms == ["spades", "megahit", "unicycler"]
-    pacbio_samples = [sample for sample in config.batch["pacbio"]["samples"]]
-    pacbio_algorithms = [assembler.algorithm for assembler in config.batch["pacbio"]["assemblers"]]
-    assert pacbio_samples == ["sample3"]
-    assert pacbio_algorithms == ["canu", "flye"]
-    oxford_samples = [sample for sample in config.batch["oxford"]["samples"]]
-    oxford_algorithms = [assembler.algorithm for assembler in config.batch["oxford"]["assemblers"]]
-    assert oxford_samples == ["sample4"]
-    assert oxford_algorithms == ["canu", "flye"]

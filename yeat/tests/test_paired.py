@@ -191,7 +191,7 @@ def test_uncompressed_input_reads(inread1, inread2, capfd, tmp_path):
     inread1 = prep_uncompressed_reads(inread1, tmp_path)
     inread2 = prep_uncompressed_reads(inread2, tmp_path)
     cfg_data = json.load(open(data_file("configs/megahit.cfg")))
-    cfg_data["samples"]["sample1"] = {"paired": [inread1, inread2]}
+    cfg_data["samples"]["sample1"] = [inread1, inread2]
     cfg = str(Path(wd).resolve() / "megahit.cfg")
     json.dump(cfg_data, open(cfg, "w"))
     arglist = [

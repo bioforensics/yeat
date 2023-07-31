@@ -13,15 +13,15 @@ from warnings import warn
 
 
 PAIRED = ("spades", "megahit", "unicycler")
-PACBIO = ("canu", "flye")
+PACBIO = ("canu", "flye", "hifiasm", "hifiasm-meta")
 OXFORD = ("canu", "flye")
 ALGORITHMS = set(PAIRED + PACBIO + OXFORD)
 
-SHORT_READS = ("paired",)
+ILLUMINA_READS = ("paired",)
 PACBIO_READS = ("pacbio-raw", "pacbio-corr", "pacbio-hifi")
 OXFORD_READS = ("nano-raw", "nano-corr", "nano-hq")
 LONG_READS = PACBIO_READS + OXFORD_READS
-READ_TYPES = SHORT_READS + LONG_READS
+READ_TYPES = ILLUMINA_READS + LONG_READS
 
 
 class AssemblyConfigurationError(ValueError):
@@ -108,7 +108,7 @@ class AssemblerConfig:
         readtypes = set()
         for sample in assembler.samples:
             readtypes.update({self.samples[sample].readtype})
-        if assembler.algorithm in PAIRED and readtypes.intersection(SHORT_READS):
+        if assembler.algorithm in PAIRED and readtypes.intersection(ILLUMINA_READS):
             self.paired_assemblers.append(assembler)
         elif assembler.algorithm in PACBIO and readtypes.intersection(PACBIO_READS):
             self.pacbio_assemblers.append(assembler)

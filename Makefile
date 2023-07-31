@@ -38,8 +38,11 @@ hifidata:
 
 ## nanodata:    download Oxford Nanopore test data for test suite
 nanodata:
-	curl -L -o yeat/tests/data/ecolk12mg1655_R10_3_guppy_345_HAC.fastq https://figshare.com/ndownloader/files/21623145
-	gzip yeat/tests/data/ecolk12mg1655_R10_3_guppy_345_HAC.fastq
+	curl -L -o yeat/tests/data/ecolk12mg1655_R10_3_guppy_345_HAC.fastq.gz https://figshare.com/ndownloader/files/21623145
+
+## metadata:    download PacBio HiFi metagenomics test data for test suite
+metadata:
+	curl -L -o yeat/tests/data/zymoD6331std-ecoli-ten-percent.fq.gz https://zenodo.org/record/5908204/files/zymoD6331std-ecoli-ten-percent.fq.gz?download=1
 
 ## style:       check code style vs Black
 style:

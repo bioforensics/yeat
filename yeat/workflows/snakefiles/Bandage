@@ -78,7 +78,7 @@ rule flye:
     output:
         "analysis/{sample}/{label}/flye/bandage/.done"
     input:
-        lambda wildcards: 
+        lambda wildcards:
             glob(f"analysis/{wildcards.sample}/{wildcards.label}/flye/30-contigger/*.gfa")
             + glob(f"analysis/{wildcards.sample}/{wildcards.label}/flye/40-polishing/*.gfa")
             + glob(f"analysis/{wildcards.sample}/{wildcards.label}/flye/*.gfa")

@@ -100,7 +100,7 @@ $ yeat --outdir {path} {config}
 	    {
             "label": "hicanu",
             "algorithm": "canu",
-            "extra_args": "genomeSize=4.6m",
+            "extra_args": "genomeSize=4.8m",
             "samples": [
                 "sample3"
             ]

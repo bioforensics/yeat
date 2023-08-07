@@ -1,4 +1,3 @@
-
 # -------------------------------------------------------------------------------------------------
 # Copyright (c) 2023, DHS. This file is part of YEAT: http://github.com/bioforensics/yeat
 #

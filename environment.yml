@@ -25,4 +25,4 @@ dependencies:
     - nanofilt>=2.3
     - nanoplot>=1.20
     - hifiasm>=0.19
-    - hifiasm_meta>=0.3
+    - hifiasm_meta>=hamtv0.3

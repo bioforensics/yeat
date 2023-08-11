@@ -1,0 +1,124 @@
+# -------------------------------------------------------------------------------------------------
+# Copyright (c) 2023, DHS. This file is part of YEAT: http://github.com/bioforensics/yeat
+#
+# This software was prepared for the Department of Homeland Security (DHS) by the Battelle National
+# Biodefense Institute, LLC (BNBI) as part of contract HSHQDC-15-C-00064 to manage and operate the
+# National Biodefense Analysis and Countermeasures Center (NBACC), a Federally Funded Research and
+# Development Center.
+# -------------------------------------------------------------------------------------------------
+
+import json
+import pandas as pd
+from pathlib import Path
+from random import randint
+from shutil import copyfile
+
+
+module helper:
+    snakefile: "__init__.py"
+    config: config
+
+use rule * from helper
+
+
+rule all:
+    input:
+        helper.get_expected_files(combined_qc=True)
+
+
+module shared_workflow:
+    snakefile: "Shared"
+    config: config
+
+use rule * from shared_workflow
+
+
+rule fastp:
+    output:
+        "seq/fastp/{sample}/combined-reads.fq.gz",
+    input:
+        "seq/input/{sample}/combined-reads.fq.gz"
+    params:
+        html_report="seq/fastp/{sample}/fastp.html",
+        json_report="seq/fastp/{sample}/fastp.json",
+        txt_report="seq/fastp/{sample}/report.txt"
+    shell:
+        """
+        fastp -i {input[0]} -o {output[0]} \
+            --html {params.html_report} --json {params.json_report} \
+            2> {params.txt_report}
+        """
+
+
+rule mash:
+    output:
+        sketch="seq/mash/{sample}/combined-reads.fq.gz.msh",
+        mash_report="seq/mash/{sample}/combined-reads.report.tsv"
+    input:
+        "seq/fastp/{sample}/combined-reads.fq.gz"
+    shell:
+        """
+        mash sketch {input[0]} -o {output.sketch}
+        mash info -t {output.sketch} > {output.mash_report}
+        """
+
+
+rule downsample:
+    output:
+        sub="seq/downsample/{sample}/combined-reads.fq.gz"
+    input:
+        read="seq/fastp/{sample}/combined-reads.fq.gz",
+        mash_report="seq/mash/{sample}/combined-reads.report.tsv"
+    params:
+        coverage=config["coverage"],
+        downsample=config["downsample"],
+        fastp_report="seq/fastp/{sample}/fastp.json",
+        genome_size=config["genomesize"],
+        seed=config["seed"]
+    run:
+        if params.downsample == -1:
+            p = Path("seq/{wildcards.sample}/downsample")
+            p.mkdir(parents=True, exist_ok=True)
+            copyfile(input.read, output.sub)
+            return
+        if params.genome_size == 0:
+            df = pd.read_csv(input.mash_report, sep="\t")
+            genome_size = df["Length"].iloc[0]
+        else:
+            genome_size = params.genome_size
+        with open(params.fastp_report, "r") as fh:
+            qcdata = json.load(fh)
+        base_count = qcdata["summary"]["after_filtering"]["total_bases"]
+        read_count = qcdata["summary"]["after_filtering"]["total_reads"]
+        avg_read_length = base_count / read_count
+        if params.downsample == 0:
+            down = int((genome_size * params.coverage) / (2 * avg_read_length))
+        else:
+            down = params.downsample
+        if params.seed == "None":
+            seed = randint(1, 2**16-1)
+        else:
+            seed = params.seed
+        print(f"[yeat] genome size: {genome_size}")
+        print(f"[yeat] average read length: {avg_read_length}")
+        print(f"[yeat] target depth of coverage: {params.coverage}x")
+        print(f"[yeat] number of reads to sample: {down}")
+        print(f"[yeat] random seed for sampling: {seed}")
+        shell("seqtk sample -s {seed} {input[0]} {down} > seq/downsample/{wildcards.sample}/combined-reads.fq")
+        shell("gzip -f seq/downsample/{wildcards.sample}/*")
+
+
+rule spades:
+    output:
+        contigs="analysis/{sample}/{label}/spades/{sample}_contigs.fasta"
+    input:
+        "seq/downsample/{sample}/combined-reads.fq.gz"
+    threads: 128
+    params:
+        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/spades",
+        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+    shell:
+        """
+        spades.py -s {input[0]} -t {threads} -o {params.outdir} {params.extra_args}
+        ln -s scaffolds.fasta {output.contigs}
+        """

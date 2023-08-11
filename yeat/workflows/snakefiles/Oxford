@@ -19,11 +19,11 @@ rule all:
         helper.get_expected_files(nanopore=True)
 
 
-module long_workflow:
-    snakefile: "Long"
+module shared_workflow:
+    snakefile: "Shared"
     config: config
 
-use rule * from long_workflow
+use rule * from shared_workflow
 
 
 rule nanofilt:

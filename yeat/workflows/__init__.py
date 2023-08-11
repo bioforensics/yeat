@@ -27,6 +27,21 @@ def run_paired(args, config):
         raise RuntimeError("Snakemake Failed")  # pragma: no cover
 
 
+def run_single(args, config):
+    snakefile = resource_filename("yeat", "workflows/snakefiles/Single")
+    data = config.to_dict(args, readtype="single")
+    success = snakemake(
+        snakefile,
+        config=data,
+        cores=args.threads,
+        dryrun=args.dry_run,
+        printshellcmds=True,
+        workdir=args.outdir,
+    )
+    if not success:
+        raise RuntimeError("Snakemake Failed")  # pragma: no cover
+
+
 def run_pacbio(args, config):
     snakefile = resource_filename("yeat", "workflows/snakefiles/Pacbio")
     data = config.to_dict(args, readtype="pacbio")
@@ -60,6 +75,8 @@ def run_oxford(args, config):
 def run_workflows(args, config):
     if config.batch["paired"]["assemblers"]:
         run_paired(args, config)
+    if config.batch["single"]["assemblers"]:
+        run_single(args, config)
     if config.batch["pacbio"]["assemblers"]:
         run_pacbio(args, config)
     if config.batch["oxford"]["assemblers"]:

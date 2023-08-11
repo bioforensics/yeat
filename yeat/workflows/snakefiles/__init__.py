@@ -7,15 +7,15 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-def get_expected_files(short_qc=False, pacbio_qc=False, nanopore=False):
+def get_expected_files(paired_qc=False, combined_qc=False, nanopore=False):
     inputlist = []
     for label in config["labels"]:
         assembler = config["assemblers"][label]
         for sample in config["label_to_samples"][label]:
             inputlist.append(f"analysis/{sample}/{label}/{assembler}/quast/{sample}_report.html")
-    if short_qc:
+    if paired_qc:
         inputlist += expand("seq/fastqc/{sample}/{sample}_{reads}_fastqc.html", sample=[*config["samples"]], reads=["R1", "R2"])
-    if pacbio_qc:
+    if combined_qc:
         inputlist += expand("seq/fastqc/{sample}/combined-reads_fastqc.html", sample=[*config["samples"]])
     if nanopore:
         inputlist += expand("seq/nanofilt/{sample}/highQuality-reads.fq.gz", sample=[*config["samples"]])

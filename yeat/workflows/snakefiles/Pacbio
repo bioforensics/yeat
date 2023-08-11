@@ -16,14 +16,14 @@ use rule * from helper
 
 rule all:
     input:
-        helper.get_expected_files(pacbio_qc=True)
+        helper.get_expected_files(combined_qc=True)
 
 
-module long_workflow:
-    snakefile: "Long"
+module shared_workflow:
+    snakefile: "Shared"
     config: config
 
-use rule * from long_workflow
+use rule * from shared_workflow
 
 
 def get_readtype_flag(sample, algorithm):

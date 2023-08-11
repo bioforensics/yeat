@@ -16,7 +16,7 @@ rule copyinput:
     input:
         reads=lambda wildcards: config["samples"][wildcards.sample]
     params:
-        combined=lambda wildcards: f"seq/input/{wildcards.sample}/combined-reads.fq"
+        combined="seq/input/{sample}/combined-reads.fq"
     run:
         for i, inread in enumerate(input):
             outread = f"seq/input/{wildcards.sample}/reads{i}.fq"

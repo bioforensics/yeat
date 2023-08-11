@@ -155,15 +155,22 @@ def test_unsupported_readtype_in_sample():
 def test_batch():
     data = json.load(open(data_file("configs/all_assemblers.cfg")))
     config = AssemblerConfig(data, 4)
-    paired_samples = [sample for sample in config.batch["paired"]["samples"]]
+    paired_samples = set(config.batch["paired"]["samples"].keys())
     paired_algorithms = [assembler.algorithm for assembler in config.batch["paired"]["assemblers"]]
-    assert paired_samples == ["sample1", "sample2"]
-    assert paired_algorithms == ["spades", "megahit", "unicycler"]
-    pacbio_samples = [sample for sample in config.batch["pacbio"]["samples"]]
+    assert paired_samples == {"sample1", "sample2"}
+    assert paired_algorithms == [
+        "spades",
+        "spades",
+        "megahit",
+        "megahit",
+        "unicycler",
+        "unicycler",
+    ]
+    pacbio_samples = set(config.batch["pacbio"]["samples"].keys())
     pacbio_algorithms = [assembler.algorithm for assembler in config.batch["pacbio"]["assemblers"]]
-    assert pacbio_samples == ["sample3"]
+    assert pacbio_samples == {"sample3"}
     assert pacbio_algorithms == ["canu", "flye"]
-    oxford_samples = [sample for sample in config.batch["oxford"]["samples"]]
+    oxford_samples = set(config.batch["oxford"]["samples"].keys())
     oxford_algorithms = [assembler.algorithm for assembler in config.batch["oxford"]["assemblers"]]
-    assert oxford_samples == ["sample4"]
+    assert oxford_samples == {"sample4"}
     assert oxford_algorithms == ["canu", "flye"]

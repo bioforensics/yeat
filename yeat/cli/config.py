@@ -115,7 +115,6 @@ class AssemblerConfig:
         }
 
     def determine_assembler_workflow(self, assembler):
-        print(assembler.samples)
         for sample in assembler.samples:
             readtype = self.samples[sample].readtype
             if readtype == "paired" and assembler.algorithm in PAIRED:

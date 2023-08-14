@@ -122,3 +122,38 @@ rule spades:
         spades.py -s {input[0]} -t {threads} -o {params.outdir} {params.extra_args}
         ln -s scaffolds.fasta {output.contigs}
         """
+
+
+rule megahit:
+    output:
+        contigs="analysis/{sample}/{label}/megahit/{sample}_contigs.fasta"
+    input:
+        "seq/downsample/{sample}/combined-reads.fq.gz"
+    threads: 128
+    params:
+        temp_dir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/megahit-temp",
+        actual_dir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/megahit",
+        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+    shell:
+        """
+        megahit -r {input[0]} -t {threads} -o {params.temp_dir} {params.extra_args}
+        mv {params.temp_dir}/* {params.actual_dir}
+        rm -r {params.temp_dir}
+        ln -s final.contigs.fa {output.contigs}
+        """
+
+
+rule unicycler:
+    output:
+        contigs="analysis/{sample}/{label}/unicycler/{sample}_contigs.fasta"
+    input:
+        "seq/downsample/{sample}/combined-reads.fq.gz"
+    threads: 128
+    params:
+        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/unicycler",
+        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+    shell:
+        """
+        unicycler -s {input[0]} -t {threads} -o {params.outdir} {params.extra_args}
+        ln -s assembly.fasta {output.contigs}
+        """

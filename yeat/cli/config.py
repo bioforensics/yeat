@@ -13,10 +13,10 @@ from warnings import warn
 
 
 PAIRED = ("spades", "megahit", "unicycler")
-SINGLE = ("spades",)
+SINGLE = ("spades", "megahit", "unicycler")
 PACBIO = ("canu", "flye")
 OXFORD = ("canu", "flye")
-ALGORITHMS = set(PAIRED + PACBIO + OXFORD)
+ALGORITHMS = set(PAIRED + SINGLE + PACBIO + OXFORD)
 
 ILLUMINA_READS = ("paired", "single")
 PACBIO_READS = ("pacbio-raw", "pacbio-corr", "pacbio-hifi")
@@ -117,10 +117,10 @@ class AssemblerConfig:
     def determine_assembler_workflow(self, assembler):
         for sample in assembler.samples:
             readtype = self.samples[sample].readtype
-            if readtype == "paired" and assembler.algorithm in PAIRED:
+            if readtype == "paired":
                 self.paired_samples.add(sample)
                 self.paired_assemblers.append(assembler)
-            elif readtype == "single" and assembler.algorithm in SINGLE:
+            elif readtype == "single":
                 self.single_samples.add(sample)
                 self.single_assemblers.append(assembler)
             elif readtype in PACBIO_READS and assembler.algorithm in PACBIO:
@@ -129,6 +129,9 @@ class AssemblerConfig:
             elif readtype in OXFORD_READS and assembler.algorithm in OXFORD:
                 self.oxford_samples.add(sample)
                 self.oxford_assemblers.append(assembler)
+
+    def get_samples(self, samples):
+        return {sample: self.samples[sample] for sample in samples}
 
     def to_dict(self, args, readtype="all"):
         if readtype == "all":
@@ -139,11 +142,9 @@ class AssemblerConfig:
             assemblers = self.batch[readtype]["assemblers"]
         label_to_samples = {}
         for assembler in assemblers:
-            temp = []
-            for s in assembler.samples:
-                if s in samples:
-                    temp.append(s)
-            label_to_samples[assembler.label] = temp
+            label_to_samples[assembler.label] = [
+                sample for sample in assembler.samples if sample in samples
+            ]
         return dict(
             samples={label: sample.to_string() for label, sample in samples.items()},
             labels=[assembler.label for assembler in assemblers],
@@ -157,12 +158,6 @@ class AssemblerConfig:
             genomesize=args.genome_size,
             seed=args.seed,
         )
-
-    def get_samples(self, samples):
-        mydict = {}
-        for sample in samples:
-            mydict[sample] = self.samples[sample]
-        return mydict
 
 
 class Sample:

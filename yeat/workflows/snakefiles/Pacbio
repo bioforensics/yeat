@@ -74,3 +74,37 @@ rule canu:
         canu {params.readtype_flag} {input[0]} maxThreads={threads} -p {wildcards.sample} -d {params.outdir} {params.extra_args} useGrid=false
         ln -s {wildcards.sample}.contigs.fasta {output.contigs}
         """
+
+
+rule hifiasm:
+    output:
+        contigs="analysis/{sample}/{label}/hifiasm/{sample}_contigs.fasta"
+    input:
+        "seq/input/{sample}/combined-reads.fq.gz"
+    threads: 128
+    params:
+        prefix=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/hifiasm/{wildcards.sample}",
+        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+    shell:
+        """
+        hifiasm -o {params.prefix} -t {threads} {params.extra_args} {input[0]}
+        awk '/^S/{{print ">"$2;print $3}}' {params.prefix}.bp.p_ctg.gfa > {params.prefix}.bp.p_ctg.fa
+        ln -s {wildcards.sample}.bp.p_ctg.fa {output.contigs}
+        """
+
+
+rule hifiasm_meta:
+    output:
+        contigs="analysis/{sample}/{label}/hifiasm-meta/{sample}_contigs.fasta"
+    input:
+        "seq/input/{sample}/combined-reads.fq.gz"
+    threads: 128
+    params:
+        prefix=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/hifiasm-meta/{wildcards.sample}",
+        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+    shell:
+        """
+        hifiasm_meta -o {params.prefix} -t {threads} {params.extra_args} {input[0]}
+        awk '/^S/{{print ">"$2;print $3}}' {params.prefix}.p_ctg.gfa > {params.prefix}.p_ctg.fa
+        ln -s {wildcards.sample}.p_ctg.fa {output.contigs}
+        """

@@ -146,7 +146,7 @@ rule spades:
     shell:
         """
         spades.py -1 {input.read1} -2 {input.read2} -t {threads} -o {params.outdir} {params.extra_args}
-        ln -s scaffolds.fasta {output.contigs}
+        ln -s contigs.fasta {output.contigs}
         """
 
 

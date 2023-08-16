@@ -24,3 +24,5 @@ dependencies:
     - flye>=2.9
     - nanofilt>=2.3
     - nanoplot>=1.20
+    - hifiasm>=0.19
+    - hifiasm_meta>=hamtv0.3

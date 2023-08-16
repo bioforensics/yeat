@@ -99,3 +99,27 @@ rule canu:
             filename = Path(gfa).stem
             shell("Bandage image {gfa} analysis/{wildcards.sample}/{wildcards.label}/canu/bandage/{filename}.jpg")
         shell("touch {output[0]}")
+
+
+rule hifiasm:
+    output:
+        "analysis/{sample}/{label}/hifiasm/bandage/.done"
+    input:
+        lambda wildcards: glob(f"analysis/{wildcards.sample}/{wildcards.label}/hifiasm/*.gfa")
+    run:
+        for gfa in input:
+            filename = Path(gfa).stem
+            shell("Bandage image {gfa} analysis/{wildcards.sample}/{wildcards.label}/hifiasm/bandage/{filename}.jpg")
+        shell("touch {output[0]}")
+
+
+rule hifiasm_meta:
+    output:
+        "analysis/{sample}/{label}/hifiasm-meta/bandage/.done"
+    input:
+        lambda wildcards: glob(f"analysis/{wildcards.sample}/{wildcards.label}/hifiasm-meta/*.gfa")
+    run:
+        for gfa in input:
+            filename = Path(gfa).stem
+            shell("Bandage image {gfa} analysis/{wildcards.sample}/{wildcards.label}/hifiasm-meta/bandage/{filename}.jpg")
+        shell("touch {output[0]}")

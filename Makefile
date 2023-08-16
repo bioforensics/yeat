@@ -35,6 +35,7 @@ testall:
 hifidata:
 	curl -L -o yeat/tests/data/ecoli.fastq https://sra-pub-src-1.s3.amazonaws.com/SRR10971019/m54316_180808_005743.fastq.1
 	gzip yeat/tests/data/ecoli.fastq
+	curl -L -o yeat/tests/data/chr11-2M.fa.gz https://github.com/chhylp123/hifiasm/releases/download/v0.7/chr11-2M.fa.gz
 
 ## nanodata:    download Oxford Nanopore test data for test suite
 nanodata:

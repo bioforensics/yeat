@@ -27,7 +27,7 @@ def test_invalid_custom_coverage_negative(coverage):
     arglist = [
         "--coverage",
         coverage,
-        data_file("megahit.cfg"),
+        data_file("paired.cfg"),
     ]
     with pytest.raises(ArgumentError, match=rf"{coverage} is not a positive integer"):
         args = cli.get_parser(exit_on_error=False).parse_args(arglist)
@@ -38,7 +38,7 @@ def test_invalid_custom_coverage_noninteger(coverage):
     arglist = [
         "--coverage",
         coverage,
-        data_file("megahit.cfg"),
+        data_file("paired.cfg"),
     ]
     with pytest.raises(ArgumentError, match=rf"{coverage} is not an integer"):
         args = cli.get_parser(exit_on_error=False).parse_args(arglist)

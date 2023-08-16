@@ -43,7 +43,7 @@ CONFIG_TEMPLATE = {
         {
             "label": "hicanu",
             "algorithm": "canu",
-            "extra_args": "genomeSize=4.6m",
+            "extra_args": "genomeSize=4.8m",
             "samples": ["sample3"],
         },
         {"label": "nanoflye", "algorithm": "flye", "extra_args": "", "samples": ["sample4"]},

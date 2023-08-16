@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Pacbio raw and corrected reads (#47)
     - Oxford Nanopore raw, corrected, and HAC (#47)
 - Support for Nanopore-reads assembly with Flye and Canu (#47)
+- New assemblers:
+    - Hifiasm and Hifiasm-meta (#49)
 
 
 ## [0.3] 2023-05-20

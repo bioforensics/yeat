@@ -85,31 +85,31 @@ class AssemblerConfig:
         ]
 
     def batch(self):
-        self.paired_samples = set()
+        self.paired_sample_labels = set()
         self.paired_assemblers = []
-        self.single_samples = set()
+        self.single_sample_labels = set()
         self.single_assemblers = []
-        self.pacbio_samples = set()
+        self.pacbio_sample_labels = set()
         self.pacbio_assemblers = []
-        self.oxford_samples = set()
+        self.oxford_sample_labels = set()
         self.oxford_assemblers = []
         for assembler in self.assemblers:
             self.determine_assembler_workflow(assembler)
         self.batch = {
             "paired": {
-                "samples": self.get_samples(self.paired_samples),
+                "samples": self.get_samples(self.paired_sample_labels),
                 "assemblers": self.paired_assemblers,
             },
             "single": {
-                "samples": self.get_samples(self.single_samples),
+                "samples": self.get_samples(self.single_sample_labels),
                 "assemblers": self.single_assemblers,
             },
             "pacbio": {
-                "samples": self.get_samples(self.pacbio_samples),
+                "samples": self.get_samples(self.pacbio_sample_labels),
                 "assemblers": self.pacbio_assemblers,
             },
             "oxford": {
-                "samples": self.get_samples(self.oxford_samples),
+                "samples": self.get_samples(self.oxford_sample_labels),
                 "assemblers": self.oxford_assemblers,
             },
         }
@@ -118,20 +118,20 @@ class AssemblerConfig:
         for sample in assembler.samples:
             readtype = self.samples[sample].readtype
             if readtype == "paired":
-                self.paired_samples.add(sample)
+                self.paired_sample_labels.add(sample)
                 self.paired_assemblers.append(assembler)
             elif readtype == "single":
-                self.single_samples.add(sample)
+                self.single_sample_labels.add(sample)
                 self.single_assemblers.append(assembler)
-            elif readtype in PACBIO_READS and assembler.algorithm in PACBIO:
-                self.pacbio_samples.add(sample)
+            elif readtype in PACBIO_READS:
+                self.pacbio_sample_labels.add(sample)
                 self.pacbio_assemblers.append(assembler)
-            elif readtype in OXFORD_READS and assembler.algorithm in OXFORD:
-                self.oxford_samples.add(sample)
+            elif readtype in OXFORD_READS:
+                self.oxford_sample_labels.add(sample)
                 self.oxford_assemblers.append(assembler)
 
-    def get_samples(self, samples):
-        return {sample: self.samples[sample] for sample in samples}
+    def get_samples(self, labels):
+        return {label: self.samples[label] for label in labels}
 
     def to_dict(self, args, readtype="all"):
         if readtype == "all":

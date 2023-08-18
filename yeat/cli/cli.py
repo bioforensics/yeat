@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import downsample
+from . import illumina
 from .config import AssemblerConfig
 from argparse import Action, ArgumentParser
 import json
@@ -93,7 +93,8 @@ def options(parser):
 def get_parser(exit_on_error=True):
     parser = ArgumentParser(exit_on_error=exit_on_error)
     options(parser)
-    downsample.options(parser)
+    illumina.fastp_options(parser)
+    illumina.downsample_options(parser)
     parser.add_argument("config", type=str, help="config file")
     return parser
 

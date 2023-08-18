@@ -11,7 +11,7 @@ from argparse import ArgumentError
 import json
 import pytest
 from yeat import cli
-from yeat.cli import InitAction, downsample
+from yeat.cli import InitAction, illumina
 from yeat.tests import data_file
 
 
@@ -38,4 +38,4 @@ def test_invalid_custom_coverage_noninteger(coverage):
 
 @pytest.mark.parametrize("value", [1, 10, 100])
 def test_check_positive(value):
-    downsample.check_positive(value) == value
+    illumina.check_positive(value) == value

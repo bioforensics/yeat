@@ -10,6 +10,18 @@
 from argparse import ArgumentTypeError
 
 
+def fastp_options(parser):
+    illumina = parser.add_argument_group("fastp arguments")
+    illumina.add_argument(
+        "-l",
+        "--length-required",
+        type=int,
+        metavar="L",
+        default=50,
+        help="discard reads shorter than the required L length during fastp; by default L=50",
+    )
+
+
 def check_positive(value):
     try:
         value = int(value)
@@ -20,9 +32,9 @@ def check_positive(value):
     return value
 
 
-def options(parser):
-    short = parser.add_argument_group("downsample arguments")
-    short.add_argument(
+def downsample_options(parser):
+    illumina = parser.add_argument_group("downsample arguments")
+    illumina.add_argument(
         "-c",
         "--coverage",
         type=check_positive,
@@ -30,7 +42,7 @@ def options(parser):
         default=150,
         help="target an average depth of coverage Cx when auto-downsampling; by default, C=150",
     )
-    short.add_argument(
+    illumina.add_argument(
         "-d",
         "--downsample",
         type=int,
@@ -38,7 +50,7 @@ def options(parser):
         default=0,
         help="randomly sample D reads from the input rather than assembling the full set; set D=0 to perform auto-downsampling to a desired level of coverage (see --coverage); set D=-1 to disable downsampling; by default D=0",
     )
-    short.add_argument(
+    illumina.add_argument(
         "-g",
         "--genome-size",
         type=int,
@@ -46,7 +58,7 @@ def options(parser):
         default=0,
         help="provide known genome size in base pairs (bp); by default, G=0",
     )
-    short.add_argument(
+    illumina.add_argument(
         "--seed",
         type=int,
         metavar="S",

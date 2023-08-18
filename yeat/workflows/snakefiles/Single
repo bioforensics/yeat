@@ -39,12 +39,14 @@ rule fastp:
     input:
         "seq/input/{sample}/combined-reads.fq.gz"
     params:
+        length_required=config["length_required"],
         html_report="seq/fastp/{sample}/fastp.html",
         json_report="seq/fastp/{sample}/fastp.json",
         txt_report="seq/fastp/{sample}/report.txt"
     shell:
         """
         fastp -i {input[0]} -o {output[0]} \
+            -l {params.length_required} \
             --html {params.html_report} --json {params.json_report} \
             2> {params.txt_report}
         """

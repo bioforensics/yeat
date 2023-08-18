@@ -157,6 +157,7 @@ class AssemblerConfig:
             coverage=args.coverage,
             genomesize=args.genome_size,
             seed=args.seed,
+            length_required=args.length_required,
         )
 
 

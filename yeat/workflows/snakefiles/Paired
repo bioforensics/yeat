@@ -71,13 +71,14 @@ rule fastp:
         read1="seq/input/{sample}/{sample}_R1.fq.gz",
         read2="seq/input/{sample}/{sample}_R2.fq.gz"
     params:
+        length_required=config["length_required"],
         html_report="seq/fastp/{sample}/fastp.html",
         json_report="seq/fastp/{sample}/fastp.json",
         txt_report="seq/fastp/{sample}/report.txt"
     shell:
         """
         fastp -i {input.read1} -I {input.read2} -o {output.out1} -O {output.out2} \
-            --detect_adapter_for_pe \
+            -l {params.length_required} --detect_adapter_for_pe \
             --html {params.html_report} --json {params.json_report} \
             2> {params.txt_report}
         """

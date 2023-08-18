@@ -10,69 +10,50 @@
 from pathlib import Path
 import pytest
 from yeat import cli
-from yeat.tests import data_file, get_core_count
+from yeat.tests import data_file, get_core_count, write_config, files_exists
 
 
 def test_pacbio_hifi_assemblers_dry_run(tmp_path):
     wd = str(tmp_path)
-    arglist = [
-        "--outdir",
-        wd,
-        "-n",
-        "-t",
-        "4",
-        data_file("configs/hifi.cfg"),
-    ]
+    arglist = ["-o", wd, "-n", "-t", "4", data_file("configs/hifi.cfg")]
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
 
 
-# @pytest.mark.hifi
-# @pytest.mark.parametrize(
-#     "algorithm,label,expected",
-#     [
-#         ("canu", "canu-default", "sample1.contigs.fasta"),
-#         ("flye", "flye-default", "assembly.fasta"),
-#         ("hifiasm", "hifiasm-default", "sample1.bp.p_ctg.fa"),
-#     ],
-# )
-# def test_pacbio_hifi_read_assemblers(algorithm, label, expected, capsys, tmp_path):
-#     wd = str(tmp_path)
-#     cores = str(get_core_count())
-#     arglist = [
-#         "--outdir",
-#         wd,
-#         "--threads",
-#         cores,
-#         data_file(f"configs/{algorithm}.cfg"),
-#     ]
-#     args = cli.get_parser().parse_args(arglist)
-#     cli.main(args)
-#     observed = Path(wd).resolve() / "analysis" / "sample1" / label / algorithm / expected
-#     assert observed.exists()
+@pytest.mark.hifi
+@pytest.mark.parametrize(
+    "labels,expected",
+    [
+        (["flye-default"], "assembly.fasta"),
+        (["hicanu-default"], "WGS_of_E._coli_K12_with_PacBio_HiFi.contigs.fasta"),
+        (["hifiasm-default"], "WGS_of_E._coli_K12_with_PacBio_HiFi.bp.p_ctg.fa"),
+    ],
+)
+def test_pacbio_hifi_read_assemblers(labels, expected, capsys, tmp_path):
+    wd = str(tmp_path)
+    assemblers = write_config(labels, wd, "hifi.cfg")
+    cores = str(get_core_count())
+    cfg = str(Path(wd) / "hifi.cfg")
+    arglist = ["-o", wd, "-t", cores, cfg]
+    args = cli.get_parser().parse_args(arglist)
+    cli.main(args)
+    files_exists(wd, assemblers, expected)
 
 
-# @pytest.mark.hifi
-# @pytest.mark.parametrize(
-#     "config,label,algorithm,expected",
-#     [
-#         ("metaflye.cfg", "metaFlye-default", "flye", "assembly.fasta"),
-#         ("hifiasm-meta.cfg", "hifiasm-meta-default", "hifiasm-meta", "zymoBIOMICS_D6331.p_ctg.fa"),
-#     ],
-# )
-# def test_pacbio_hifi_read_metagenomic_assemblers(
-#     config, label, algorithm, expected, capsys, tmp_path
-# ):
-#     wd = str(tmp_path)
-#     cores = str(get_core_count())
-#     arglist = [
-#         "--outdir",
-#         wd,
-#         "--threads",
-#         cores,
-#         data_file(f"configs/{config}"),
-#     ]
-#     args = cli.get_parser().parse_args(arglist)
-#     cli.main(args)
-#     observed = Path(wd).resolve() / "analysis" / "zymoBIOMICS_D6331" / label / algorithm / expected
-#     assert observed.exists()
+@pytest.mark.hifi
+@pytest.mark.parametrize(
+    "labels,expected",
+    [
+        (["metaflye-default"], "assembly.fasta"),
+        (["hifiasm-meta-default"], "zymoBIOMICS_D6331.p_ctg.fa"),
+    ],
+)
+def test_pacbio_hifi_read_metagenomic_assemblers(labels, expected, capsys, tmp_path):
+    wd = str(tmp_path)
+    assemblers = write_config(labels, wd, "meta.cfg")
+    cores = str(get_core_count())
+    cfg = str(Path(wd) / "meta.cfg")
+    arglist = ["-o", wd, "-t", cores, cfg]
+    args = cli.get_parser().parse_args(arglist)
+    cli.main(args)
+    files_exists(wd, assemblers, expected)

@@ -86,13 +86,13 @@ class AssemblerConfig:
 
     def batch(self):
         self.paired_sample_labels = set()
-        self.paired_assemblers = []
+        self.paired_assemblers = set()
         self.single_sample_labels = set()
-        self.single_assemblers = []
+        self.single_assemblers = set()
         self.pacbio_sample_labels = set()
-        self.pacbio_assemblers = []
+        self.pacbio_assemblers = set()
         self.oxford_sample_labels = set()
-        self.oxford_assemblers = []
+        self.oxford_assemblers = set()
         for assembler in self.assemblers:
             self.determine_assembler_workflow(assembler)
         self.batch = {
@@ -119,16 +119,16 @@ class AssemblerConfig:
             readtype = self.samples[sample].readtype
             if readtype == "paired":
                 self.paired_sample_labels.add(sample)
-                self.paired_assemblers.append(assembler)
+                self.paired_assemblers.add(assembler)
             elif readtype == "single":
                 self.single_sample_labels.add(sample)
-                self.single_assemblers.append(assembler)
+                self.single_assemblers.add(assembler)
             elif readtype in PACBIO_READS:
                 self.pacbio_sample_labels.add(sample)
-                self.pacbio_assemblers.append(assembler)
+                self.pacbio_assemblers.add(assembler)
             elif readtype in OXFORD_READS:
                 self.oxford_sample_labels.add(sample)
-                self.oxford_assemblers.append(assembler)
+                self.oxford_assemblers.add(assembler)
 
     def get_samples(self, labels):
         return {label: self.samples[label] for label in labels}
@@ -199,3 +199,15 @@ class Assembler:
             raise ValueError(
                 "Canu requires at least 4 avaliable cores; increase `--threads` to 4 or more"
             )
+
+    def __members(self):
+        return (self.label,)
+
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.__members() == other.__members()
+        else:
+            return False
+
+    def __hash__(self):
+        return hash(self.__members())

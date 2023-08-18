@@ -24,29 +24,18 @@ def test_display_config_template(capsys):
 
 @pytest.mark.parametrize("coverage", [("-1"), ("0")])
 def test_invalid_custom_coverage_negative(coverage):
-    arglist = [
-        "--coverage",
-        coverage,
-        data_file("paired.cfg"),
-    ]
+    arglist = ["-c", coverage, data_file("paired.cfg")]
     with pytest.raises(ArgumentError, match=rf"{coverage} is not a positive integer"):
         args = cli.get_parser(exit_on_error=False).parse_args(arglist)
 
 
 @pytest.mark.parametrize("coverage", [("string"), ("3.14")])
 def test_invalid_custom_coverage_noninteger(coverage):
-    arglist = [
-        "--coverage",
-        coverage,
-        data_file("paired.cfg"),
-    ]
+    arglist = ["-c", coverage, data_file("paired.cfg")]
     with pytest.raises(ArgumentError, match=rf"{coverage} is not an integer"):
         args = cli.get_parser(exit_on_error=False).parse_args(arglist)
 
 
-@pytest.mark.parametrize(
-    "value",
-    [1, 10, 100],
-)
+@pytest.mark.parametrize("value", [1, 10, 100])
 def test_check_positive(value):
     downsample.check_positive(value) == value

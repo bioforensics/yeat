@@ -10,38 +10,30 @@
 from pathlib import Path
 import pytest
 from yeat import cli
-from yeat.tests import data_file
+from yeat.tests import data_file, write_config, files_exists
 
 
 def test_single_end_assemblers_dry_run(tmp_path):
     wd = str(tmp_path)
-    arglist = [
-        "--outdir",
-        wd,
-        "-n",
-        data_file("configs/single.cfg"),
-    ]
+    arglist = ["-o", wd, "-n", data_file("configs/single.cfg")]
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
 
 
-# @pytest.mark.long
-# @pytest.mark.parametrize(
-#     "algorithm,label,expected",
-#     [
-#         ("spades", "spades-meta", "contigs.fasta"),
-#         ("megahit", "megahit-default", "final.contigs.fa"),
-#         ("unicycler", "unicycler-default", "assembly.fasta"),
-#     ],
-# )
-# def test_individual_single_end_assemblers(algorithm, label, expected, capsys, tmp_path):
-#     wd = str(tmp_path)
-#     arglist = [
-#         "--outdir",
-#         wd,
-#         data_file(f"configs/{algorithm}.cfg"),
-#     ]
-#     args = cli.get_parser().parse_args(arglist)
-#     cli.main(args)
-#     analysis_dir = Path(wd).resolve() / "analysis"
-#     assert (analysis_dir / "sample1" / label / algorithm / expected).exists()
+@pytest.mark.long
+@pytest.mark.parametrize(
+    "labels,expected",
+    [
+        (["spades-default"], "contigs.fasta"),
+        (["megahit-default"], "final.contigs.fa"),
+        (["unicycler-default"], "assembly.fasta"),
+    ],
+)
+def test_single_end_assemblers(labels, expected, capsys, tmp_path):
+    wd = str(tmp_path)
+    assemblers = write_config(labels, wd, "single.cfg")
+    cfg = str(Path(wd) / "single.cfg")
+    arglist = ["-o", wd, cfg]
+    args = cli.get_parser().parse_args(arglist)
+    cli.main(args)
+    files_exists(wd, assemblers, expected)

@@ -42,13 +42,14 @@ rule nanofilt:
 
 rule nanoplot:
     output:
-        reports="seq/nanoplot/{sample}/{quality}_LengthvsQualityScatterPlot_dot.pdf"
+        raw_report="seq/nanoplot/{sample}/raw_LengthvsQualityScatterPlot_dot.pdf",
+        filtered_report="seq/nanoplot/{sample}/filtered_LengthvsQualityScatterPlot_dot.pdf"
     input:
         raw_reads="seq/input/{sample}/combined-reads.fq.gz",
         filtered_reads="seq/nanofilt/{sample}/highQuality-reads.fq.gz"
     threads: 128
     params:
-        outdir="seq/input/{sample}/nanoplot"
+        outdir="seq/nanoplot/{sample}"
     shell:
         """
         NanoPlot -t {threads} --fastq {input.raw_reads} -o {params.outdir} --N50 -p raw_ --title "{wildcards.sample} Raw" -f pdf --plots dot

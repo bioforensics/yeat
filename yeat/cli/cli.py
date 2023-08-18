@@ -26,8 +26,8 @@ CONFIG_TEMPLATE = {
         },
         "sample2": {
             "paired": [
-                "yeat/tests/data/Animal_289_R1.fastq.gz",
-                "yeat/tests/data/Animal_289_R2.fastq.gz",
+                "yeat/tests/data/Animal_289_R1.fq.gz",
+                "yeat/tests/data/Animal_289_R2.fq.gz",
             ]
         },
         "sample3": {"pacbio-hifi": ["yeat/tests/data/ecoli.fastq.gz"]},
@@ -35,7 +35,7 @@ CONFIG_TEMPLATE = {
     },
     "assemblers": [
         {
-            "label": "default-spades",
+            "label": "spades-default",
             "algorithm": "spades",
             "extra_args": "",
             "samples": ["sample1", "sample2"],
@@ -46,7 +46,7 @@ CONFIG_TEMPLATE = {
             "extra_args": "genomeSize=4.8m",
             "samples": ["sample3"],
         },
-        {"label": "nanoflye", "algorithm": "flye", "extra_args": "", "samples": ["sample4"]},
+        {"label": "flye_ONT", "algorithm": "flye", "extra_args": "", "samples": ["sample4"]},
     ],
 }
 

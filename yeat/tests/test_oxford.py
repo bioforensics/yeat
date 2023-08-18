@@ -25,7 +25,7 @@ def test_oxford_nanopore_assemblers_dry_run(tmp_path):
     "labels,expected",
     [
         (["flye-default"], "assembly.fasta"),
-        # (["canu-default"], "Ecoli_K12_MG1655_R10.3_HAC.contigs.fasta"),
+        (["canu-default"], "Ecoli_K12_MG1655_R10.3_HAC.contigs.fasta"),
     ],
 )
 def test_oxford_nanopore_read_assemblers(labels, expected, capsys, tmp_path):
@@ -36,5 +36,4 @@ def test_oxford_nanopore_read_assemblers(labels, expected, capsys, tmp_path):
     arglist = ["-o", wd, "-t", cores, cfg]
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
-    print(wd)
     files_exists(wd, assemblers, expected)

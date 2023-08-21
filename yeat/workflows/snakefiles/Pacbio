@@ -88,7 +88,7 @@ rule hifiasm:
     shell:
         """
         hifiasm -o {params.prefix} -t {threads} {params.extra_args} {input[0]}
-        awk '/^S/{{print ">"$2;print $3}}' {params.prefix}.bp.p_ctg.gfa > {params.prefix}.bp.p_ctg.fa
+        gfatools gfa2fa {params.prefix}.bp.p_ctg.gfa > {params.prefix}.bp.p_ctg.fa
         ln -s {wildcards.sample}.bp.p_ctg.fa {output.contigs}
         """
 
@@ -105,6 +105,6 @@ rule hifiasm_meta:
     shell:
         """
         hifiasm_meta -o {params.prefix} -t {threads} {params.extra_args} {input[0]}
-        awk '/^S/{{print ">"$2;print $3}}' {params.prefix}.p_ctg.gfa > {params.prefix}.p_ctg.fa
+        gfatools gfa2fa {params.prefix}.p_ctg.gfa > {params.prefix}.p_ctg.fa
         ln -s {wildcards.sample}.p_ctg.fa {output.contigs}
         """

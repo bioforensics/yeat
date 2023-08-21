@@ -49,10 +49,14 @@ def test_multiple_paired_end_assemblers(capsys, tmp_path):
     arglist = ["-o", wd, data_file(f"configs/paired.cfg")]
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
-    sample1_dir = Path(wd).resolve() / "analysis" / "sample1"
-    assert (sample1_dir / "spades-default" / "spades" / "contigs.fasta").exists()
-    assert (sample1_dir / "megahit-default" / "megahit" / "contigs.fasta").exists()
-    assert (sample1_dir / "unicycler-default" / "unicycler" / "assembly.fasta").exists()
+    outdirs = {
+        "sample1": Path(wd).resolve() / "analysis" / "sample1",
+        "sample2": Path(wd).resolve() / "analysis" / "sample2",
+    }
+    for outdir in outdirs:
+        assert (outdir / "spades-default" / "spades" / "contigs.fasta").exists()
+        assert (outdir / "megahit-default" / "megahit" / "final.contigs.fa").exists()
+        assert (outdir / "unicycler-default" / "unicycler" / "assembly.fasta").exists()
 
 
 @pytest.mark.long

@@ -53,7 +53,7 @@ def test_multiple_paired_end_assemblers(capsys, tmp_path):
         "sample1": Path(wd).resolve() / "analysis" / "sample1",
         "sample2": Path(wd).resolve() / "analysis" / "sample2",
     }
-    for outdir in outdirs:
+    for sample, outdir in outdirs.items():
         assert (outdir / "spades-default" / "spades" / "contigs.fasta").exists()
         assert (outdir / "megahit-default" / "megahit" / "final.contigs.fa").exists()
         assert (outdir / "unicycler-default" / "unicycler" / "assembly.fasta").exists()

@@ -18,7 +18,7 @@ def fastp_options(parser):
         type=int,
         metavar="L",
         default=50,
-        help="discard reads shorter than the required L length after pre-preocessing; by default L=50",
+        help="discard reads shorter than the required L length after pre-preocessing; by default, L=50",
     )
 
 

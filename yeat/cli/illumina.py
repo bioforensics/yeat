@@ -48,7 +48,7 @@ def downsample_options(parser):
         type=int,
         metavar="D",
         default=0,
-        help="randomly sample D reads from the input rather than assembling the full set; set D=0 to perform auto-downsampling to a desired level of coverage (see --coverage); set D=-1 to disable downsampling; by default D=0",
+        help="randomly sample D reads from the input rather than assembling the full set; set D=0 to perform auto-downsampling to a desired level of coverage (see --coverage); set D=-1 to disable downsampling; by default, D=0",
     )
     illumina.add_argument(
         "-g",
@@ -63,5 +63,5 @@ def downsample_options(parser):
         type=int,
         metavar="S",
         default=None,
-        help="seed for the random number generator used for downsampling; by default the seed is chosen randomly",
+        help="seed for the random number generator used for downsampling; by default, the seed is chosen randomly",
     )

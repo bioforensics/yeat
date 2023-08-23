@@ -80,7 +80,7 @@ def options(parser):
         type=int,
         metavar="T",
         default=1,
-        help="execute workflow with T threads; by default T=1",
+        help="execute workflow with T threads; by default, T=1",
     )
     parser.add_argument(
         "-n",

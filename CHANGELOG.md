@@ -10,8 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Input fastq read support:
     - Pacbio raw and corrected reads (#47)
-    - Oxford Nanopore raw, corrected, and HAC (#47)
-- Support for Nanopore-reads assembly with Flye and Canu (#47)
+    - Oxford Nanopore raw, corrected, and HAC reads (#47)
+    - Single-end Illumina reads (#50)
+- Support for Nanopore-reads assembly with Flye and Canu (#47, #50)
 - New assemblers:
     - Hifiasm and Hifiasm-meta (#49)
 

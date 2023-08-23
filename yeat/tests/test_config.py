@@ -108,20 +108,21 @@ def test_check_canu_required_params_errors(extra_args, cores, expected):
 
 
 @pytest.mark.parametrize(
-    "cfg,readtype,subsamples,sublabels",
+    "readtype,subsamples,sublabels",
     [
         (
-            data_file("configs/flye_unicycler.cfg"),
             "all",
-            ["sample1", "sample2"],
-            ["flye-default", "spades-default"],
+            ["sample1", "sample2", "sample3", "sample4"],
+            ["spades-default", "hicanu", "flye_ONT"],
         ),
-        (data_file("configs/flye_unicycler.cfg"), "pacbio", ["sample1"], ["flye-default"]),
-        (data_file("configs/flye_unicycler.cfg"), "paired", ["sample2"], ["spades-default"]),
+        ("paired", ["sample1", "sample2"], ["spades-default"]),
+        ("pacbio", ["sample3"], ["hicanu"]),
+        ("oxford", ["sample4"], ["flye_ONT"]),
     ],
 )
-def test_to_dict(cfg, readtype, subsamples, sublabels):
-    args = cli.get_parser().parse_args([cfg])
+def test_to_dict(readtype, subsamples, sublabels):
+    arglist = ["-t", "4", data_file("configs/example.cfg")]
+    args = cli.get_parser().parse_args(arglist)
     config = AssemblerConfig.from_json(args.config, args.threads)
     observed = config.to_dict(args, readtype)
     for sample in subsamples:
@@ -132,38 +133,37 @@ def test_to_dict(cfg, readtype, subsamples, sublabels):
         assert observed["assemblers"][label] in label
     assert len(observed["samples"]) == len(subsamples)
     assert len(observed["labels"]) == len(sublabels)
-    assert len(observed["assemblers"]) == len(sublabels)
 
 
 def test_multiple_readtypes_in_sample():
-    data = json.load(open(data_file("configs/oxford.cfg")))
-    data["samples"]["sample1"]["extra_readtype"] = ["long_read.fastq"]
-    pattern = r"Multiple read types in sample 'sample1'"
+    data = json.load(open(data_file("configs/ont.cfg")))
+    data["samples"]["Ecoli_K12_MG1655_R10.3_HAC"]["extra_readtype"] = ["long_read.fastq"]
+    pattern = r"Multiple read types in sample 'Ecoli_K12_MG1655_R10.3_HAC'"
     with pytest.raises(ValueError, match=pattern):
         AssemblerConfig(data, 1)
 
 
 def test_unsupported_readtype_in_sample():
-    data = json.load(open(data_file("configs/oxford.cfg")))
-    del data["samples"]["sample1"]["nano-hq"]
-    data["samples"]["sample1"]["not"] = ["supported"]
+    data = json.load(open(data_file("configs/ont.cfg")))
+    del data["samples"]["Ecoli_K12_MG1655_R10.3_HAC"]["nano-hq"]
+    data["samples"]["Ecoli_K12_MG1655_R10.3_HAC"]["not"] = ["supported"]
     pattern = r"Unsupported read type 'not'"
     with pytest.raises(ValueError, match=pattern):
         AssemblerConfig(data, 1)
 
 
 def test_batch():
-    data = json.load(open(data_file("configs/all_assemblers.cfg")))
+    data = json.load(open(data_file("configs/example.cfg")))
     config = AssemblerConfig(data, 4)
-    paired_samples = [sample for sample in config.batch["paired"]["samples"]]
+    paired_samples = set(config.batch["paired"]["samples"].keys())
     paired_algorithms = [assembler.algorithm for assembler in config.batch["paired"]["assemblers"]]
-    assert paired_samples == ["sample1", "sample2"]
-    assert paired_algorithms == ["spades", "megahit", "unicycler"]
-    pacbio_samples = [sample for sample in config.batch["pacbio"]["samples"]]
+    assert paired_samples == {"sample1", "sample2"}
+    assert paired_algorithms == ["spades"]
+    pacbio_samples = set(config.batch["pacbio"]["samples"].keys())
     pacbio_algorithms = [assembler.algorithm for assembler in config.batch["pacbio"]["assemblers"]]
-    assert pacbio_samples == ["sample3"]
-    assert pacbio_algorithms == ["canu", "flye"]
-    oxford_samples = [sample for sample in config.batch["oxford"]["samples"]]
+    assert pacbio_samples == {"sample3"}
+    assert pacbio_algorithms == ["canu"]
+    oxford_samples = set(config.batch["oxford"]["samples"].keys())
     oxford_algorithms = [assembler.algorithm for assembler in config.batch["oxford"]["assemblers"]]
-    assert oxford_samples == ["sample4"]
-    assert oxford_algorithms == ["canu", "flye"]
+    assert oxford_samples == {"sample4"}
+    assert oxford_algorithms == ["flye"]

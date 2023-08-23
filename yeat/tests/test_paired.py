@@ -14,74 +14,60 @@ import pytest
 import re
 import subprocess
 from yeat import cli
-from yeat.tests import data_file
+from yeat.tests import data_file, write_config, files_exists
 
 
 def test_paired_end_assemblers_dry_run(tmp_path):
-    """The purpose of this test is to check if the snakemake workflow is properly defined."""
     wd = str(tmp_path)
-    arglist = [
-        "--outdir",
-        wd,
-        "-n",
-        data_file("configs/paired.cfg"),
-    ]
+    arglist = ["-o", wd, "-n", data_file("configs/paired.cfg")]
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
 
 
 @pytest.mark.long
 @pytest.mark.parametrize(
-    "algorithm,label,expected",
+    "labels,expected",
     [
-        ("spades", "spades-meta", "contigs.fasta"),
-        ("megahit", "megahit-default", "final.contigs.fa"),
-        ("unicycler", "unicycler-default", "assembly.fasta"),
+        (["spades-default"], "contigs.fasta"),
+        (["megahit-default"], "final.contigs.fa"),
+        (["unicycler-default"], "assembly.fasta"),
     ],
 )
-def test_individual_paired_end_assemblers(algorithm, label, expected, capsys, tmp_path):
+def test_paired_end_assemblers(labels, expected, capsys, tmp_path):
     wd = str(tmp_path)
-    arglist = [
-        "--outdir",
-        wd,
-        data_file(f"configs/{algorithm}.cfg"),
-    ]
+    assemblers = write_config(labels, wd, "paired.cfg")
+    cfg = str(Path(wd) / "paired.cfg")
+    arglist = ["-o", wd, cfg]
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
-    analysis_dir = Path(wd).resolve() / "analysis"
-    assert (analysis_dir / "sample1" / label / algorithm / expected).exists()
-
-
-@pytest.mark.long
-def test_multiple_spades(capsys, tmp_path):
-    wd = str(tmp_path)
-    arglist = [
-        "--outdir",
-        wd,
-        data_file(f"configs/two_spades.cfg"),
-    ]
-    args = cli.get_parser().parse_args(arglist)
-    cli.main(args)
-    analysis_dir = Path(wd).resolve() / "analysis"
-    assert (analysis_dir / "sample1" / "spades-default" / "spades" / "contigs.fasta").exists()
-    assert (analysis_dir / "sample1" / "spades-meta" / "spades" / "contigs.fasta").exists()
+    files_exists(wd, assemblers, expected)
 
 
 @pytest.mark.long
 def test_multiple_paired_end_assemblers(capsys, tmp_path):
     wd = str(tmp_path)
-    arglist = [
-        "--outdir",
-        wd,
-        data_file(f"configs/unicycler_spades.cfg"),
-    ]
+    arglist = ["-o", wd, data_file(f"configs/paired.cfg")]
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
-    analysis_dir = Path(wd).resolve() / "analysis"
-    assert (
-        analysis_dir / "sample1" / "unicycler-default" / "unicycler" / "assembly.fasta"
-    ).exists()
-    assert (analysis_dir / "sample1" / "spades-meta" / "spades" / "contigs.fasta").exists()
+    outdirs = {
+        "sample1": Path(wd).resolve() / "analysis" / "sample1",
+        "sample2": Path(wd).resolve() / "analysis" / "sample2",
+    }
+    for sample, outdir in outdirs.items():
+        assert (outdir / "spades-default" / "spades" / "contigs.fasta").exists()
+        assert (outdir / "megahit-default" / "megahit" / "final.contigs.fa").exists()
+        assert (outdir / "unicycler-default" / "unicycler" / "assembly.fasta").exists()
+
+
+@pytest.mark.long
+def test_multiple_spades(capsys, tmp_path):
+    wd = str(tmp_path)
+    arglist = ["-o", wd, data_file(f"configs/two_spades.cfg")]
+    args = cli.get_parser().parse_args(arglist)
+    cli.main(args)
+    sample1_dir = Path(wd).resolve() / "analysis" / "sample1"
+    assert (sample1_dir / "spades-default" / "spades" / "contigs.fasta").exists()
+    assert (sample1_dir / "spades-meta" / "spades" / "contigs.fasta").exists()
 
 
 @pytest.mark.long
@@ -93,21 +79,11 @@ def test_custom_downsample_input(
     downsample, num_contigs, largest_contig, total_len, capsys, tmp_path
 ):
     wd = str(tmp_path)
-    arglist = [
-        "--outdir",
-        wd,
-        "-d",
-        downsample,
-        "--seed",
-        "0",
-        data_file("configs/megahit.cfg"),
-    ]
+    arglist = ["-o", wd, "-d", downsample, "--seed", "0", data_file("configs/megahit.cfg")]
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
-    analysis_dir = Path(wd).resolve() / "analysis"
-    quast_report = (
-        analysis_dir / "sample1" / "megahit-default" / "megahit" / "quast" / "report.tsv"
-    )
+    sample1_dir = Path(wd).resolve() / "analysis" / "sample1"
+    quast_report = sample1_dir / "megahit-default" / "megahit" / "quast" / "report.tsv"
     df = pd.read_csv(quast_report, sep="\t")
     assert df.iloc[12]["sample1_contigs"] == num_contigs
     assert df.iloc[13]["sample1_contigs"] == largest_contig
@@ -118,19 +94,11 @@ def test_custom_downsample_input(
 @pytest.mark.parametrize("coverage", [("150"), ("75"), ("10")])
 def test_custom_coverage_input(coverage, capsys, tmp_path):
     wd = str(tmp_path)
-    arglist = [
-        "--outdir",
-        wd,
-        "-c",
-        coverage,
-        data_file("configs/megahit.cfg"),
-    ]
+    arglist = ["-o", wd, "-c", coverage, data_file("configs/megahit.cfg")]
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
-    analysis_dir = Path(wd).resolve() / "analysis"
-    quast_report = (
-        analysis_dir / "sample1" / "megahit-default" / "megahit" / "quast" / "report.tsv"
-    )
+    sample1_dir = Path(wd).resolve() / "analysis" / "sample1"
+    quast_report = sample1_dir / "megahit-default" / "megahit" / "quast" / "report.tsv"
     df = pd.read_csv(quast_report, sep="\t")
     num_contigs = df.iloc[12]["sample1_contigs"]
     assert num_contigs == 56
@@ -144,19 +112,11 @@ def test_custom_coverage_input(coverage, capsys, tmp_path):
 @pytest.mark.parametrize("execution_number", range(3))
 def test_random_downsample_seed(execution_number, capsys, tmp_path):
     wd = str(tmp_path)
-    arglist = [
-        "--outdir",
-        wd,
-        "-d",
-        "2000",
-        data_file("configs/megahit.cfg"),
-    ]
+    arglist = ["-o", wd, "-d", "2000", data_file("configs/megahit.cfg")]
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
-    analysis_dir = Path(wd).resolve() / "analysis"
-    quast_report = (
-        analysis_dir / "sample1" / "megahit-default" / "megahit" / "quast" / "report.tsv"
-    )
+    sample1_dir = Path(wd).resolve() / "analysis" / "sample1"
+    quast_report = sample1_dir / "megahit-default" / "megahit" / "quast" / "report.tsv"
     df = pd.read_csv(quast_report, sep="\t")
     num_contigs = df.iloc[12]["sample1_contigs"]
     assert num_contigs == pytest.approx(76, abs=15)  # 76 +/- 20%
@@ -194,11 +154,7 @@ def test_uncompressed_input_reads(inread1, inread2, capfd, tmp_path):
     cfg_data["samples"]["sample1"] = {"paired": [inread1, inread2]}
     cfg = str(Path(wd).resolve() / "megahit.cfg")
     json.dump(cfg_data, open(cfg, "w"))
-    arglist = [
-        "--outdir",
-        wd,
-        cfg,
-    ]
+    arglist = ["-o", wd, cfg]
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
     outread1 = Path(wd) / "seq" / "input" / "sample1" / "sample1_R1.fq.gz"

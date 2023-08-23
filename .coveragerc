@@ -5,5 +5,5 @@ show_missing = True
 branch = True
 omit = 
     */yeat/_version.py
-    */yeat/Snakefile
+    */yeat/workflows/snakefiles/*
     */yeat/tests/*

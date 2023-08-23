@@ -51,6 +51,7 @@ $ yeat --outdir {path} {config}
 | Readtype  | Algorithm |
 | ------------- | ------------- |
 | paired  | spades, megahit, unicycler |
+| single  | spades, megahit, unicycler |
 | pacbio-raw  | flye, canu |
 | pacbio-corr  | flye, canu |
 | pacbio-hifi  | flye, canu, hifiasm, hifiasm-meta |
@@ -72,8 +73,8 @@ $ yeat --outdir {path} {config}
         },
         "sample2": {
             "paired": [
-                "yeat/tests/data/Animal_289_R1.fastq.gz",
-                "yeat/tests/data/Animal_289_R2.fastq.gz"
+                "yeat/tests/data/Animal_289_R1.fq.gz",
+                "yeat/tests/data/Animal_289_R2.fq.gz"
             ]
         },
         "sample3": {
@@ -89,7 +90,7 @@ $ yeat --outdir {path} {config}
     },
     "assemblers": [
         {
-            "label": "default-spades",
+            "label": "spades-default",
             "algorithm": "spades",
             "extra_args": "",
             "samples": [
@@ -106,7 +107,7 @@ $ yeat --outdir {path} {config}
             ]
         },
         {
-            "label": "nanoflye",
+            "label": "flye_ONT",
             "algorithm": "flye",
             "extra_args": "",
             "samples": [

@@ -13,11 +13,12 @@ from warnings import warn
 
 
 PAIRED = ("spades", "megahit", "unicycler")
+SINGLE = ("spades", "megahit", "unicycler")
 PACBIO = ("canu", "flye", "hifiasm", "hifiasm-meta")
 OXFORD = ("canu", "flye")
-ALGORITHMS = set(PAIRED + PACBIO + OXFORD)
+ALGORITHMS = set(PAIRED + SINGLE + PACBIO + OXFORD)
 
-ILLUMINA_READS = ("paired",)
+ILLUMINA_READS = ("paired", "single")
 PACBIO_READS = ("pacbio-raw", "pacbio-corr", "pacbio-hifi")
 OXFORD_READS = ("nano-raw", "nano-corr", "nano-hq")
 LONG_READS = PACBIO_READS + OXFORD_READS
@@ -84,44 +85,53 @@ class AssemblerConfig:
         ]
 
     def batch(self):
-        self.paired_assemblers = []
-        self.pacbio_assemblers = []
-        self.oxford_assemblers = []
+        self.paired_sample_labels = set()
+        self.paired_assemblers = set()
+        self.single_sample_labels = set()
+        self.single_assemblers = set()
+        self.pacbio_sample_labels = set()
+        self.pacbio_assemblers = set()
+        self.oxford_sample_labels = set()
+        self.oxford_assemblers = set()
         for assembler in self.assemblers:
             self.determine_assembler_workflow(assembler)
         self.batch = {
             "paired": {
-                "samples": self.get_batch_samples(self.paired_assemblers),
+                "samples": self.get_samples(self.paired_sample_labels),
                 "assemblers": self.paired_assemblers,
             },
+            "single": {
+                "samples": self.get_samples(self.single_sample_labels),
+                "assemblers": self.single_assemblers,
+            },
             "pacbio": {
-                "samples": self.get_batch_samples(self.pacbio_assemblers),
+                "samples": self.get_samples(self.pacbio_sample_labels),
                 "assemblers": self.pacbio_assemblers,
             },
             "oxford": {
-                "samples": self.get_batch_samples(self.oxford_assemblers),
+                "samples": self.get_samples(self.oxford_sample_labels),
                 "assemblers": self.oxford_assemblers,
             },
         }
 
     def determine_assembler_workflow(self, assembler):
-        readtypes = set()
         for sample in assembler.samples:
-            readtypes.update({self.samples[sample].readtype})
-        if assembler.algorithm in PAIRED and readtypes.intersection(ILLUMINA_READS):
-            self.paired_assemblers.append(assembler)
-        elif assembler.algorithm in PACBIO and readtypes.intersection(PACBIO_READS):
-            self.pacbio_assemblers.append(assembler)
-        elif assembler.algorithm in OXFORD and readtypes.intersection(OXFORD_READS):
-            self.oxford_assemblers.append(assembler)
+            readtype = self.samples[sample].readtype
+            if readtype == "paired":
+                self.paired_sample_labels.add(sample)
+                self.paired_assemblers.add(assembler)
+            elif readtype == "single":
+                self.single_sample_labels.add(sample)
+                self.single_assemblers.add(assembler)
+            elif readtype in PACBIO_READS:
+                self.pacbio_sample_labels.add(sample)
+                self.pacbio_assemblers.add(assembler)
+            elif readtype in OXFORD_READS:
+                self.oxford_sample_labels.add(sample)
+                self.oxford_assemblers.add(assembler)
 
-    def get_batch_samples(self, assemblers):
-        samples = {}
-        for assembler in assemblers:
-            samples = samples | dict(
-                (key, self.samples[key]) for key in assembler.samples if key in self.samples
-            )
-        return samples
+    def get_samples(self, labels):
+        return {label: self.samples[label] for label in labels}
 
     def to_dict(self, args, readtype="all"):
         if readtype == "all":
@@ -130,18 +140,24 @@ class AssemblerConfig:
         else:
             samples = self.batch[readtype]["samples"]
             assemblers = self.batch[readtype]["assemblers"]
+        label_to_samples = {}
+        for assembler in assemblers:
+            label_to_samples[assembler.label] = [
+                sample for sample in assembler.samples if sample in samples
+            ]
         return dict(
             samples={label: sample.to_string() for label, sample in samples.items()},
             labels=[assembler.label for assembler in assemblers],
             assemblers={assembler.label: assembler.algorithm for assembler in assemblers},
             extra_args={assembler.label: assembler.extra_args for assembler in assemblers},
-            label_to_samples={assembler.label: assembler.samples for assembler in assemblers},
+            label_to_samples=label_to_samples,
             sample_readtype={label: sample.readtype for label, sample in samples.items()},
             threads=args.threads,
             downsample=args.downsample,
             coverage=args.coverage,
             genomesize=args.genome_size,
             seed=args.seed,
+            length_required=args.length_required,
         )
 
 
@@ -184,3 +200,9 @@ class Assembler:
             raise ValueError(
                 "Canu requires at least 4 avaliable cores; increase `--threads` to 4 or more"
             )
+
+    def __eq__(self, other):
+        return hash(self) == hash(other)
+
+    def __hash__(self):
+        return hash(self.label)

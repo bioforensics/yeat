@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import downsample
+from . import illumina
 from .config import AssemblerConfig
 from argparse import Action, ArgumentParser
 import json
@@ -26,8 +26,8 @@ CONFIG_TEMPLATE = {
         },
         "sample2": {
             "paired": [
-                "yeat/tests/data/Animal_289_R1.fastq.gz",
-                "yeat/tests/data/Animal_289_R2.fastq.gz",
+                "yeat/tests/data/Animal_289_R1.fq.gz",
+                "yeat/tests/data/Animal_289_R2.fq.gz",
             ]
         },
         "sample3": {"pacbio-hifi": ["yeat/tests/data/ecoli.fastq.gz"]},
@@ -35,7 +35,7 @@ CONFIG_TEMPLATE = {
     },
     "assemblers": [
         {
-            "label": "default-spades",
+            "label": "spades-default",
             "algorithm": "spades",
             "extra_args": "",
             "samples": ["sample1", "sample2"],
@@ -46,7 +46,7 @@ CONFIG_TEMPLATE = {
             "extra_args": "genomeSize=4.8m",
             "samples": ["sample3"],
         },
-        {"label": "nanoflye", "algorithm": "flye", "extra_args": "", "samples": ["sample4"]},
+        {"label": "flye_ONT", "algorithm": "flye", "extra_args": "", "samples": ["sample4"]},
     ],
 }
 
@@ -80,7 +80,7 @@ def options(parser):
         type=int,
         metavar="T",
         default=1,
-        help="execute workflow with T threads; by default T=1",
+        help="execute workflow with T threads; by default, T=1",
     )
     parser.add_argument(
         "-n",
@@ -93,7 +93,8 @@ def options(parser):
 def get_parser(exit_on_error=True):
     parser = ArgumentParser(exit_on_error=exit_on_error)
     options(parser)
-    downsample.options(parser)
+    illumina.fastp_options(parser)
+    illumina.downsample_options(parser)
     parser.add_argument("config", type=str, help="config file")
     return parser
 

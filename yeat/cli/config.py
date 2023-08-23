@@ -201,14 +201,8 @@ class Assembler:
                 "Canu requires at least 4 avaliable cores; increase `--threads` to 4 or more"
             )
 
-    def __members(self):
-        return (self.label,)
-
     def __eq__(self, other):
-        if type(other) is type(self):
-            return self.__members() == other.__members()
-        else:
-            return False
+        return hash(self) == hash(other)
 
     def __hash__(self):
-        return hash(self.__members())
+        return hash(self.label)

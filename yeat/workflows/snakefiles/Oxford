@@ -36,7 +36,7 @@ rule nanofilt:
         filter="-q 10"
     shell:
         """
-        gunzip -c {input.inreads} | Nanofilt {params.filter} | gzip > {output.outreads}
+        gunzip -c {input.inreads} | NanoFilt {params.filter} | gzip > {output.outreads}
         """
 
 

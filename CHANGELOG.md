@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
-- Unicycler algorithm for long-read only assembly
+- Unicycler algorithm for long-read only assembly (#55)
 
 
 ## [0.4] 2023-08-23

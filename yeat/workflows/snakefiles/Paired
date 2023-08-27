@@ -59,7 +59,7 @@ rule fastqc:
         outdir=lambda wildcards: f"seq/fastqc/{wildcards.sample}"
     shell:
         """
-        fastqc {input.read1} {input.read2} --threads {threads} -o {params.outdir}
+        fastqc {input.read1} {input.read2} -t {threads} -o {params.outdir}
         """
 
 
@@ -110,7 +110,8 @@ rule downsample:
         downsample=config["downsample"],
         fastp_report="seq/fastp/{sample}/fastp.json",
         genome_size=config["genomesize"],
-        seed=config["seed"]
+        seed=config["seed"],
+        outdir=lambda wildcards: f"seq/downsample/{wildcards.sample}"
     run:
         if params.downsample == -1:
             p = Path("seq/{wildcards.sample}/downsample")
@@ -141,9 +142,9 @@ rule downsample:
         print(f"[yeat] target depth of coverage: {params.coverage}x")
         print(f"[yeat] number of reads to sample: {down}")
         print(f"[yeat] random seed for sampling: {seed}")
-        shell("seqtk sample -s {seed} {input[0]} {down} > seq/downsample/{wildcards.sample}/{wildcards.sample}.R1.fq")
-        shell("seqtk sample -s {seed} {input[1]} {down} > seq/downsample/{wildcards.sample}/{wildcards.sample}.R2.fq")
-        shell("gzip -f seq/downsample/{wildcards.sample}/*")
+        shell("seqtk sample -s {seed} {input.read1} {down} > {params.outdir}/{wildcards.sample}.R1.fq")
+        shell("seqtk sample -s {seed} {input.read2} {down} > {params.outdir}/{wildcards.sample}.R2.fq")
+        shell("gzip -f {params.outdir}/*")
 
 
 rule spades:

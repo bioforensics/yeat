@@ -38,7 +38,7 @@ rule fastqc:
         outdir=lambda wildcards: f"seq/fastqc/{wildcards.sample}"
     shell:
         """
-        fastqc {input.reads} --threads {threads} -o {params.outdir}
+        fastqc {input.reads} -t {threads} -o {params.outdir}
         """
 
 

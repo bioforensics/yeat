@@ -46,7 +46,7 @@ rule flye:
     output:
         contigs="analysis/{sample}/{label}/flye/{sample}_contigs.fasta"
     input:
-        "seq/input/{sample}/combined-reads.fq.gz"
+        reads="seq/input/{sample}/combined-reads.fq.gz"
     threads: 128
     params:
         readtype_flag=lambda wildcards: get_readtype_flag(wildcards.sample, "flye"),
@@ -54,7 +54,7 @@ rule flye:
         extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        flye {params.readtype_flag} {input[0]} -t {threads} -o {params.outdir} {params.extra_args}
+        flye {params.readtype_flag} {input.reads} -t {threads} -o {params.outdir} {params.extra_args}
         ln -s assembly.fasta {output.contigs}
         """
 
@@ -63,7 +63,7 @@ rule canu:
     output:
         contigs="analysis/{sample}/{label}/canu/{sample}_contigs.fasta"
     input:
-        "seq/input/{sample}/combined-reads.fq.gz"
+        reads="seq/input/{sample}/combined-reads.fq.gz"
     threads: 128
     params:
         readtype_flag=lambda wildcards: get_readtype_flag(wildcards.sample, "canu"),
@@ -71,7 +71,7 @@ rule canu:
         extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        canu {params.readtype_flag} {input[0]} maxThreads={threads} -p {wildcards.sample} -d {params.outdir} {params.extra_args} useGrid=false
+        canu {params.readtype_flag} {input.reads} maxThreads={threads} -p {wildcards.sample} -d {params.outdir} {params.extra_args} useGrid=false
         ln -s {wildcards.sample}.contigs.fasta {output.contigs}
         """
 
@@ -80,14 +80,14 @@ rule hifiasm:
     output:
         contigs="analysis/{sample}/{label}/hifiasm/{sample}_contigs.fasta"
     input:
-        "seq/input/{sample}/combined-reads.fq.gz"
+        reads="seq/input/{sample}/combined-reads.fq.gz"
     threads: 128
     params:
         prefix=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/hifiasm/{wildcards.sample}",
         extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        hifiasm -o {params.prefix} -t {threads} {params.extra_args} {input[0]}
+        hifiasm -o {params.prefix} -t {threads} {params.extra_args} {input.reads}
         gfatools gfa2fa {params.prefix}.bp.p_ctg.gfa > {params.prefix}.bp.p_ctg.fa
         ln -s {wildcards.sample}.bp.p_ctg.fa {output.contigs}
         """
@@ -97,14 +97,30 @@ rule hifiasm_meta:
     output:
         contigs="analysis/{sample}/{label}/hifiasm-meta/{sample}_contigs.fasta"
     input:
-        "seq/input/{sample}/combined-reads.fq.gz"
+        reads="seq/input/{sample}/combined-reads.fq.gz"
     threads: 128
     params:
         prefix=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/hifiasm-meta/{wildcards.sample}",
         extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        hifiasm_meta -o {params.prefix} -t {threads} {params.extra_args} {input[0]}
+        hifiasm_meta -o {params.prefix} -t {threads} {params.extra_args} {input.reads}
         gfatools gfa2fa {params.prefix}.p_ctg.gfa > {params.prefix}.p_ctg.fa
         ln -s {wildcards.sample}.p_ctg.fa {output.contigs}
+        """
+
+
+rule unicycler:
+    output:
+        contigs="analysis/{sample}/{label}/unicycler/{sample}_contigs.fasta"
+    input:
+        reads="seq/input/{sample}/combined-reads.fq.gz"
+    threads: 128
+    params:
+        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/unicycler",
+        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+    shell:
+        """
+        unicycler -l {input.reads} -t {threads} -o {params.outdir} {params.extra_args}
+        ln -s assembly.fasta {output.contigs}
         """

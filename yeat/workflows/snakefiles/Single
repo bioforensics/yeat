@@ -35,9 +35,9 @@ use rule * from shared_workflow
 
 rule fastp:
     output:
-        "seq/fastp/{sample}/combined-reads.fq.gz",
+        filtered_reads="seq/fastp/{sample}/combined-reads.fq.gz",
     input:
-        "seq/input/{sample}/combined-reads.fq.gz"
+        raw_reads="seq/input/{sample}/combined-reads.fq.gz"
     params:
         length_required=config["length_required"],
         html_report="seq/fastp/{sample}/fastp.html",
@@ -45,7 +45,7 @@ rule fastp:
         txt_report="seq/fastp/{sample}/report.txt"
     shell:
         """
-        fastp -i {input[0]} -o {output[0]} \
+        fastp -i {input.raw_reads} -o {output.filtered_reads} \
             -l {params.length_required} \
             --html {params.html_report} --json {params.json_report} \
             2> {params.txt_report}
@@ -57,10 +57,10 @@ rule mash:
         sketch="seq/mash/{sample}/combined-reads.fq.gz.msh",
         mash_report="seq/mash/{sample}/combined-reads.report.tsv"
     input:
-        "seq/fastp/{sample}/combined-reads.fq.gz"
+        reads="seq/fastp/{sample}/combined-reads.fq.gz"
     shell:
         """
-        mash sketch {input[0]} -o {output.sketch}
+        mash sketch {input.reads} -o {output.sketch}
         mash info -t {output.sketch} > {output.mash_report}
         """
 
@@ -69,7 +69,7 @@ rule downsample:
     output:
         sub="seq/downsample/{sample}/combined-reads.fq.gz"
     input:
-        read="seq/fastp/{sample}/combined-reads.fq.gz",
+        reads="seq/fastp/{sample}/combined-reads.fq.gz",
         mash_report="seq/mash/{sample}/combined-reads.report.tsv"
     params:
         coverage=config["coverage"],
@@ -81,7 +81,7 @@ rule downsample:
         if params.downsample == -1:
             p = Path("seq/{wildcards.sample}/downsample")
             p.mkdir(parents=True, exist_ok=True)
-            copyfile(input.read, output.sub)
+            copyfile(input.reads, output.sub)
             return
         if params.genome_size == 0:
             df = pd.read_csv(input.mash_report, sep="\t")
@@ -106,22 +106,22 @@ rule downsample:
         print(f"[yeat] target depth of coverage: {params.coverage}x")
         print(f"[yeat] number of reads to sample: {down}")
         print(f"[yeat] random seed for sampling: {seed}")
-        shell("seqtk sample -s {seed} {input[0]} {down} > seq/downsample/{wildcards.sample}/combined-reads.fq")
-        shell("gzip -f seq/downsample/{wildcards.sample}/*")
+        shell("seqtk sample -s {seed} {input.reads} {down} > {output.sub}")
+        shell("gzip -f {output.sub}")
 
 
 rule spades:
     output:
         contigs="analysis/{sample}/{label}/spades/{sample}_contigs.fasta"
     input:
-        "seq/downsample/{sample}/combined-reads.fq.gz"
+        reads="seq/downsample/{sample}/combined-reads.fq.gz"
     threads: 128
     params:
         outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/spades",
         extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        spades.py -s {input[0]} -t {threads} -o {params.outdir} {params.extra_args}
+        spades.py -s {input.reads} -t {threads} -o {params.outdir} {params.extra_args}
         ln -s scaffolds.fasta {output.contigs}
         """
 
@@ -130,7 +130,7 @@ rule megahit:
     output:
         contigs="analysis/{sample}/{label}/megahit/{sample}_contigs.fasta"
     input:
-        "seq/downsample/{sample}/combined-reads.fq.gz"
+        reads="seq/downsample/{sample}/combined-reads.fq.gz"
     threads: 128
     params:
         temp_dir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/megahit-temp",
@@ -138,7 +138,7 @@ rule megahit:
         extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        megahit -r {input[0]} -t {threads} -o {params.temp_dir} {params.extra_args}
+        megahit -r {input.reads} -t {threads} -o {params.temp_dir} {params.extra_args}
         mv {params.temp_dir}/* {params.actual_dir}
         rm -r {params.temp_dir}
         ln -s final.contigs.fa {output.contigs}
@@ -149,13 +149,13 @@ rule unicycler:
     output:
         contigs="analysis/{sample}/{label}/unicycler/{sample}_contigs.fasta"
     input:
-        "seq/downsample/{sample}/combined-reads.fq.gz"
+        reads="seq/downsample/{sample}/combined-reads.fq.gz"
     threads: 128
     params:
         outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/unicycler",
         extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        unicycler -s {input[0]} -t {threads} -o {params.outdir} {params.extra_args}
+        unicycler -s {input.reads} -t {threads} -o {params.outdir} {params.extra_args}
         ln -s assembly.fasta {output.contigs}
         """

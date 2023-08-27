@@ -27,6 +27,7 @@ def test_pacbio_hifi_assemblers_dry_run(tmp_path):
         (["flye-default"], "assembly.fasta"),
         (["hicanu-default"], "WGS_of_E._coli_K12_with_PacBio_HiFi.contigs.fasta"),
         (["hifiasm-default"], "chr11-2M.bp.p_ctg.fa"),
+        (["unicycler-default"], "assembly.fasta"),
     ],
 )
 def test_pacbio_hifi_read_assemblers(labels, expected, capsys, tmp_path):

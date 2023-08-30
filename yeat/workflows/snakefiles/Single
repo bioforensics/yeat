@@ -76,7 +76,8 @@ rule downsample:
         downsample=config["downsample"],
         fastp_report="seq/fastp/{sample}/fastp.json",
         genome_size=config["genomesize"],
-        seed=config["seed"]
+        seed=config["seed"],
+        outdir=lambda wildcards: f"seq/downsample/{wildcards.sample}"
     run:
         if params.downsample == -1:
             p = Path("seq/{wildcards.sample}/downsample")
@@ -106,8 +107,8 @@ rule downsample:
         print(f"[yeat] target depth of coverage: {params.coverage}x")
         print(f"[yeat] number of reads to sample: {down}")
         print(f"[yeat] random seed for sampling: {seed}")
-        shell("seqtk sample -s {seed} {input.reads} {down} > {output.sub}")
-        shell("gzip -f {output.sub}")
+        shell("seqtk sample -s {seed} {input.reads} {down} > {params.outdir}/combined-reads.fq")
+        shell("gzip -f {params.outdir}/combined-reads.fq")
 
 
 rule spades:

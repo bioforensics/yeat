@@ -54,16 +54,15 @@ rule megahit:
     input:
         lambda wildcards: get_and_filter_contig_files(wildcards.sample, wildcards.label)
     params:
-        intermediates_dir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/megahit/intermediate_contigs"
+        intermediates_dir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/megahit/intermediate_contigs",
         outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/megahit/bandage"
     run:
         for fa in input:
             kmer = re.findall(r'k\d+.contigs.fa', fa)[0].split(".")[0][1:]
             filename = Path(fa).stem
-            fastg = "{params.intermediates_dir}/{filename}.fastg"
+            fastg = f"{params.intermediates_dir}/{filename}.fastg"
             shell("megahit_toolkit contig2fastg {kmer} {fa} > {fastg}")
-            jpg = "{params.outdir}/{filename}.jpg"
-            shell("Bandage image {fastg} {jpg}")
+            shell("Bandage image {fastg} {params.outdir}/{filename}.jpg")
         shell("touch {output.status}")
 
 

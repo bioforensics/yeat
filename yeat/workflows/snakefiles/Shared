@@ -24,7 +24,7 @@ rule copyinput:
                 shell("gunzip -c {inread} > {outread}")
             else:
                 copyfile(inread, outread)
-        shell("{params.outdir}/*.fq > {params.outdir}/combined-reads.fq")
+        shell("cat {params.outdir}/*.fq > {params.outdir}/combined-reads.fq")
         shell("gzip {params.outdir}/combined-reads.fq")
 
 

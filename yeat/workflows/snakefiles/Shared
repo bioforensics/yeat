@@ -12,11 +12,11 @@ from shutil import copyfile
 
 rule copyinput:
     output:
-        compressed="seq/input/{sample}/combined-reads.fq.gz"
+        combined="seq/input/{sample}/combined-reads.fq.gz"
     input:
         reads=lambda wildcards: config["samples"][wildcards.sample]
     params:
-        combined="seq/input/{sample}/combined-reads.fq"
+        outdir=lambda wildcards: f"seq/input/{wildcards.sample}"
     run:
         for i, inread in enumerate(input):
             outread = f"seq/input/{wildcards.sample}/reads{i}.fq"
@@ -24,8 +24,8 @@ rule copyinput:
                 shell("gunzip -c {inread} > {outread}")
             else:
                 copyfile(inread, outread)
-        shell("cat seq/input/{wildcards.sample}/*.fq > {params.combined}")
-        shell("gzip {params.combined}")
+        shell("{params.outdir}/*.fq > {params.outdir}/combined-reads.fq")
+        shell("gzip {params.outdir}/combined-reads.fq")
 
 
 rule fastqc:

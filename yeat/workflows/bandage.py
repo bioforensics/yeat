@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from pkg_resources import resource_filename
+from importlib.resources import files
 from snakemake import snakemake
 import subprocess
 import warnings
@@ -29,7 +29,7 @@ def run_bandage(args, config):
     if not check_bandage():
         warnings.warn("Unable to run Bandage; skipping Bandage")
         return
-    snakefile = resource_filename("yeat", "workflows/snakefiles/Bandage")
+    snakefile = files("yeat") / "workflows" / "snakefiles" / "Bandage"
     data = config.to_dict(args)
     success = snakemake(
         snakefile, config=data, cores=args.threads, printshellcmds=True, workdir=args.outdir

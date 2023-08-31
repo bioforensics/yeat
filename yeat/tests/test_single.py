@@ -10,7 +10,7 @@
 from pathlib import Path
 import pytest
 from yeat import cli
-from yeat.tests import data_file, write_config, files_exists
+from yeat.tests import data_file, write_config, files_exist
 
 
 def test_single_end_assemblers_dry_run(tmp_path):
@@ -36,4 +36,4 @@ def test_single_end_assemblers(labels, expected, capsys, tmp_path):
     arglist = ["-o", wd, cfg]
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
-    files_exists(wd, assemblers, expected)
+    files_exist(wd, assemblers, expected)

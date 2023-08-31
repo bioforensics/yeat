@@ -8,12 +8,12 @@
 # -------------------------------------------------------------------------------------------------
 
 from . import bandage
-from pkg_resources import resource_filename
+from importlib.resources import files
 from snakemake import snakemake
 
 
 def run_paired(args, config):
-    snakefile = resource_filename("yeat", "workflows/snakefiles/Paired")
+    snakefile = files("yeat") / "workflows" / "snakefiles" / "Paired"
     data = config.to_dict(args, readtype="paired")
     success = snakemake(
         snakefile,
@@ -28,7 +28,7 @@ def run_paired(args, config):
 
 
 def run_single(args, config):
-    snakefile = resource_filename("yeat", "workflows/snakefiles/Single")
+    snakefile = files("yeat") / "workflows" / "snakefiles" / "Single"
     data = config.to_dict(args, readtype="single")
     success = snakemake(
         snakefile,
@@ -43,7 +43,7 @@ def run_single(args, config):
 
 
 def run_pacbio(args, config):
-    snakefile = resource_filename("yeat", "workflows/snakefiles/Pacbio")
+    snakefile = files("yeat") / "workflows" / "snakefiles" / "Pacbio"
     data = config.to_dict(args, readtype="pacbio")
     success = snakemake(
         snakefile,
@@ -58,7 +58,7 @@ def run_pacbio(args, config):
 
 
 def run_oxford(args, config):
-    snakefile = resource_filename("yeat", "workflows/snakefiles/Oxford")
+    snakefile = files("yeat") / "workflows" / "snakefiles" / "Oxford"
     data = config.to_dict(args, readtype="oxford")
     success = snakemake(
         snakefile,

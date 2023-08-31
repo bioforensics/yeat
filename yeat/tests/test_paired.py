@@ -14,7 +14,7 @@ import pytest
 import re
 import subprocess
 from yeat import cli
-from yeat.tests import data_file, write_config, files_exists
+from yeat.tests import data_file, write_config, files_exist
 
 
 def test_paired_end_assemblers_dry_run(tmp_path):
@@ -40,7 +40,7 @@ def test_paired_end_assemblers(labels, expected, capsys, tmp_path):
     arglist = ["-o", wd, cfg]
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
-    files_exists(wd, assemblers, expected)
+    files_exist(wd, assemblers, expected)
 
 
 @pytest.mark.long

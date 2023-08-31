@@ -9,15 +9,13 @@
 
 import json
 import multiprocessing
-import os
 from pathlib import Path
-from pkg_resources import resource_filename
+from importlib.resources import files
 
 
 def data_file(path):
-    pathparts = path.split("/")
-    relpath = os.path.join("tests", "data", *pathparts)
-    return resource_filename("yeat", relpath)
+    pkg_path = files("yeat") / "tests" / "data" / path
+    return str(pkg_path)
 
 
 def get_core_count():
@@ -35,7 +33,7 @@ def write_config(labels, wd, cfg):
     return assemblers
 
 
-def files_exists(wd, assemblers, expected):
+def files_exist(wd, assemblers, expected):
     analysis_dir = Path(wd).resolve() / "analysis"
     for assembler in assemblers:
         for sample in assembler["samples"]:

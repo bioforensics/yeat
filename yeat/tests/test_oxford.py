@@ -10,7 +10,7 @@
 from pathlib import Path
 import pytest
 from yeat import cli
-from yeat.tests import data_file, get_core_count, write_config, files_exists
+from yeat.tests import data_file, get_core_count, write_config, files_exist
 
 
 def test_oxford_nanopore_assemblers_dry_run(tmp_path):
@@ -37,4 +37,4 @@ def test_oxford_nanopore_read_assemblers(labels, expected, capsys, tmp_path):
     arglist = ["-o", wd, "-t", cores, cfg]
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
-    files_exists(wd, assemblers, expected)
+    files_exist(wd, assemblers, expected)

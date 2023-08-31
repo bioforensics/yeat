@@ -28,16 +28,18 @@ rule all:
 
 rule spades:
     output:
-        "analysis/{sample}/{label}/spades/bandage/.done"
+        status="analysis/{sample}/{label}/spades/bandage/.done"
     input:
         lambda wildcards:
             glob(f"analysis/{wildcards.sample}/{wildcards.label}/spades/*.gfa")
             + glob(f"analysis/{wildcards.sample}/{wildcards.label}/spades/*.fastg")
+    params:
+        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/spades/bandage"
     run:
         for gfa in input:
             filename = Path(gfa).stem
-            shell("Bandage image {gfa} analysis/{wildcards.sample}/{wildcards.label}/spades/bandage/{filename}.jpg")
-        shell("touch {output[0]}")
+            shell("Bandage image {gfa} {params.outdir}/{filename}.jpg")
+        shell("touch {output.status}")
 
 
 def get_and_filter_contig_files(sample, label):
@@ -48,78 +50,90 @@ def get_and_filter_contig_files(sample, label):
 
 rule megahit:
     output:
-        "analysis/{sample}/{label}/megahit/bandage/.done"
+        status="analysis/{sample}/{label}/megahit/bandage/.done"
     input:
         lambda wildcards: get_and_filter_contig_files(wildcards.sample, wildcards.label)
+    params:
+        intermediates_dir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/megahit/intermediate_contigs",
+        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/megahit/bandage"
     run:
         for fa in input:
             kmer = re.findall(r'k\d+.contigs.fa', fa)[0].split(".")[0][1:]
             filename = Path(fa).stem
-            fastg = f"analysis/{wildcards.sample}/{wildcards.label}/megahit/intermediate_contigs/{filename}.fastg"
+            fastg = f"{params.intermediates_dir}/{filename}.fastg"
             shell("megahit_toolkit contig2fastg {kmer} {fa} > {fastg}")
-            jpg = f"analysis/{wildcards.sample}/{wildcards.label}/megahit/bandage/{filename}.jpg"
-            shell("Bandage image {fastg} {jpg}")
-        shell("touch {output[0]}")
+            shell("Bandage image {fastg} {params.outdir}/{filename}.jpg")
+        shell("touch {output.status}")
 
 
 rule unicycler:
     output:
-        "analysis/{sample}/{label}/unicycler/bandage/.done"
+        status="analysis/{sample}/{label}/unicycler/bandage/.done"
     input:
         lambda wildcards: glob(f"analysis/{wildcards.sample}/{wildcards.label}/unicycler/*.gfa")
+    params:
+        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/unicycler/bandage"
     run:
         for gfa in input:
             filename = Path(gfa).stem
-            shell("Bandage image {gfa} analysis/{wildcards.sample}/{wildcards.label}/unicycler/bandage/{filename}.jpg")
-        shell("touch {output[0]}")
+            shell("Bandage image {gfa} {params.outdir}/{filename}.jpg")
+        shell("touch {output.status}")
 
 
 rule flye:
     output:
-        "analysis/{sample}/{label}/flye/bandage/.done"
+        status="analysis/{sample}/{label}/flye/bandage/.done"
     input:
         lambda wildcards:
             glob(f"analysis/{wildcards.sample}/{wildcards.label}/flye/30-contigger/*.gfa")
             + glob(f"analysis/{wildcards.sample}/{wildcards.label}/flye/40-polishing/*.gfa")
             + glob(f"analysis/{wildcards.sample}/{wildcards.label}/flye/*.gfa")
+    params:
+        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/flye/bandage"
     run:
         for gfa in input:
             filename = Path(gfa).stem
-            shell("Bandage image {gfa} analysis/{wildcards.sample}/{wildcards.label}/flye/bandage/{filename}.jpg")
-        shell("touch {output[0]}")
+            shell("Bandage image {gfa} {params.outdir}/{filename}.jpg")
+        shell("touch {output.status}")
 
 
 rule canu:
     output:
-        "analysis/{sample}/{label}/canu/bandage/.done"
+        status="analysis/{sample}/{label}/canu/bandage/.done"
     input:
         lambda wildcards: glob(f"analysis/{wildcards.sample}/{wildcards.label}/canu/unitigging/4-unitigger/*.gfa")
+    params:
+        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/canu/bandage"
     run:
         for gfa in input:
             filename = Path(gfa).stem
-            shell("Bandage image {gfa} analysis/{wildcards.sample}/{wildcards.label}/canu/bandage/{filename}.jpg")
-        shell("touch {output[0]}")
+            shell("Bandage image {gfa} {params.outdir}/{filename}.jpg")
+        shell("touch {output.status}")
 
 
 rule hifiasm:
     output:
-        "analysis/{sample}/{label}/hifiasm/bandage/.done"
+        status="analysis/{sample}/{label}/hifiasm/bandage/.done"
     input:
         lambda wildcards: glob(f"analysis/{wildcards.sample}/{wildcards.label}/hifiasm/*.gfa")
+    params:
+        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/hifiasm/bandage"
     run:
         for gfa in input:
             filename = Path(gfa).stem
-            shell("Bandage image {gfa} analysis/{wildcards.sample}/{wildcards.label}/hifiasm/bandage/{filename}.jpg")
-        shell("touch {output[0]}")
+            shell("Bandage image {gfa} {params.outdir}/{filename}.jpg")
+        shell("touch {output.status}")
 
 
 rule hifiasm_meta:
     output:
-        "analysis/{sample}/{label}/hifiasm-meta/bandage/.done"
+        status="analysis/{sample}/{label}/hifiasm-meta/bandage/.done"
     input:
         lambda wildcards: glob(f"analysis/{wildcards.sample}/{wildcards.label}/hifiasm-meta/*.gfa")
+    params:
+        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/hifiasm-meta/bandage"
     run:
         for gfa in input:
             filename = Path(gfa).stem
-            shell("Bandage image {gfa} analysis/{wildcards.sample}/{wildcards.label}/hifiasm-meta/bandage/{filename}.jpg")
-        shell("touch {output[0]}")
+            shell("Bandage image {gfa} {params.outdir}/{filename}.jpg")
+        shell("touch {output.status}")

@@ -26,6 +26,7 @@ def test_oxford_nanopore_assemblers_dry_run(tmp_path):
     [
         (["flye-default"], "assembly.fasta"),
         (["canu-default"], "Ecoli_K12_MG1655_R10.3_HAC.contigs.fasta"),
+        (["unicycler-default"], "assembly.fasta"),
     ],
 )
 def test_oxford_nanopore_read_assemblers(labels, expected, capsys, tmp_path):

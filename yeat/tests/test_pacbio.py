@@ -58,3 +58,8 @@ def test_pacbio_hifi_read_metagenomic_assemblers(labels, expected, capsys, tmp_p
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
     files_exist(wd, assemblers, expected)
+
+
+
+def test_metaMDBG_assembler():
+    pass

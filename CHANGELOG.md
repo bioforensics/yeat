@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Unicycler algorithm for long-read only assembly (#55)
+- metaMDBG algorithm for PacBio-HiFi reads (#)
 
 
 ## [0.4] 2023-08-23

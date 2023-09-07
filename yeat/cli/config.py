@@ -14,7 +14,7 @@ from warnings import warn
 
 PAIRED = ("spades", "megahit", "unicycler")
 SINGLE = ("spades", "megahit", "unicycler")
-PACBIO = ("canu", "flye", "hifiasm", "hifiasm-meta", "unicycler")
+PACBIO = ("canu", "flye", "hifiasm", "hifiasm-meta", "unicycler", "metamdbg")
 OXFORD = ("canu", "flye", "unicycler")
 ALGORITHMS = set(PAIRED + SINGLE + PACBIO + OXFORD)
 

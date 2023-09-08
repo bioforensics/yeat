@@ -136,10 +136,10 @@ rule metamdbg:
     threads: 128
     params:
         outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/metamdbg",
-        extra_args=lambda wildcards: config["extra_args"][wildcards.label] #add extra_args....
+        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
     shell:
         """
-        metaMDBG asm {params.outdir} {input.reads} -t {threads}
+        metaMDBG asm {params.outdir} {input.reads} -t {threads} {params.extra_args}
         gunzip {params.outdir}/contigs.fasta.gz
         ln -s contigs.fasta {output.contigs}
         """

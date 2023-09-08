@@ -94,7 +94,7 @@ $ yeat --outdir {path} {config}
 | nano-corr  | flye, canu |
 | nano-hq  | flye, canu |
 
-\* \- available on Linux OS only
+\* \- Available on Linux OS only
 
 
 ### Example config file

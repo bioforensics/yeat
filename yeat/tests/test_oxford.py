@@ -13,6 +13,7 @@ from yeat import cli
 from yeat.tests import data_file, get_core_count, write_config, files_exist
 
 
+@pytest.mark.short
 def test_oxford_nanopore_assemblers_dry_run(tmp_path):
     wd = str(tmp_path)
     arglist = ["-o", wd, "-n", "-t", "4", data_file("configs/ont.cfg")]
@@ -20,6 +21,7 @@ def test_oxford_nanopore_assemblers_dry_run(tmp_path):
     cli.main(args)
 
 
+@pytest.mark.long
 @pytest.mark.nano
 @pytest.mark.parametrize(
     "labels,expected",

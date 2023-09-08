@@ -14,6 +14,8 @@ from yeat import cli
 from yeat.cli.config import Assembler, AssemblerConfig, AssemblyConfigurationError, Sample
 from yeat.tests import data_file
 
+pytestmark = pytest.mark.short
+
 
 def test_unsupported_assembly_algorithm():
     assembler = {

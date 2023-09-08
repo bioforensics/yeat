@@ -136,7 +136,7 @@ rule metamdbg:
     threads: 128
     params:
         outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/metamdbg",
-        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+        extra_args=lambda wildcards: config["extra_args"][wildcards.label] #add extra_args....
     shell:
         """
         metaMDBG asm {params.outdir} {input.reads} -t {threads}

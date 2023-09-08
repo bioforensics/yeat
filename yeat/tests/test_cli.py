@@ -14,6 +14,8 @@ from yeat import cli
 from yeat.cli import InitAction, illumina
 from yeat.tests import data_file
 
+pytestmark = pytest.mark.short
+
 
 def test_display_config_template(capsys):
     with pytest.raises(SystemExit):

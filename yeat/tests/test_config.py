@@ -10,6 +10,7 @@
 import json
 from pathlib import Path
 import pytest
+from unittest.mock import patch
 from yeat import cli
 from yeat.cli.config import Assembler, AssemblerConfig, AssemblyConfigurationError, Sample
 from yeat.tests import data_file
@@ -25,6 +26,19 @@ def test_unsupported_assembly_algorithm():
         "samples": ["sample1"],
     }
     pattern = rf"Unsupported assembly algorithm '{assembler['algorithm']}'"
+    with pytest.raises(ValueError, match=pattern):
+        Assembler(assembler, 1)
+
+
+@patch("yeat.cli.config.platform", "darwin")
+def test_linux_only_algorithm():
+    assembler = {
+        "label": "metamdbg-default",
+        "algorithm": "metamdbg",
+        "extra_args": "",
+        "samples": ["sample1"],
+    }
+    pattern = r"Assembly algorithm 'metaMDBG' can only run on Linux OS"
     with pytest.raises(ValueError, match=pattern):
         Assembler(assembler, 1)
 

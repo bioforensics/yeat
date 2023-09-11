@@ -83,16 +83,16 @@ $ yeat --outdir {path} {config}
 
 ### Supported Input Reads with Assembly Algorithms
 
-| Readtype  | Algorithm |
+| Readtype  | Algorithms |
 | ------------- | ------------- |
 | paired  | spades, megahit, unicycler |
 | single  | spades, megahit, unicycler |
-| pacbio-raw  | flye, canu |
-| pacbio-corr  | flye, canu |
-| pacbio-hifi  | flye, canu, hifiasm, hifiasm-meta, metamdbg* |
-| nano-raw  | flye, canu |
-| nano-corr  | flye, canu |
-| nano-hq  | flye, canu |
+| pacbio-raw  | flye, canu, unicycler |
+| pacbio-corr  | flye, canu, unicycler |
+| pacbio-hifi  | flye, canu, hifiasm, hifiasm-meta, unicycler, metamdbg* |
+| nano-raw  | flye, canu, unicycler |
+| nano-corr  | flye, canu, unicycler |
+| nano-hq  | flye, canu, unicycler |
 
 \* \- Available on Linux OS only
 

@@ -9,12 +9,13 @@
 
 import json
 from pathlib import Path
+from sys import platform
 from warnings import warn
 
 
 PAIRED = ("spades", "megahit", "unicycler")
 SINGLE = ("spades", "megahit", "unicycler")
-PACBIO = ("canu", "flye", "hifiasm", "hifiasm-meta", "unicycler")
+PACBIO = ("canu", "flye", "hifiasm", "hifiasm-meta", "unicycler", "metamdbg")
 OXFORD = ("canu", "flye", "unicycler")
 ALGORITHMS = set(PAIRED + SINGLE + PACBIO + OXFORD)
 
@@ -80,9 +81,9 @@ class AssemblerConfig:
         self.samples = {}
         for key, value in self.data["samples"].items():
             self.samples[key] = Sample(value)
-        self.assemblers = [
-            Assembler(assembler, self.threads) for assembler in self.data["assemblers"]
-        ]
+        self.assemblers = []
+        for assembler in self.data["assemblers"]:
+            self.assemblers.append(Assembler(assembler, self.threads))
 
     def batch(self):
         self.paired_sample_labels = set()
@@ -182,16 +183,21 @@ class Sample:
 class Assembler:
     def __init__(self, data, threads):
         self.label = data["label"]
-        if data["algorithm"] not in ALGORITHMS:
-            raise AssemblyConfigurationError(
-                f"Unsupported assembly algorithm '{data['algorithm']}'"
-            )
+        self.check_valid_algorithm(data)
         self.algorithm = data["algorithm"]
         self.samples = data["samples"]
         self.extra_args = data["extra_args"]
         self.threads = threads
         if self.algorithm == "canu":
             self.check_canu_required_params()
+
+    def check_valid_algorithm(self, data):
+        if data["algorithm"] not in ALGORITHMS:
+            message = f"Unsupported assembly algorithm '{data['algorithm']}'"
+            raise AssemblyConfigurationError(message)
+        if data["algorithm"] == "metamdbg" and platform not in ["linux", "linux2"]:
+            message = f"Assembly algorithm 'metaMDBG' can only run on Linux OS"
+            raise AssemblyConfigurationError(message)
 
     def check_canu_required_params(self):
         if "genomeSize=" not in self.extra_args:

@@ -30,6 +30,7 @@ def test_bandage_subprocess_failed(function_mock):
     assert bandage.check_bandage() == False
 
 
+@pytest.mark.short
 @patch.dict(os.environ, {"PATH": "ROUGE"})
 def test_env_path_has_no_path_to_bandage(capsys):
     bandage.check_bandage()
@@ -37,6 +38,7 @@ def test_env_path_has_no_path_to_bandage(capsys):
     assert "No such file or directory: 'Bandage'" in out
 
 
+@pytest.mark.short
 @patch("yeat.workflows.bandage.check_bandage")
 def test_no_bandage_warning(function_mock):
     function_mock.return_value = False
@@ -59,6 +61,7 @@ def test_assembly_graph_to_png(file, tmp_path):
     assert jpg.exists()
 
 
+@pytest.mark.short
 def test_convert_contig_to_fastg(tmp_path):
     contig = data_file("k29.contigs.fa.gz")
     fastg = tmp_path / "k29.contigs.fastg"

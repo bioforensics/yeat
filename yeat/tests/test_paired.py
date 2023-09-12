@@ -17,6 +17,7 @@ from yeat import cli
 from yeat.tests import data_file, write_config, files_exist
 
 
+@pytest.mark.short
 def test_paired_end_assemblers_dry_run(tmp_path):
     wd = str(tmp_path)
     arglist = ["-o", wd, "-n", data_file("configs/paired.cfg")]
@@ -25,6 +26,7 @@ def test_paired_end_assemblers_dry_run(tmp_path):
 
 
 @pytest.mark.long
+@pytest.mark.illumina
 @pytest.mark.parametrize(
     "labels,expected",
     [
@@ -44,6 +46,7 @@ def test_paired_end_assemblers(labels, expected, capsys, tmp_path):
 
 
 @pytest.mark.long
+@pytest.mark.illumina
 def test_multiple_paired_end_assemblers(capsys, tmp_path):
     wd = str(tmp_path)
     arglist = ["-o", wd, data_file(f"configs/paired.cfg")]
@@ -60,6 +63,7 @@ def test_multiple_paired_end_assemblers(capsys, tmp_path):
 
 
 @pytest.mark.long
+@pytest.mark.illumina
 def test_multiple_spades(capsys, tmp_path):
     wd = str(tmp_path)
     arglist = ["-o", wd, data_file(f"configs/two_spades.cfg")]
@@ -71,6 +75,7 @@ def test_multiple_spades(capsys, tmp_path):
 
 
 @pytest.mark.long
+@pytest.mark.illumina
 @pytest.mark.parametrize(
     "downsample,num_contigs,largest_contig,total_len",
     [("2000", 79, 5294, 70818), ("-1", 56, 35168, 199940)],
@@ -91,6 +96,7 @@ def test_custom_downsample_input(
 
 
 @pytest.mark.long
+@pytest.mark.illumina
 @pytest.mark.parametrize("coverage", [("150"), ("75"), ("10")])
 def test_custom_coverage_input(coverage, capsys, tmp_path):
     wd = str(tmp_path)
@@ -109,6 +115,7 @@ def test_custom_coverage_input(coverage, capsys, tmp_path):
 
 
 @pytest.mark.long
+@pytest.mark.illumina
 @pytest.mark.parametrize("execution_number", range(3))
 def test_random_downsample_seed(execution_number, capsys, tmp_path):
     wd = str(tmp_path)
@@ -139,6 +146,7 @@ def prep_uncompressed_reads(filename, tmp_path):
 
 
 @pytest.mark.long
+@pytest.mark.illumina
 @pytest.mark.parametrize(
     "inread1,inread2",
     [

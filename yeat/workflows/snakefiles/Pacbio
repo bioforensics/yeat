@@ -124,3 +124,22 @@ rule unicycler:
         unicycler -l {input.reads} -t {threads} -o {params.outdir} {params.extra_args}
         ln -s assembly.fasta {output.contigs}
         """
+
+
+rule metamdbg:
+    output:
+        contigs="analysis/{sample}/{label}/metamdbg/{sample}_contigs.fasta"
+    input:
+        reads="seq/input/{sample}/combined-reads.fq.gz"
+    conda:
+        "metaMDBG"
+    threads: 128
+    params:
+        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/metamdbg",
+        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+    shell:
+        """
+        metaMDBG asm {params.outdir} {input.reads} -t {threads} {params.extra_args}
+        gunzip {params.outdir}/contigs.fasta.gz
+        ln -s contigs.fasta {output.contigs}
+        """

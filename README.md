@@ -20,15 +20,50 @@ Once the binary file has been obtained, users will need to update their environm
 
 Example for Ubuntu:
 ```
-export PATH={BANDAGE_DIR}:$PATH
+export PATH=~/projects/Bandage:$PATH
 ```
 
 Example for MacOS:
 ```
-export PATH={BANDAGE_DIR}/Bandage.app/Contents/MacOS:$PATH
+export PATH=~/projects/Bandage/Bandage.app/Contents/MacOS:$PATH
 ```
 
 In order to run the pre-built binary files successfully, ensure that the binary file is kept in the same directory with all of the other files that came with it.
+
+
+### Installing metaMDBG (for Linux OS only)
+
+To enable `metaMDBG` into YEAT's workflow, users will need to create a conda environment, install, and build from the source. Once created, YEAT will activate the environment whenever `metaMDBG` is called.
+
+#### Download metaMDBG repository  
+```
+git clone https://github.com/GaetanBenoitDev/metaMDBG.git
+```
+
+#### Create metaMDBG conda environment
+```
+cd metaMDBG
+conda env create -f conda_env.yml
+conda activate metaMDBG
+conda env config vars set CPATH=${CONDA_PREFIX}/include:${CPATH}
+conda deactivate
+
+# Activate metaMDBG environment
+conda activate metaMDBG
+
+# Compile the software
+mkdir build
+cd build
+cmake ..
+make -j 3
+```
+
+After successful installation, an executable named metaMDBG will appear in ./build/bin.
+
+#### Link the binary to the environment's bin
+```
+ln -s ~/projects/metaMDBG/build/bin/metaMDBG /home/danejo/anaconda3/envs/metaMDBG/bin/metaMDBG
+```
 
 ### Running PacBio Hifi and Nanopore-Reads Tests For Developers
 
@@ -48,16 +83,18 @@ $ yeat --outdir {path} {config}
 
 ### Supported Input Reads with Assembly Algorithms
 
-| Readtype  | Algorithm |
+| Readtype  | Algorithms |
 | ------------- | ------------- |
 | paired  | spades, megahit, unicycler |
 | single  | spades, megahit, unicycler |
-| pacbio-raw  | flye, canu |
-| pacbio-corr  | flye, canu |
-| pacbio-hifi  | flye, canu, hifiasm, hifiasm-meta |
-| nano-raw  | flye, canu |
-| nano-corr  | flye, canu |
-| nano-hq  | flye, canu |
+| pacbio-raw  | flye, canu, unicycler |
+| pacbio-corr  | flye, canu, unicycler |
+| pacbio-hifi  | flye, canu, hifiasm, hifiasm-meta, unicycler, metamdbg* |
+| nano-raw  | flye, canu, unicycler |
+| nano-corr  | flye, canu, unicycler |
+| nano-hq  | flye, canu, unicycler |
+
+\* \- Available on Linux OS only
 
 
 ### Example config file

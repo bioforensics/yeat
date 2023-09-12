@@ -137,3 +137,17 @@ rule hifiasm_meta:
             filename = Path(gfa).stem
             shell("Bandage image {gfa} {params.outdir}/{filename}.jpg")
         shell("touch {output.status}")
+
+
+rule metamdbg:
+    output:
+        status="analysis/{sample}/{label}/metamdbg/bandage/.done"
+    input:
+        gfa="analysis/{sample}/{label}/metamdbg/tmp/assembly_graph.gfa"
+    params:
+        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/metamdbg/bandage"
+    shell:
+        """
+        Bandage image {input.gfa} {params.outdir}/assembly_graph.jpg
+        touch {output.status}
+        """

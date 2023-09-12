@@ -52,6 +52,7 @@ def run_pacbio(args, config):
         dryrun=args.dry_run,
         printshellcmds=True,
         workdir=args.outdir,
+        use_conda=True,
     )
     if not success:
         raise RuntimeError("Snakemake Failed")  # pragma: no cover

@@ -13,6 +13,7 @@ from yeat import cli
 from yeat.tests import data_file, write_config, files_exist
 
 
+@pytest.mark.short
 def test_single_end_assemblers_dry_run(tmp_path):
     wd = str(tmp_path)
     arglist = ["-o", wd, "-n", data_file("configs/single.cfg")]
@@ -21,6 +22,7 @@ def test_single_end_assemblers_dry_run(tmp_path):
 
 
 @pytest.mark.long
+@pytest.mark.illumina
 @pytest.mark.parametrize(
     "labels,expected",
     [

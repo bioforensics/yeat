@@ -13,6 +13,7 @@ from yeat import cli
 from yeat.tests import data_file, get_core_count, write_config, files_exist
 
 
+@pytest.mark.short
 def test_pacbio_hifi_assemblers_dry_run(tmp_path):
     wd = str(tmp_path)
     arglist = ["-o", wd, "-n", "-t", "4", data_file("configs/hifi.cfg")]
@@ -20,6 +21,7 @@ def test_pacbio_hifi_assemblers_dry_run(tmp_path):
     cli.main(args)
 
 
+@pytest.mark.long
 @pytest.mark.hifi
 @pytest.mark.parametrize(
     "labels,expected",
@@ -41,6 +43,7 @@ def test_pacbio_hifi_read_assemblers(labels, expected, capsys, tmp_path):
     files_exist(wd, assemblers, expected)
 
 
+@pytest.mark.long
 @pytest.mark.hifi
 @pytest.mark.parametrize(
     "labels,expected",
@@ -58,3 +61,15 @@ def test_pacbio_hifi_read_metagenomic_assemblers(labels, expected, capsys, tmp_p
     args = cli.get_parser().parse_args(arglist)
     cli.main(args)
     files_exist(wd, assemblers, expected)
+
+
+@pytest.mark.linux
+def test_metaMDBG_assembler(tmp_path):
+    wd = str(tmp_path)
+    assemblers = write_config(["metamdbg-default"], wd, "meta.cfg")
+    cores = str(get_core_count())
+    cfg = str(Path(wd) / "meta.cfg")
+    arglist = ["-o", wd, "-t", cores, cfg]
+    args = cli.get_parser().parse_args(arglist)
+    cli.main(args)
+    files_exist(wd, assemblers, "contigs.fasta")

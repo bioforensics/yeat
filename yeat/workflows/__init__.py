@@ -73,14 +73,21 @@ def run_oxford(args, config):
         raise RuntimeError("Snakemake Failed")  # pragma: no cover
 
 
+def run_hybrid(args, config):
+    pass
+
+
 def run_workflows(args, config):
-    if config.batch["paired"]["assemblers"]:
+    if config.batch["paired"]["assemblies"]:
         run_paired(args, config)
-    if config.batch["single"]["assemblers"]:
-        run_single(args, config)
-    if config.batch["pacbio"]["assemblers"]:
-        run_pacbio(args, config)
-    if config.batch["oxford"]["assemblers"]:
-        run_oxford(args, config)
-    if not args.dry_run:
-        bandage.run_bandage(args, config)
+    # if config.batch["single"]["assemblies"]:
+    #     run_single(args, config)
+    # if config.batch["pacbio"]["assemblies"]:
+    #     run_pacbio(args, config)
+    # if config.batch["oxford"]["assemblies"]:
+    #     run_oxford(args, config)
+    # if config.batch["hybrid"]["assemblies"]:
+    #     run_hybrid(args, config)
+    #     assert 0
+    # if not args.dry_run:
+    #     bandage.run_bandage(args, config)

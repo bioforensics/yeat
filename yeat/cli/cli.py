@@ -8,7 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 from . import illumina
-from .config import AssemblerConfig
+from .config import AssemblyConfig
 from argparse import Action, ArgumentParser
 import json
 import sys
@@ -20,34 +20,42 @@ CONFIG_TEMPLATE = {
     "samples": {
         "sample1": {
             "paired": [
-                "yeat/tests/data/short_reads_1.fastq.gz",
-                "yeat/tests/data/short_reads_2.fastq.gz",
-            ]
+                [
+                    "yeat/tests/data/short_reads_1.fastq.gz",
+                    "yeat/tests/data/short_reads_2.fastq.gz",
+                ],
+            ],
+            "pacbio-corr": [
+                "yeat/tests/data/long_reads_high_depth.fastq.gz",
+            ],
         },
-        "sample2": {
-            "paired": [
-                "yeat/tests/data/Animal_289_R1.fq.gz",
-                "yeat/tests/data/Animal_289_R2.fq.gz",
-            ]
-        },
-        "sample3": {"pacbio-hifi": ["yeat/tests/data/ecoli.fastq.gz"]},
-        "sample4": {"nano-hq": ["yeat/tests/data/ecolk12mg1655_R10_3_guppy_345_HAC.fastq.gz"]},
     },
-    "assemblers": [
-        {
-            "label": "spades-default",
+    "assemblies": {
+        "spades-default": {
             "algorithm": "spades",
             "extra_args": "",
-            "samples": ["sample1", "sample2"],
+            "samples": [
+                "sample1",
+            ],
+            "mode": "illumina",
         },
-        {
-            "label": "hicanu",
-            "algorithm": "canu",
-            "extra_args": "genomeSize=4.8m",
-            "samples": ["sample3"],
+        "flye-default": {
+            "algorithm": "flye",
+            "extra_args": "",
+            "samples": [
+                "sample1",
+            ],
+            "mode": "pacbio",
         },
-        {"label": "flye_ONT", "algorithm": "flye", "extra_args": "", "samples": ["sample4"]},
-    ],
+        "unicycler-default": {
+            "algorithm": "unicycler",
+            "extra_args": "",
+            "samples": [
+                "sample1",
+            ],
+            "mode": "hybrid",
+        },
+    },
 }
 
 
@@ -102,5 +110,5 @@ def get_parser(exit_on_error=True):
 def main(args=None):
     if args is None:
         args = get_parser().parse_args()  # pragma: no cover
-    config = AssemblerConfig.from_json(args.config, args.threads)
+    config = AssemblyConfig.from_json(args.config, args.threads)
     workflows.run_workflows(args, config)

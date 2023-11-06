@@ -10,22 +10,22 @@
 from shutil import copyfile
 
 
-rule copyinput:
-    output:
-        combined="seq/input/{sample}/combined-reads.fq.gz"
-    input:
-        reads=lambda wildcards: config["samples"][wildcards.sample]
-    params:
-        outdir=lambda wildcards: f"seq/input/{wildcards.sample}"
-    run:
-        for i, inread in enumerate(input):
-            outread = f"seq/input/{wildcards.sample}/reads{i}.fq"
-            if inread.endswith(".gz"):
-                shell("gunzip -c {inread} > {outread}")
-            else:
-                copyfile(inread, outread)
-        shell("cat {params.outdir}/*.fq > {params.outdir}/combined-reads.fq")
-        shell("gzip {params.outdir}/combined-reads.fq")
+# rule copyinput:
+#     output:
+#         combined="seq/input/{sample}/combined-reads.fq.gz"
+#     input:
+#         reads=lambda wildcards: config["samples"][wildcards.sample]
+#     params:
+#         outdir=lambda wildcards: f"seq/input/{wildcards.sample}"
+#     run:
+#         for i, inread in enumerate(input):
+#             outread = f"seq/input/{wildcards.sample}/reads{i}.fq"
+#             if inread.endswith(".gz"):
+#                 shell("gunzip -c {inread} > {outread}")
+#             else:
+#                 copyfile(inread, outread)
+#         shell("cat {params.outdir}/*.fq > {params.outdir}/combined-reads.fq")
+#         shell("gzip {params.outdir}/combined-reads.fq")
 
 
 rule fastqc:

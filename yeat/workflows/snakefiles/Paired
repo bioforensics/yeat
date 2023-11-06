@@ -35,25 +35,36 @@ use rule * from shared_workflow exclude copyinput as other_*
 
 rule copyinput:
     output:
-        read1="seq/input/{sample}/{sample}_R1.fq.gz",
-        read2="seq/input/{sample}/{sample}_R2.fq.gz"
-    input: 
-        lambda wildcards: config["samples"][wildcards.sample]
+        read1="seq/input/{sample}/r1_combined-reads.fq.gz",
+        read2="seq/input/{sample}/r2_combined-reads.fq.gz"
+    input:
+        r1s = lambda wildcards: [x[0] for x in config["reads"][wildcards.sample]["paired"]],
+        r2s = lambda wildcards: [x[1] for x in config["reads"][wildcards.sample]["paired"]]
+    params:
+        outdir=lambda wildcards: f"seq/input/{wildcards.sample}"
     run:
-        for inreads, outreads in zip(input, output):
-            if inreads.endswith(".gz"):
-                copyfile(inreads, outreads)
-            else:
-                shell(f"gzip -c {inreads} > {outreads}")
+        combine(input.r1s, "r1", params.outdir)
+        combine(input.r2s, "r2", params.outdir)
+
+
+def combine(reads, type1, outdir):
+    for i, inread in enumerate(reads):
+        outread = f"{outdir}/{type1}_reads{i}.fq"
+        if inread.endswith(".gz"):
+            shell("gunzip -c {inread} > {outread}")
+        else:
+            copyfile(inread, outread)
+    shell(f"cat {outdir}/{type1}_reads*.fq > {outdir}/{type1}_combined-reads.fq")
+    shell(f"gzip {outdir}/{type1}_combined-reads.fq")
 
 
 rule fastqc:
     output:
-        out1="seq/fastqc/{sample}/{sample}_R1_fastqc.html",
-        out2="seq/fastqc/{sample}/{sample}_R2_fastqc.html"
+        out1="seq/fastqc/{sample}/r1_combined-reads_fastqc.html",
+        out2="seq/fastqc/{sample}/r2_combined-reads_fastqc.html"
     input:
-        read1="seq/input/{sample}/{sample}_R1.fq.gz",
-        read2="seq/input/{sample}/{sample}_R2.fq.gz"
+        read1="seq/input/{sample}/r1_combined-reads.fq.gz",
+        read2="seq/input/{sample}/r2_combined-reads.fq.gz"
     threads: 128
     params:
         outdir=lambda wildcards: f"seq/fastqc/{wildcards.sample}"
@@ -68,8 +79,8 @@ rule fastp:
         out1="seq/fastp/{sample}/{sample}.R1.fq.gz",
         out2="seq/fastp/{sample}/{sample}.R2.fq.gz"
     input:
-        read1="seq/input/{sample}/{sample}_R1.fq.gz",
-        read2="seq/input/{sample}/{sample}_R2.fq.gz"
+        read1="seq/input/{sample}/r1_combined-reads.fq.gz",
+        read2="seq/input/{sample}/r2_combined-reads.fq.gz"
     params:
         length_required=config["length_required"],
         html_report="seq/fastp/{sample}/fastp.html",

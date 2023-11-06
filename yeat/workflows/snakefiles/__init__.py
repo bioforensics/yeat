@@ -10,11 +10,11 @@
 def get_expected_files(paired_qc=False, combined_qc=False, nanopore=False):
     inputlist = []
     for label in config["labels"]:
-        assembler = config["assemblers"][label]
+        assembly = config["assemblies"][label]
         for sample in config["label_to_samples"][label]:
-            inputlist.append(f"analysis/{sample}/{label}/{assembler}/quast/{sample}_report.html")
+            inputlist.append(f"analysis/{sample}/{label}/{assembly}/quast/{sample}_report.html")
     if paired_qc:
-        inputlist += expand("seq/fastqc/{sample}/{sample}_{reads}_fastqc.html", sample=[*config["samples"]], reads=["R1", "R2"])
+        inputlist += expand("seq/fastqc/{sample}/{reads}_combined-reads_fastqc.html", sample=[*config["samples"]], reads=["r1", "r2"])
     if combined_qc:
         inputlist += expand("seq/fastqc/{sample}/combined-reads_fastqc.html", sample=[*config["samples"]])
     if nanopore:

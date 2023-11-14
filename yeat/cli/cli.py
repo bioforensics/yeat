@@ -8,12 +8,11 @@
 # -------------------------------------------------------------------------------------------------
 
 from . import illumina
-from .config import AssemblyConfig
 from argparse import Action, ArgumentParser
 import json
+from pathlib import Path
 import sys
 import yeat
-from yeat import workflows
 
 
 CONFIG_TEMPLATE = {
@@ -37,7 +36,7 @@ CONFIG_TEMPLATE = {
             "samples": [
                 "sample1",
             ],
-            "mode": "illumina",
+            "mode": "paired",
         },
         "flye-default": {
             "algorithm": "flye",
@@ -66,8 +65,17 @@ class InitAction(Action):
         raise SystemExit()
 
 
-def options(parser):
-    parser.add_argument("-v", "--version", action="version", version=f"YEAT v{yeat.__version__}")
+def get_parser(exit_on_error=True):
+    parser = ArgumentParser(add_help=False, exit_on_error=exit_on_error)
+    optional_options(parser)
+    workflow_options(parser)
+    illumina.fastp_options(parser)
+    illumina.downsample_options(parser)
+    parser.add_argument("config", help="config file", type=lambda p: str(Path(p).resolve()))
+    return parser
+
+
+def optional_options(parser):
     parser.add_argument(
         "--init",
         action=InitAction,
@@ -75,40 +83,40 @@ def options(parser):
         help="print a template assembly config file to the terminal (stdout) and exit",
     )
     parser.add_argument(
-        "-o",
-        "--outdir",
-        type=str,
-        metavar="DIR",
-        default=".",
-        help="output directory; default is current working directory",
+        "-h",
+        "--help",
+        action="help",
+        help="show this help message and exit",
     )
     parser.add_argument(
-        "-t",
-        "--threads",
-        type=int,
-        metavar="T",
-        default=1,
-        help="execute workflow with T threads; by default, T=1",
+        "-v",
+        "--version",
+        action="version",
+        version=f"YEAT v{yeat.__version__}",
     )
-    parser.add_argument(
+
+
+def workflow_options(parser):
+    workflow = parser.add_argument_group("workflow arguments")
+    workflow.add_argument(
         "-n",
         "--dry-run",
         action="store_true",
         help="construct workflow DAG and print a summary but do not execute",
     )
-
-
-def get_parser(exit_on_error=True):
-    parser = ArgumentParser(exit_on_error=exit_on_error)
-    options(parser)
-    illumina.fastp_options(parser)
-    illumina.downsample_options(parser)
-    parser.add_argument("config", type=str, help="config file")
-    return parser
-
-
-def main(args=None):
-    if args is None:
-        args = get_parser().parse_args()  # pragma: no cover
-    config = AssemblyConfig.from_json(args.config, args.threads)
-    workflows.run_workflows(args, config)
+    workflow.add_argument(
+        "-o",
+        "--outdir",
+        default=".",
+        help="output directory; default is current working directory",
+        metavar="DIR",
+        type=str,
+    )
+    workflow.add_argument(
+        "-t",
+        "--threads",
+        default=1,
+        help="execute workflow with T threads; by default, T=1",
+        metavar="T",
+        type=int,
+    )

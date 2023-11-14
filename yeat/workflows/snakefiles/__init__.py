@@ -7,17 +7,21 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-def get_expected_files(paired_qc=False, combined_qc=False, nanopore=False):
-    inputlist = []
-    for label in config["labels"]:
-        assembly = config["assemblies"][label]
-        for sample in config["label_to_samples"][label]:
-            inputlist.append(f"analysis/{sample}/{label}/{assembly}/quast/{sample}_report.html")
-    if paired_qc:
-        inputlist += expand("seq/fastqc/{sample}/{reads}_combined-reads_fastqc.html", sample=[*config["samples"]], reads=["r1", "r2"])
-    if combined_qc:
-        inputlist += expand("seq/fastqc/{sample}/combined-reads_fastqc.html", sample=[*config["samples"]])
-    if nanopore:
-        inputlist += expand("seq/nanofilt/{sample}/highQuality-reads.fq.gz", sample=[*config["samples"]])
-        inputlist += expand("seq/nanoplot/{sample}/{quality}_LengthvsQualityScatterPlot_dot.pdf", sample=[*config["samples"]], quality=["raw", "filtered"])
-    return inputlist
+# def get_expected_files(paired_qc=False, combined_qc=False, nanopore=False):
+#     inputlist = []
+#     for label in config["labels"]:
+#         assembly = config["assemblies"][label]
+#         for sample in config["label_to_samples"][label]:
+#             inputlist.append(f"analysis/{sample}/{label}/{assembly}/quast/{sample}_report.html")
+#     if paired_qc:
+#         inputlist += expand("seq/fastqc/{sample}/{reads}_combined-reads_fastqc.html", sample=[*config["samples"]], reads=["r1", "r2"])
+#     if combined_qc:
+#         inputlist += expand("seq/fastqc/{sample}/combined-reads_fastqc.html", sample=[*config["samples"]])
+#     if nanopore:
+#         inputlist += expand("seq/nanofilt/{sample}/highQuality-reads.fq.gz", sample=[*config["samples"]])
+#         inputlist += expand("seq/nanoplot/{sample}/{quality}_LengthvsQualityScatterPlot_dot.pdf", sample=[*config["samples"]], quality=["raw", "filtered"])
+#     return inputlist
+
+
+
+

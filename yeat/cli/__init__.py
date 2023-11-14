@@ -7,4 +7,11 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from .cli import *
+from . import cli
+from yeat import workflows
+
+
+def main(args=None):
+    if args is None:
+        args = cli.get_parser().parse_args()
+    workflows.run_workflow(args)

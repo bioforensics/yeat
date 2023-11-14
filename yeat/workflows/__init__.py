@@ -7,17 +7,19 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import bandage
 from importlib.resources import files
+import json
+from pathlib import Path
 from snakemake import snakemake
 
 
-def run_paired(args, config):
-    snakefile = files("yeat") / "workflows" / "snakefiles" / "Paired"
-    data = config.to_dict(args, readtype="paired")
+def run_workflow(args):
+    snakefile = files("yeat") / "workflows" / "snakefiles" / "Workflow"
+    config = vars(args)
+    config["data"] = resolve_paths(config["config"])
     success = snakemake(
         snakefile,
-        config=data,
+        config=config,
         cores=args.threads,
         dryrun=args.dry_run,
         printshellcmds=True,
@@ -27,67 +29,12 @@ def run_paired(args, config):
         raise RuntimeError("Snakemake Failed")  # pragma: no cover
 
 
-def run_single(args, config):
-    snakefile = files("yeat") / "workflows" / "snakefiles" / "Single"
-    data = config.to_dict(args, readtype="single")
-    success = snakemake(
-        snakefile,
-        config=data,
-        cores=args.threads,
-        dryrun=args.dry_run,
-        printshellcmds=True,
-        workdir=args.outdir,
-    )
-    if not success:
-        raise RuntimeError("Snakemake Failed")  # pragma: no cover
-
-
-def run_pacbio(args, config):
-    snakefile = files("yeat") / "workflows" / "snakefiles" / "Pacbio"
-    data = config.to_dict(args, readtype="pacbio")
-    success = snakemake(
-        snakefile,
-        config=data,
-        cores=args.threads,
-        dryrun=args.dry_run,
-        printshellcmds=True,
-        workdir=args.outdir,
-        use_conda=True,
-    )
-    if not success:
-        raise RuntimeError("Snakemake Failed")  # pragma: no cover
-
-
-def run_oxford(args, config):
-    snakefile = files("yeat") / "workflows" / "snakefiles" / "Oxford"
-    data = config.to_dict(args, readtype="oxford")
-    success = snakemake(
-        snakefile,
-        config=data,
-        cores=args.threads,
-        dryrun=args.dry_run,
-        printshellcmds=True,
-        workdir=args.outdir,
-    )
-    if not success:
-        raise RuntimeError("Snakemake Failed")  # pragma: no cover
-
-
-def run_hybrid(args, config):
-    pass
-
-
-def run_workflows(args, config):
-    if config.batch["paired"]["assemblies"]:
-        run_paired(args, config)
-    # if config.batch["single"]["assemblies"]:
-    #     run_single(args, config)
-    # if config.batch["pacbio"]["assemblies"]:
-    #     run_pacbio(args, config)
-    # if config.batch["oxford"]["assemblies"]:
-    #     run_oxford(args, config)
-    # if config.batch["hybrid"]["assemblies"]:
-    #     run_hybrid(args, config)
-    #     assert 0
-    # if not args.dry_run:
-    #     bandage.run_bandage(args, config)
+def resolve_paths(infile):
+    data = json.load(open(infile))
+    for label, sample in data["samples"].items():
+        for readtype, reads in sample.items():
+            if readtype == "paired":
+                sample[readtype] = [[str(Path(read).resolve()) for read in pair] for pair in reads]
+            else:
+                sample[readtype] = [str(Path(read).resolve()) for read in reads]
+    return data

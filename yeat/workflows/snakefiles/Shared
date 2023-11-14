@@ -10,22 +10,22 @@
 from shutil import copyfile
 
 
-# rule copyinput:
-#     output:
-#         combined="seq/input/{sample}/combined-reads.fq.gz"
-#     input:
-#         reads=lambda wildcards: config["samples"][wildcards.sample]
-#     params:
-#         outdir=lambda wildcards: f"seq/input/{wildcards.sample}"
-#     run:
-#         for i, inread in enumerate(input):
-#             outread = f"seq/input/{wildcards.sample}/reads{i}.fq"
-#             if inread.endswith(".gz"):
-#                 shell("gunzip -c {inread} > {outread}")
-#             else:
-#                 copyfile(inread, outread)
-#         shell("cat {params.outdir}/*.fq > {params.outdir}/combined-reads.fq")
-#         shell("gzip {params.outdir}/combined-reads.fq")
+rule copyinput:
+    output:
+        combined="seq/input/{sample}/combined-reads.fq.gz"
+    input:
+        reads=lambda wildcards: config["samples"][wildcards.sample]
+    params:
+        outdir=lambda wildcards: f"seq/input/{wildcards.sample}"
+    run:
+        for i, inread in enumerate(input):
+            outread = f"seq/input/{wildcards.sample}/reads{i}.fq"
+            if inread.endswith(".gz"):
+                shell("gunzip -c {inread} > {outread}")
+            else:
+                copyfile(inread, outread)
+        shell("cat {params.outdir}/*.fq > {params.outdir}/combined-reads.fq")
+        shell("gzip {params.outdir}/combined-reads.fq")
 
 
 rule fastqc:
@@ -44,11 +44,11 @@ rule fastqc:
 
 rule quast:
     output:
-        report="analysis/{sample}/{label}/{assembler}/quast/{sample}_report.html"
+        report="analysis/{sample}/{readtype}/{label}/{assembler}/quast/{sample}_report.html"
     input:
-        contigs="analysis/{sample}/{label}/{assembler}/{sample}_contigs.fasta"
+        contigs="analysis/{sample}/{readtype}/{label}/{assembler}/{sample}_contigs.fasta"
     params:
-        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/{wildcards.assembler}/quast"
+        outdir="analysis/{sample}/{readtype}/{label}/{assembler}/quast"
     shell:
         """
         quast.py {input.contigs} -o {params.outdir}

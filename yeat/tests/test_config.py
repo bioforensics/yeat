@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 from unittest.mock import patch
 from yeat import cli
-from yeat.cli.config import Assembler, AssemblerConfig, AssemblyConfigurationError, Sample
+from yeat.config.config import Assembler, AssemblerConfig, AssemblyConfigurationError, Sample
 from yeat.tests import data_file
 
 pytestmark = pytest.mark.short

@@ -1,0 +1,50 @@
+# -------------------------------------------------------------------------------------------------
+# Copyright (c) 2023, DHS. This file is part of YEAT: http://github.com/bioforensics/yeat
+#
+# This software was prepared for the Department of Homeland Security (DHS) by the Battelle National
+# Biodefense Institute, LLC (BNBI) as part of contract HSHQDC-15-C-00064 to manage and operate the
+# National Biodefense Analysis and Countermeasures Center (NBACC), a Federally Funded Research and
+# Development Center.
+# -------------------------------------------------------------------------------------------------
+
+from yeat.config.config import AssemblyConfig
+
+
+cfg = AssemblyConfig(config["data"], config["threads"])
+config["samples"] = cfg.samples
+config["assemblies"] = cfg.assemblies
+
+
+def get_expected_files():
+    inputlist = []
+    for assembly_label, assembly_obj in config["assemblies"].items():
+        for sample_label in assembly_obj.samples:
+            sample_obj = config["samples"][sample_label]
+            if assembly_obj.mode == "paired":
+                inputlist += expand("seq/fastqc/{sample}/paired/{direction}_combined-reads_fastqc.html", sample=[sample_label], direction=["r1", "r2"])
+                inputlist.append(f"analysis/{sample_label}/paired/{assembly_label}/{assembly_obj.algorithm}/quast/{sample_label}_report.html")
+            # elif assembly_obj.mode == "single":
+            #     inputlist.append(f"seq/fastqc/{sample_label}/single/combined-reads_fastqc.html")
+            #     inputlist.append(f"analysis/{sample_label}/single/{assembly_label}/{assembly_obj.algorithm}/quast/{sample_label}_report.html")
+            # elif assembly_obj.mode == "pacbio":
+            #     readtype = sample_obj.long_readtype
+            #     inputlist.append(f"seq/fastqc/{sample_label}/{readtype}/combined-reads_fastqc.html")
+            #     inputlist.append(f"analysis/{sample_label}/{readtype}/{assembly_label}/{assembly_obj.algorithm}/quast/{sample_label}_report.html")
+            # elif assembly_obj.mode == "oxford":
+            #     readtype = sample_obj.long_readtype
+            #     inputlist.append(f"seq/nanofilt/{sample_label}/{readtype}/highQuality-reads.fq.gz")
+            #     inputlist += expand("seq/nanoplot/{sample}/{readtype}/{quality}_LengthvsQualityScatterPlot_dot.pdf", sample=[sample_label], readtype=[readtype], quality=["raw", "filtered"])
+            #     inputlist.append(f"analysis/{sample_label}/{readtype}/{assembly_label}/{assembly_obj.algorithm}/quast/{sample_label}_report.html")
+    return inputlist
+
+
+rule all:
+    input:
+        get_expected_files()
+
+
+module paired_workflow:
+    snakefile: "Paired"
+    config: config
+
+use rule * from paired_workflow

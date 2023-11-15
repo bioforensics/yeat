@@ -14,35 +14,16 @@ from random import randint
 from shutil import copyfile
 
 
-module helper:
-    snakefile: "__init__.py"
-    config: config
-
-use rule * from helper
-
-
-rule all:
-    input:
-        helper.get_expected_files(combined_qc=True)
-
-
-module shared_workflow:
-    snakefile: "Shared"
-    config: config
-
-use rule * from shared_workflow
-
-
 rule fastp:
     output:
-        filtered_reads="seq/fastp/{sample}/combined-reads.fq.gz",
+        filtered_reads="seq/fastp/{sample}/single/combined-reads.fq.gz",
     input:
-        raw_reads="seq/input/{sample}/combined-reads.fq.gz"
+        raw_reads="seq/input/{sample}/single/combined-reads.fq.gz"
     params:
         length_required=config["length_required"],
-        html_report="seq/fastp/{sample}/fastp.html",
-        json_report="seq/fastp/{sample}/fastp.json",
-        txt_report="seq/fastp/{sample}/report.txt"
+        html_report="seq/fastp/{sample}/single/fastp.html",
+        json_report="seq/fastp/{sample}/single/fastp.json",
+        txt_report="seq/fastp/{sample}/single/report.txt"
     shell:
         """
         fastp -i {input.raw_reads} -o {output.filtered_reads} \
@@ -54,10 +35,10 @@ rule fastp:
 
 rule mash:
     output:
-        sketch="seq/mash/{sample}/combined-reads.fq.gz.msh",
-        mash_report="seq/mash/{sample}/combined-reads.report.tsv"
+        sketch="seq/mash/{sample}/single/combined-reads.fq.gz.msh",
+        mash_report="seq/mash/{sample}/single/combined-reads.report.tsv"
     input:
-        reads="seq/fastp/{sample}/combined-reads.fq.gz"
+        reads="seq/fastp/{sample}/single/combined-reads.fq.gz"
     shell:
         """
         mash sketch {input.reads} -o {output.sketch}
@@ -67,20 +48,20 @@ rule mash:
 
 rule downsample:
     output:
-        sub="seq/downsample/{sample}/combined-reads.fq.gz"
+        sub="seq/downsample/{sample}/single/combined-reads.fq.gz"
     input:
-        reads="seq/fastp/{sample}/combined-reads.fq.gz",
-        mash_report="seq/mash/{sample}/combined-reads.report.tsv"
+        reads="seq/fastp/{sample}/single/combined-reads.fq.gz",
+        mash_report="seq/mash/{sample}/single/combined-reads.report.tsv"
     params:
         coverage=config["coverage"],
         downsample=config["downsample"],
-        fastp_report="seq/fastp/{sample}/fastp.json",
-        genome_size=config["genomesize"],
+        fastp_report="seq/fastp/{sample}/single/fastp.json",
+        genome_size=config["genome_size"],
         seed=config["seed"],
-        outdir=lambda wildcards: f"seq/downsample/{wildcards.sample}"
+        outdir="seq/downsample/{sample}/single"
     run:
         if params.downsample == -1:
-            p = Path("seq/{wildcards.sample}/downsample")
+            p = Path("seq/{wildcards.sample}/{wildcards.readtype}/downsample")
             p.mkdir(parents=True, exist_ok=True)
             copyfile(input.reads, output.sub)
             return
@@ -113,30 +94,29 @@ rule downsample:
 
 rule spades:
     output:
-        contigs="analysis/{sample}/{label}/spades/{sample}_contigs.fasta"
+        contigs="analysis/{sample}/single/{label}/spades/contigs.fasta"
     input:
-        reads="seq/downsample/{sample}/combined-reads.fq.gz"
+        reads="seq/downsample/{sample}/single/combined-reads.fq.gz"
     threads: 128
     params:
-        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/spades",
-        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+        outdir="analysis/{sample}/single/{label}/spades",
+        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
         spades.py -s {input.reads} -t {threads} -o {params.outdir} {params.extra_args}
-        ln -s scaffolds.fasta {output.contigs}
         """
 
 
 rule megahit:
     output:
-        contigs="analysis/{sample}/{label}/megahit/{sample}_contigs.fasta"
+        contigs="analysis/{sample}/single/{label}/megahit/contigs.fasta"
     input:
-        reads="seq/downsample/{sample}/combined-reads.fq.gz"
+        reads="seq/downsample/{sample}/single/combined-reads.fq.gz"
     threads: 128
     params:
-        temp_dir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/megahit-temp",
-        actual_dir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/megahit",
-        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+        temp_dir="analysis/{sample}/single/{label}/megahit-temp",
+        actual_dir="analysis/{sample}/single/{label}/megahit",
+        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
         megahit -r {input.reads} -t {threads} -o {params.temp_dir} {params.extra_args}
@@ -148,13 +128,13 @@ rule megahit:
 
 rule unicycler:
     output:
-        contigs="analysis/{sample}/{label}/unicycler/{sample}_contigs.fasta"
+        contigs="analysis/{sample}/single/{label}/unicycler/contigs.fasta"
     input:
-        reads="seq/downsample/{sample}/combined-reads.fq.gz"
+        reads="seq/downsample/{sample}/single/combined-reads.fq.gz"
     threads: 128
     params:
-        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/unicycler",
-        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+        outdir="analysis/{sample}/single/{label}/unicycler",
+        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
         unicycler -s {input.reads} -t {threads} -o {params.outdir} {params.extra_args}

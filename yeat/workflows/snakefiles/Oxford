@@ -7,30 +7,11 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-module helper:
-    snakefile: "__init__.py"
-    config: config
-
-use rule * from helper
-
-
-rule all:
-    input:
-        helper.get_expected_files(nanopore=True)
-
-
-module shared_workflow:
-    snakefile: "Shared"
-    config: config
-
-use rule * from shared_workflow
-
-
 rule nanofilt:
     output:
-        filtered_reads="seq/nanofilt/{sample}/highQuality-reads.fq.gz"
+        filtered_reads="seq/nanofilt/{sample}/{readtype}/highQuality-reads.fq.gz"
     input:
-        raw_reads="seq/input/{sample}/combined-reads.fq.gz"
+        raw_reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
     threads: 128
     params:
         filter="-q 10"
@@ -42,14 +23,14 @@ rule nanofilt:
 
 rule nanoplot:
     output:
-        raw_report="seq/nanoplot/{sample}/raw_LengthvsQualityScatterPlot_dot.pdf",
-        filtered_report="seq/nanoplot/{sample}/filtered_LengthvsQualityScatterPlot_dot.pdf"
+        raw_report="seq/nanoplot/{sample}/{readtype}/raw_LengthvsQualityScatterPlot_dot.pdf",
+        filtered_report="seq/nanoplot/{sample}/{readtype}/filtered_LengthvsQualityScatterPlot_dot.pdf"
     input:
-        raw_reads="seq/input/{sample}/combined-reads.fq.gz",
-        filtered_reads="seq/nanofilt/{sample}/highQuality-reads.fq.gz"
+        raw_reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz",
+        filtered_reads="seq/nanofilt/{sample}/{readtype}/highQuality-reads.fq.gz"
     threads: 128
     params:
-        outdir="seq/nanoplot/{sample}"
+        outdir="seq/nanoplot/{sample}/{readtype}"
     shell:
         """
         NanoPlot -t {threads} --fastq {input.raw_reads} -o {params.outdir} --N50 -p raw_ --title "{wildcards.sample} Raw" -f pdf --plots dot
@@ -57,8 +38,7 @@ rule nanoplot:
         """
 
 
-def get_readtype_flag(sample):
-    readtype = config["sample_readtype"][sample]
+def get_readtype_flag(readtype):
     if readtype == "nano-raw":
         return "--nano-raw"
     elif readtype == "nano-corr":
@@ -69,14 +49,14 @@ def get_readtype_flag(sample):
 
 rule flye:
     output:
-        contigs="analysis/{sample}/{label}/flye/{sample}_contigs.fasta"
+        contigs="analysis/{sample}/{readtype,nano-raw|nano-corr|nano-hq}/{label}/flye/contigs.fasta"
     input:
-        reads="seq/nanofilt/{sample}/highQuality-reads.fq.gz"
+        reads="seq/nanofilt/{sample}/{readtype}/highQuality-reads.fq.gz"
     threads: 128
     params:
-        readtype_flag=lambda wildcards: get_readtype_flag(wildcards.sample),
-        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/flye",
-        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+        readtype_flag=lambda wildcards: get_readtype_flag(wildcards.readtype),
+        outdir="analysis/{sample}/{readtype}/{label}/flye",
+        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
         flye {params.readtype_flag} {input.reads} -t {threads} -o {params.outdir} {params.extra_args}
@@ -86,13 +66,13 @@ rule flye:
 
 rule canu:
     output:
-        contigs="analysis/{sample}/{label}/canu/{sample}_contigs.fasta"
+        contigs="analysis/{sample}/{readtype,nano-raw|nano-corr|nano-hq}/{label}/canu/contigs.fasta"
     input:
-        reads="seq/nanofilt/{sample}/highQuality-reads.fq.gz"
+        reads="seq/nanofilt/{sample}/{readtype}/highQuality-reads.fq.gz"
     threads: 128
     params:
-        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/canu",
-        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+        outdir="analysis/{sample}/{readtype}/{label}/canu",
+        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
         canu -nanopore {input.reads} maxThreads={threads} -p {wildcards.sample} -d {params.outdir} {params.extra_args} useGrid=false
@@ -102,13 +82,13 @@ rule canu:
 
 rule unicycler:
     output:
-        contigs="analysis/{sample}/{label}/unicycler/{sample}_contigs.fasta"
+        contigs="analysis/{sample}/{readtype,nano-raw|nano-corr|nano-hq}/{label}/unicycler/contigs.fasta"
     input:
-        reads="seq/nanofilt/{sample}/highQuality-reads.fq.gz"
+        reads="seq/nanofilt/{sample}/{readtype}/highQuality-reads.fq.gz"
     threads: 128
     params:
-        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/unicycler",
-        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+        outdir="analysis/{sample}/{readtype}/{label}/unicycler",
+        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
         unicycler -l {input.reads} -t {threads} -o {params.outdir} {params.extra_args}

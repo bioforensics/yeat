@@ -14,22 +14,15 @@ from random import randint
 from shutil import copyfile
 
 
-module shared_workflow:
-    snakefile: "Shared"
-    config: config
-
-use rule * from shared_workflow exclude copyinput, fastqc as other_*
-
-
 rule copyinput:
     output:
-        read1="seq/input/{sample}/{readtype}/r1_combined-reads.fq.gz",
-        read2="seq/input/{sample}/{readtype}/r2_combined-reads.fq.gz"
+        read1="seq/input/{sample}/paired/r1_combined-reads.fq.gz",
+        read2="seq/input/{sample}/paired/r2_combined-reads.fq.gz"
     input:
         r1s = lambda wildcards: [read[0] for read in config["samples"][wildcards.sample].data["paired"]],
         r2s = lambda wildcards: [read[1] for read in config["samples"][wildcards.sample].data["paired"]]
     params:
-        outdir="seq/input/{sample}/{readtype}"
+        outdir="seq/input/{sample}/paired"
     run:
         combine(input.r1s, "r1", params.outdir)
         combine(input.r2s, "r2", params.outdir)
@@ -48,14 +41,14 @@ def combine(reads, direction, outdir):
 
 rule fastqc:
     output:
-        out1="seq/fastqc/{sample}/{readtype}/r1_combined-reads_fastqc.html",
-        out2="seq/fastqc/{sample}/{readtype}/r2_combined-reads_fastqc.html"
+        out1="seq/fastqc/{sample}/paired/r1_combined-reads_fastqc.html",
+        out2="seq/fastqc/{sample}/paired/r2_combined-reads_fastqc.html"
     input:
-        read1="seq/input/{sample}/{readtype}/r1_combined-reads.fq.gz",
-        read2="seq/input/{sample}/{readtype}/r2_combined-reads.fq.gz"
+        read1="seq/input/{sample}/paired/r1_combined-reads.fq.gz",
+        read2="seq/input/{sample}/paired/r2_combined-reads.fq.gz"
     threads: 128
     params:
-        outdir="seq/fastqc/{sample}/{readtype}"
+        outdir="seq/fastqc/{sample}/paired"
     shell:
         """
         fastqc {input.read1} {input.read2} -t {threads} -o {params.outdir}
@@ -64,16 +57,16 @@ rule fastqc:
 
 rule fastp:
     output:
-        out1="seq/fastp/{sample}/{readtype}/{sample}.R1.fq.gz",
-        out2="seq/fastp/{sample}/{readtype}/{sample}.R2.fq.gz"
+        out1="seq/fastp/{sample}/paired/{sample}.R1.fq.gz",
+        out2="seq/fastp/{sample}/paired/{sample}.R2.fq.gz"
     input:
-        read1="seq/input/{sample}/{readtype}/r1_combined-reads.fq.gz",
-        read2="seq/input/{sample}/{readtype}/r2_combined-reads.fq.gz"
+        read1="seq/input/{sample}/paired/r1_combined-reads.fq.gz",
+        read2="seq/input/{sample}/paired/r2_combined-reads.fq.gz"
     params:
         length_required=config["length_required"],
-        html_report="seq/fastp/{sample}/{readtype}/fastp.html",
-        json_report="seq/fastp/{sample}/{readtype}/fastp.json",
-        txt_report="seq/fastp/{sample}/{readtype}/report.txt"
+        html_report="seq/fastp/{sample}/paired/fastp.html",
+        json_report="seq/fastp/{sample}/paired/fastp.json",
+        txt_report="seq/fastp/{sample}/paired/report.txt"
     shell:
         """
         fastp -i {input.read1} -I {input.read2} -o {output.out1} -O {output.out2} \
@@ -85,10 +78,10 @@ rule fastp:
 
 rule mash:
     output:
-        sketch="seq/mash/{sample}/{readtype}/{sample}.R1.fq.gz.msh",
-        mash_report="seq/mash/{sample}/{readtype}/{sample}.report.tsv"
+        sketch="seq/mash/{sample}/paired/{sample}.R1.fq.gz.msh",
+        mash_report="seq/mash/{sample}/paired/{sample}.report.tsv"
     input:
-        read1="seq/fastp/{sample}/{readtype}/{sample}.R1.fq.gz"
+        read1="seq/fastp/{sample}/paired/{sample}.R1.fq.gz"
     shell:
         """
         mash sketch {input.read1} -o {output.sketch}
@@ -98,22 +91,22 @@ rule mash:
 
 rule downsample:
     output:
-        sub1="seq/downsample/{sample}/{readtype}/{sample}.R1.fq.gz",
-        sub2="seq/downsample/{sample}/{readtype}/{sample}.R2.fq.gz"
+        sub1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
+        sub2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz"
     input:
-        read1="seq/fastp/{sample}/{readtype}/{sample}.R1.fq.gz",
-        read2="seq/fastp/{sample}/{readtype}/{sample}.R2.fq.gz",
-        mash_report="seq/mash/{sample}/{readtype}/{sample}.report.tsv"
+        read1="seq/fastp/{sample}/paired/{sample}.R1.fq.gz",
+        read2="seq/fastp/{sample}/paired/{sample}.R2.fq.gz",
+        mash_report="seq/mash/{sample}/paired/{sample}.report.tsv"
     params:
         coverage=config["coverage"],
         downsample=config["downsample"],
-        fastp_report="seq/fastp/{sample}/{readtype}/fastp.json",
+        fastp_report="seq/fastp/{sample}/paired/fastp.json",
         genome_size=config["genome_size"],
         seed=config["seed"],
-        outdir=lambda wildcards: f"seq/downsample/{wildcards.sample}/{wildcards.readtype}"
+        outdir="seq/downsample/{sample}/paired"
     run:
         if params.downsample == -1:
-            p = Path("seq/{wildcards.sample}/downsample")
+            p = Path("seq/{wildcards.sample}/{wildcards.readtype}/downsample")
             p.mkdir(parents=True, exist_ok=True)
             copyfile(input.read1, output.sub1)
             copyfile(input.read2, output.sub2)
@@ -148,32 +141,31 @@ rule downsample:
 
 rule spades:
     output:
-        contigs="analysis/{sample}/{label}/spades/{sample}_contigs.fasta"
+        contigs="analysis/{sample}/paired/{label}/spades/contigs.fasta"
     input:
-        read1="seq/downsample/{sample}/{sample}.R1.fq.gz",
-        read2="seq/downsample/{sample}/{sample}.R2.fq.gz"
+        read1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
+        read2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz"
     threads: 128
     params:
-        outdir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/spades",
+        outdir="analysis/{sample}/paired/{label}/spades",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
         spades.py -1 {input.read1} -2 {input.read2} -t {threads} -o {params.outdir} {params.extra_args}
-        ln -s contigs.fasta {output.contigs}
         """
 
 
 rule megahit:
     output:
-        contigs="analysis/{sample}/{label}/megahit/{sample}_contigs.fasta"
+        contigs="analysis/{sample}/paired/{label}/megahit/contigs.fasta"
     input:
-        read1="seq/downsample/{sample}/{sample}.R1.fq.gz",
-        read2="seq/downsample/{sample}/{sample}.R2.fq.gz"
+        read1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
+        read2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz"
     threads: 128
     params:
-        temp_dir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/megahit-temp",
-        actual_dir=lambda wildcards: f"analysis/{wildcards.sample}/{wildcards.label}/megahit",
-        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+        temp_dir="analysis/{sample}/paired/{label}/megahit-temp",
+        actual_dir="analysis/{sample}/paired/{label}/megahit",
+        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
         megahit -1 {input.read1} -2 {input.read2} -t {threads} -o {params.temp_dir} {params.extra_args}
@@ -185,13 +177,13 @@ rule megahit:
 
 rule unicycler:
     output:
-        contigs="analysis/{sample}/{readtype}/{label}/unicycler/{sample}_contigs.fasta"
+        contigs="analysis/{sample}/paired/{label}/unicycler/contigs.fasta"
     input:
-        read1="seq/downsample/{sample}/{readtype}/{sample}.R1.fq.gz",
-        read2="seq/downsample/{sample}/{readtype}/{sample}.R2.fq.gz"
+        read1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
+        read2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz"
     threads: 128
     params:
-        outdir="analysis/{sample}/{readtype}/{label}/unicycler",
+        outdir="analysis/{sample}/paired/{label}/unicycler",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """

@@ -12,14 +12,14 @@ from shutil import copyfile
 
 rule copyinput:
     output:
-        combined="seq/input/{sample}/combined-reads.fq.gz"
+        combined="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
     input:
-        reads=lambda wildcards: config["samples"][wildcards.sample]
+        reads=lambda wildcards: config["samples"][wildcards.sample].data[wildcards.readtype]
     params:
-        outdir=lambda wildcards: f"seq/input/{wildcards.sample}"
+        outdir="seq/input/{sample}/{readtype}"
     run:
         for i, inread in enumerate(input):
-            outread = f"seq/input/{wildcards.sample}/reads{i}.fq"
+            outread = f"seq/input/{wildcards.sample}/{wildcards.readtype}/reads{i}.fq"
             if inread.endswith(".gz"):
                 shell("gunzip -c {inread} > {outread}")
             else:
@@ -30,12 +30,12 @@ rule copyinput:
 
 rule fastqc:
     output:
-        report="seq/fastqc/{sample}/combined-reads_fastqc.html"
+        report="seq/fastqc/{sample}/{readtype}/combined-reads_fastqc.html"
     input:
-        reads="seq/input/{sample}/combined-reads.fq.gz"
+        reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
     threads: 128
     params:
-        outdir=lambda wildcards: f"seq/fastqc/{wildcards.sample}"
+        outdir="seq/fastqc/{sample}/{readtype}"
     shell:
         """
         fastqc {input.reads} -t {threads} -o {params.outdir}
@@ -44,13 +44,12 @@ rule fastqc:
 
 rule quast:
     output:
-        report="analysis/{sample}/{readtype}/{label}/{assembler}/quast/{sample}_report.html"
+        report="analysis/{sample}/{readtype}/{label}/{assembler}/quast/report.html"
     input:
-        contigs="analysis/{sample}/{readtype}/{label}/{assembler}/{sample}_contigs.fasta"
+        contigs="analysis/{sample}/{readtype}/{label}/{assembler}/contigs.fasta"
     params:
         outdir="analysis/{sample}/{readtype}/{label}/{assembler}/quast"
     shell:
         """
         quast.py {input.contigs} -o {params.outdir}
-        ln -s report.html {output.report}
         """

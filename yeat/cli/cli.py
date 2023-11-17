@@ -46,14 +46,6 @@ CONFIG_TEMPLATE = {
             ],
             "mode": "pacbio",
         },
-        "unicycler-default": {
-            "algorithm": "unicycler",
-            "extra_args": "",
-            "samples": [
-                "sample1",
-            ],
-            "mode": "hybrid",
-        },
     },
 }
 

@@ -29,29 +29,29 @@ rule spades:
         shell("touch {output.status}")
 
 
-def get_and_filter_contig_files(sample, readtype, label):
-    pattern = rf"analysis/{sample}/{readtype}/{label}/megahit/intermediate_contigs/k\d+.contigs.fa"
-    contigs = glob(rf"analysis/{sample}/{readtype}/{label}/megahit/intermediate_contigs/k*.contigs.fa")
-    return filter(re.compile(pattern).match, contigs)
-
-
 rule megahit:
     output:
         status="analysis/{sample}/{readtype}/{label}/megahit/bandage/.done"
     input:
-        gfa=lambda wildcards: get_and_filter_contig_files(wildcards.sample, wildcards.readtype, wildcards.label),
+        fa=lambda wildcards: get_and_filter_contig_files(wildcards.sample, wildcards.readtype, wildcards.label),
         report="analysis/{sample}/{readtype}/{label}/megahit/quast/report.html"
     params:
         intermediates_dir="analysis/{sample}/{readtype}/{label}/megahit/intermediate_contigs",
         outdir="analysis/{sample}/{readtype}/{label}/megahit/bandage"
     run:
-        for fa in input.gfa:
+        for fa in input.fa:
             kmer = re.findall(r'k\d+.contigs.fa', fa)[0].split(".")[0][1:]
             filename = Path(fa).stem
             fastg = f"{params.intermediates_dir}/{filename}.fastg"
             shell("megahit_toolkit contig2fastg {kmer} {fa} > {fastg}")
             shell("Bandage image {fastg} {params.outdir}/{filename}.jpg")
         shell("touch {output.status}")
+
+
+def get_and_filter_contig_files(sample, readtype, label):
+    pattern = rf"analysis/{sample}/{readtype}/{label}/megahit/intermediate_contigs/k\d+.contigs.fa"
+    contigs = glob(rf"analysis/{sample}/{readtype}/{label}/megahit/intermediate_contigs/k*.contigs.fa")
+    return filter(re.compile(pattern).match, contigs)
 
 
 rule unicycler:

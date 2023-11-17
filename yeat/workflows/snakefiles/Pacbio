@@ -46,9 +46,9 @@ rule canu:
         reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
     threads: 128
     params:
-        readtype_flag=lambda wildcards: get_readtype_flag(wildcards.sample, "canu"),
+        readtype_flag=lambda wildcards: get_readtype_flag(wildcards.readtype, "canu"),
         outdir="analysis/{sample}/{readtype}/{label}/canu",
-        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
         canu {params.readtype_flag} {input.reads} maxThreads={threads} -p {wildcards.sample} -d {params.outdir} {params.extra_args} useGrid=false
@@ -64,7 +64,7 @@ rule hifiasm:
     threads: 128
     params:
         prefix="analysis/{sample}/{readtype}/{label}/hifiasm/contigs",
-        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
         hifiasm -o {params.prefix} -t {threads} {params.extra_args} {input.reads}
@@ -81,7 +81,7 @@ rule hifiasm_meta:
     threads: 128
     params:
         prefix="analysis/{sample}/{readtype}/{label}/hifiasm-meta/contigs",
-        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
         hifiasm_meta -o {params.prefix} -t {threads} {params.extra_args} {input.reads}
@@ -98,7 +98,7 @@ rule unicycler:
     threads: 128
     params:
         outdir="analysis/{sample}/{readtype}/{label}/unicycler",
-        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
         unicycler -l {input.reads} -t {threads} -o {params.outdir} {params.extra_args}
@@ -116,7 +116,7 @@ rule metamdbg:
     threads: 128
     params:
         outdir="analysis/{sample}/{readtype}/{label}/metamdbg",
-        extra_args=lambda wildcards: config["extra_args"][wildcards.label]
+        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
         metaMDBG asm {params.outdir} {input.reads} -t {threads} {params.extra_args}

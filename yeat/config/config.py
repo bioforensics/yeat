@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import READ_TYPES, AssemblyConfigError
+from . import PACBIO_READS, OXFORD_READS, READ_TYPES, AssemblyConfigError
 from .assembly import Assembly
 from .sample import Sample
 
@@ -22,8 +22,7 @@ class AssemblyConfig:
         self.validate()
         self.threads = threads
         self.create_sample_and_assembly_objects()
-        # need to do another validation checking if the assembly object's mode has
-        # samples that have the correct reads in each of them.
+        self.validate_samples_to_assembly_modes()
 
     def validate(self):
         self.check_required_keys(self.data.keys(), BASE_KEYS)
@@ -54,3 +53,18 @@ class AssemblyConfig:
             self.samples[key] = Sample(key, value)
         for key, value in self.data["assemblies"].items():
             self.assemblies[key] = Assembly(key, value, self.threads)
+
+    def validate_samples_to_assembly_modes(self):
+        for assembly_label, assembly_obj in self.assemblies.items():
+            check = False
+            for sample_label in assembly_obj.samples:
+                sample_obj = self.samples[sample_label]
+                if assembly_obj.mode in ["paired", "single"]:
+                    check = True if assembly_obj.mode in sample_obj.data else False
+                elif assembly_obj.mode == "pacbio":
+                    check = True if set(PACBIO_READS).intersection(sample_obj.data) else False
+                elif assembly_obj.mode == "oxford":
+                    check = True if set(OXFORD_READS).intersection(sample_obj.data) else False
+            if check == False:
+                message = f"No samples can interact with assembly mode '{assembly_obj.mode}' for '{assembly_label}'"
+                raise AssemblyConfigError(message)

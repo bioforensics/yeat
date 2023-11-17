@@ -7,6 +7,8 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+import subprocess
+import warnings
 from yeat.config.config import AssemblyConfig
 
 
@@ -16,23 +18,43 @@ config["assemblies"] = cfg.assemblies
 
 
 def get_expected_files():
+    run_bandage = check_bandage()
     inputlist = []
     for assembly_label, assembly_obj in config["assemblies"].items():
         for sample_label in assembly_obj.samples:
             sample_obj = config["samples"][sample_label]
+            if assembly_obj.mode in ["paired", "single"]:
+                inputlist.append(get_file(sample_label, sample_obj.short_readtype, assembly_label, assembly_obj.algorithm, run_bandage))
+            elif assembly_obj.mode in ["pacbio", "oxford"]:
+                inputlist.append(get_file(sample_label, sample_obj.long_readtype, assembly_label, assembly_obj.algorithm, run_bandage))
             if assembly_obj.mode == "paired":
                 inputlist += expand("seq/fastqc/{sample}/paired/{direction}_combined-reads_fastqc.html", sample=[sample_label], direction=["r1", "r2"])
-                inputlist.append(f"analysis/{sample_label}/paired/{assembly_label}/{assembly_obj.algorithm}/quast/report.html")
-            elif assembly_obj.mode == "single":
-                inputlist.append(f"seq/fastqc/{sample_label}/single/combined-reads_fastqc.html")
-                inputlist.append(f"analysis/{sample_label}/single/{assembly_label}/{assembly_obj.algorithm}/quast/report.html")
-            elif assembly_obj.mode == "pacbio":
-                inputlist.append(f"seq/fastqc/{sample_label}/{sample_obj.long_readtype}/combined-reads_fastqc.html")
-                inputlist.append(f"analysis/{sample_label}/{sample_obj.long_readtype}/{assembly_label}/{assembly_obj.algorithm}/quast/report.html")
             elif assembly_obj.mode == "oxford":
                 inputlist += expand("seq/nanoplot/{sample}/{readtype}/{quality}_LengthvsQualityScatterPlot_dot.pdf", sample=[sample_label], readtype=[sample_obj.long_readtype], quality=["raw", "filtered"])
-                inputlist.append(f"analysis/{sample_label}/{sample_obj.long_readtype}/{assembly_label}/{assembly_obj.algorithm}/quast/report.html")
+            else:
+                inputlist.append(f"seq/fastqc/{sample_label}/single/combined-reads_fastqc.html")
     return inputlist
+
+
+def check_bandage():
+    try:
+        completed_process = subprocess.run(["Bandage", "--help"], capture_output=True, text=True)
+    except Exception as exception:
+        print(f"{type(exception).__name__}: {exception}")
+        warnings.warn("Unable to run Bandage; skipping Bandage")
+        return False
+    if completed_process.returncode == 1:
+        print(completed_process.stderr)
+        warnings.warn("Unable to run Bandage; skipping Bandage")
+        return False
+    return True
+
+
+def get_file(sample, readtype, assembly, algorithm, run_bandage):
+    if run_bandage:
+        return f"analysis/{sample}/{readtype}/{assembly}/{algorithm}/bandage/.done"
+    else:
+        return f"analysis/{sample}/{readtype}/{assembly}/{algorithm}/quast/report.html"
 
 
 rule all:
@@ -73,3 +95,10 @@ module oxford_workflow:
     config: config
 
 use rule * from oxford_workflow as oxford_*
+
+
+module bandage_workflow:
+    snakefile: "Bandage"
+    config: config
+
+use rule * from bandage_workflow as bandage_*

@@ -13,8 +13,8 @@ from pathlib import Path
 from snakemake import snakemake
 
 
-def run_workflow(args):
-    snakefile = files("yeat") / "workflows" / "snakefiles" / "Workflow"
+def run_workflows(args):
+    snakefile = files("yeat") / "workflows" / "snakefiles" / "Workflows"
     config = vars(args)
     config["data"] = resolve_paths(config["config"])
     success = snakemake(

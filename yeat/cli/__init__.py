@@ -14,4 +14,4 @@ from yeat import workflows
 def main(args=None):
     if args is None:
         args = cli.get_parser().parse_args()
-    workflows.run_workflow(args)
+    workflows.run_workflows(args)

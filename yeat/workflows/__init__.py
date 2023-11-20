@@ -32,9 +32,12 @@ def run_workflows(args):
 def resolve_paths(infile):
     data = json.load(open(infile))
     for label, sample in data["samples"].items():
+        resolved_paths = []
         for readtype, reads in sample.items():
-            if readtype == "paired":
-                sample[readtype] = [[str(Path(read).resolve()) for read in pair] for pair in reads]
-            else:
-                sample[readtype] = [str(Path(read).resolve()) for read in reads]
+            for read in reads:
+                if isinstance(read, list):
+                    resolved_paths.append([str(Path(direction).resolve()) for direction in read])
+                else:
+                    resolved_paths.append(str(Path(read).resolve()))
+        sample[readtype] = resolved_paths
     return data

@@ -54,5 +54,5 @@ class Assembly:
             message = f"Missing required extra argument 'genomeSize' for '{self.label}'"
             raise AssemblyConfigError(message)
         if self.threads < 4:
-            message = f"Canu requires at least 4 avaliable cores; increase yeat's '-t' or '--threads' to 4 or more"
+            message = f"Canu requires at least 4 avaliable cores; increase '-t' or '--threads' to 4 or more"
             raise AssemblyConfigError(message)

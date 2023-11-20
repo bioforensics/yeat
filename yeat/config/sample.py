@@ -43,15 +43,21 @@ class Sample:
     def check_input_reads(self):
         self.all_reads = []
         for readtype, reads in self.data.items():
+            if len(reads) == 0:
+                print("no input reads!")
+                assert 0
             if readtype == "paired":
                 for pair in reads:
                     self.check_paired_reads(pair)
                     self.check_reads(pair)
             else:
                 self.check_reads(reads)
-            self.all_reads += reads
 
     def check_paired_reads(self, pair):
+        if not isinstance(pair, list):
+            print("not list of lists!")
+            # data entry is not a list!
+            assert 0
         observed = len(pair)
         expected = 2
         if observed == 0:
@@ -72,3 +78,4 @@ class Sample:
             if read in self.all_reads:
                 message = f"Found duplicate read sample '{read}' for '{self.label}'"
                 raise AssemblyConfigError(message)
+            self.all_reads.append(read)

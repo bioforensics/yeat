@@ -10,6 +10,7 @@
 from glob import glob
 from pathlib import Path
 import re
+from yeat.workflows.snakefiles import get_and_filter_contig_files
 
 
 rule spades:
@@ -46,12 +47,6 @@ rule megahit:
             shell("megahit_toolkit contig2fastg {kmer} {fa} > {fastg}")
             shell("Bandage image {fastg} {params.outdir}/{filename}.jpg")
         shell("touch {output.status}")
-
-
-def get_and_filter_contig_files(sample, readtype, label):
-    pattern = rf"analysis/{sample}/{readtype}/{label}/megahit/intermediate_contigs/k\d+.contigs.fa"
-    contigs = glob(rf"analysis/{sample}/{readtype}/{label}/megahit/intermediate_contigs/k*.contigs.fa")
-    return filter(re.compile(pattern).match, contigs)
 
 
 rule unicycler:

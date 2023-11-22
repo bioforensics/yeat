@@ -12,6 +12,7 @@ import pandas as pd
 from pathlib import Path
 from random import randint
 from shutil import copyfile
+from yeat.workflows.snakefiles import combine
 
 
 rule copyinput:
@@ -26,17 +27,6 @@ rule copyinput:
     run:
         combine(input.r1s, "r1", params.outdir)
         combine(input.r2s, "r2", params.outdir)
-
-
-def combine(reads, direction, outdir):
-    for i, inread in enumerate(reads):
-        outread = f"{outdir}/{direction}_reads{i}.fq"
-        if inread.endswith(".gz"):
-            shell("gunzip -c {inread} > {outread}")
-        else:
-            copyfile(inread, outread)
-    shell(f"cat {outdir}/{direction}_reads*.fq > {outdir}/{direction}_combined-reads.fq")
-    shell(f"gzip {outdir}/{direction}_combined-reads.fq")
 
 
 rule fastqc:

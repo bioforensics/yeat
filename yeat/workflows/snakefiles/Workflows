@@ -7,9 +7,8 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-import subprocess
-import warnings
 from yeat.config.config import AssemblyConfig
+from yeat.workflows.snakefiles import get_expected_files
 
 
 cfg = AssemblyConfig(config["data"], config["threads"])
@@ -17,49 +16,9 @@ config["samples"] = cfg.samples
 config["assemblies"] = cfg.assemblies
 
 
-def get_expected_files():
-    run_bandage = check_bandage()
-    inputlist = []
-    for assembly_label, assembly_obj in config["assemblies"].items():
-        for sample_label in assembly_obj.samples:
-            sample_obj = config["samples"][sample_label]
-            if assembly_obj.mode in ["paired", "single"]:
-                inputlist.append(get_file(sample_label, sample_obj.short_readtype, assembly_label, assembly_obj.algorithm, run_bandage))
-            elif assembly_obj.mode in ["pacbio", "oxford"]:
-                inputlist.append(get_file(sample_label, sample_obj.long_readtype, assembly_label, assembly_obj.algorithm, run_bandage))
-            if assembly_obj.mode == "paired":
-                inputlist += expand("seq/fastqc/{sample}/paired/{direction}_combined-reads_fastqc.html", sample=[sample_label], direction=["r1", "r2"])
-            elif assembly_obj.mode == "oxford":
-                inputlist += expand("seq/nanoplot/{sample}/{readtype}/{quality}_LengthvsQualityScatterPlot_dot.pdf", sample=[sample_label], readtype=[sample_obj.long_readtype], quality=["raw", "filtered"])
-            else:
-                inputlist.append(f"seq/fastqc/{sample_label}/single/combined-reads_fastqc.html")
-    return inputlist
-
-
-def check_bandage():
-    try:
-        completed_process = subprocess.run(["Bandage", "--help"], capture_output=True, text=True)
-    except Exception as exception:
-        print(f"{type(exception).__name__}: {exception}")
-        warnings.warn("Unable to run Bandage; skipping Bandage")
-        return False
-    if completed_process.returncode == 1:
-        print(completed_process.stderr)
-        warnings.warn("Unable to run Bandage; skipping Bandage")
-        return False
-    return True
-
-
-def get_file(sample, readtype, assembly, algorithm, run_bandage):
-    if run_bandage:
-        return f"analysis/{sample}/{readtype}/{assembly}/{algorithm}/bandage/.done"
-    else:
-        return f"analysis/{sample}/{readtype}/{assembly}/{algorithm}/quast/report.html"
-
-
 rule all:
     input:
-        get_expected_files()
+        get_expected_files(config)
 
 
 module shared_workflow:

@@ -7,19 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-def get_readtype_flag(readtype, algorithm):
-    if algorithm == "flye":
-        if readtype == "pacbio-raw":
-            return "--pacbio-raw"
-        elif readtype == "pacbio-corr":
-            return "--pacbio-corr"
-        elif readtype == "pacbio-hifi":
-            return "--pacbio-hifi"
-    elif algorithm == "canu":
-        if readtype in ["pacbio-raw", "pacbio-corr"]:
-            return "-pacbio"
-        elif readtype == "pacbio-hifi":
-            return "-pacbio-hifi"
+from yeat.workflows.snakefiles import get_canu_readtype_flag
 
 
 rule flye:
@@ -29,12 +17,11 @@ rule flye:
         reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
     threads: 128
     params:
-        readtype_flag=lambda wildcards: get_readtype_flag(wildcards.readtype, "flye"),
         outdir="analysis/{sample}/{readtype}/{label}/flye",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
-        flye {params.readtype_flag} {input.reads} -t {threads} -o {params.outdir} {params.extra_args}
+        flye --{wildcards.readtype} {input.reads} -t {threads} -o {params.outdir} {params.extra_args}
         ln -s assembly.fasta {output.contigs}
         """
 
@@ -46,7 +33,7 @@ rule canu:
         reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
     threads: 128
     params:
-        readtype_flag=lambda wildcards: get_readtype_flag(wildcards.readtype, "canu"),
+        readtype_flag=lambda wildcards: get_canu_readtype_flag(wildcards.readtype),
         outdir="analysis/{sample}/{readtype}/{label}/canu",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:

@@ -19,6 +19,11 @@ FINAL_FILES = {
     "spades": "contigs.fasta",
     "megahit": "final.contigs.fa",
     "unicycler": "assembly.fasta",
+    "flye": "assembly.fasta",
+    "canu": "*.contigs.fasta",
+    "hifiasm": "*.bp.p_ctg.fa",
+    "hifiasm_meta": "*.p_ctg.fa",
+    "metamdbg": "contigs.fasta.gz",
 }
 
 
@@ -64,7 +69,7 @@ def get_expected(algorithm, wd, data):
                     / next(iter(short_readtype))
                     / assembly_label
                     / assembly_obj["algorithm"]
-                    / FINAL_FILES[algorithm]
+                    / FINAL_FILES[algorithm].replace("*", sample_label)
                 )
             elif assembly_obj["mode"] in ["pacbio", "oxford"]:
                 expected.append(
@@ -73,7 +78,7 @@ def get_expected(algorithm, wd, data):
                     / next(iter(long_readtype))
                     / assembly_label
                     / assembly_obj["algorithm"]
-                    / FINAL_FILES[algorithm]
+                    / FINAL_FILES[algorithm].replace("*", sample_label)
                 )
     return expected
 

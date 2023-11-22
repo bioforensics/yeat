@@ -7,36 +7,25 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from pathlib import Path
 import pytest
-from yeat import cli
-from yeat.tests import data_file, get_core_count, write_config, files_exist
+from yeat.tests import *
 
 
 @pytest.mark.short
 def test_oxford_nanopore_assemblers_dry_run(tmp_path):
     wd = str(tmp_path)
     arglist = ["-o", wd, "-n", "-t", "4", data_file("configs/ont.cfg")]
-    args = cli.get_parser().parse_args(arglist)
-    cli.main(args)
+    run_yeat(arglist)
 
 
 @pytest.mark.long
 @pytest.mark.nano
-@pytest.mark.parametrize(
-    "labels,expected",
-    [
-        (["flye-default"], "assembly.fasta"),
-        (["canu-default"], "Ecoli_K12_MG1655_R10.3_HAC.contigs.fasta"),
-        (["unicycler-default"], "assembly.fasta"),
-    ],
-)
-def test_oxford_nanopore_read_assemblers(labels, expected, capsys, tmp_path):
+@pytest.mark.parametrize("algorithm", ["flye", "canu", "unicycler"])
+def test_oxford_nanopore_read_assemblers(algorithm, capsys, tmp_path):
     wd = str(tmp_path)
-    assemblers = write_config(labels, wd, "ont.cfg")
     cores = str(get_core_count())
-    cfg = str(Path(wd) / "ont.cfg")
-    arglist = ["-o", wd, "-t", cores, cfg]
-    args = cli.get_parser().parse_args(arglist)
-    cli.main(args)
-    files_exist(wd, assemblers, expected)
+    config, data = write_config(algorithm, wd, "ont.cfg")
+    arglist = ["-o", wd, "-t", cores, config]
+    run_yeat(arglist)
+    expected = get_expected(algorithm, wd, data)
+    files_exist(expected)

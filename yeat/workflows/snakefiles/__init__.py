@@ -50,10 +50,12 @@ def get_expected_files(config):
                 inputlist.append(get_file(sample_label, sample_obj.long_readtype, assembly_label, assembly_obj.algorithm, run_bandage))
             if assembly_obj.mode == "paired":
                 inputlist += [f"seq/fastqc/{sample_label}/paired/{direction}_combined-reads_fastqc.html" for direction in ["r1", "r2"]]
+            elif assembly_obj.mode == "single":
+                inputlist.append(f"seq/fastqc/{sample_label}/single/combined-reads_fastqc.html")
+            elif assembly_obj.mode == "pacbio":
+                inputlist.append(f"seq/fastqc/{sample_label}/{sample_obj.long_readtype}/combined-reads_fastqc.html")
             elif assembly_obj.mode == "oxford":
                 inputlist += [f"seq/nanoplot/{sample_label}/{sample_obj.long_readtype}/{quality}_LengthvsQualityScatterPlot_dot.pdf" for quality in ["raw", "filtered"]]
-            else:
-                inputlist.append(f"seq/fastqc/{sample_label}/single/combined-reads_fastqc.html")
     return inputlist
 
 

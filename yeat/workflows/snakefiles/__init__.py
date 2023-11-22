@@ -45,8 +45,7 @@ def get_genome_size(genome_size, mash_report):
     if genome_size == 0:
         df = pd.read_csv(mash_report, sep="\t")
         return df["Length"].iloc[0]
-    else:
-        return genome_size
+    return genome_size
 
 
 def get_avg_read_length(fastp_report):
@@ -60,15 +59,13 @@ def get_avg_read_length(fastp_report):
 def get_down(downsample, genome_size, coverage, avg_read_length):
     if downsample == 0:
         return int((genome_size * coverage) / (2 * avg_read_length))
-    else:
-        return downsample
+    return downsample
 
 
 def get_seed(seed):
     if seed == "None":
         return randint(1, 2**16-1)
-    else:
-        return seed
+    return seed
 
 
 def print_downsample_values(genome_size, avg_read_length, coverage, down, seed):
@@ -117,5 +114,4 @@ def check_bandage():
 def get_file(run_bandage, sample, readtype, assembly, algorithm):
     if run_bandage:
         return f"analysis/{sample}/{readtype}/{assembly}/{algorithm}/bandage/.done"
-    else:
-        return f"analysis/{sample}/{readtype}/{assembly}/{algorithm}/quast/report.html"
+    return f"analysis/{sample}/{readtype}/{assembly}/{algorithm}/quast/report.html"

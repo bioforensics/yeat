@@ -93,8 +93,6 @@ rule downsample:
         outdir="seq/downsample/{sample}/paired"
     run:
         if params.downsample == -1:
-            p = Path("seq/{wildcards.sample}/{wildcards.readtype}/downsample")
-            p.mkdir(parents=True, exist_ok=True)
             copyfile(input.read1, output.sub1)
             copyfile(input.read2, output.sub2)
             return

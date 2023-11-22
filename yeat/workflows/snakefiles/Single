@@ -59,8 +59,6 @@ rule downsample:
         outdir="seq/downsample/{sample}/single"
     run:
         if params.downsample == -1:
-            p = Path("seq/{wildcards.sample}/{wildcards.readtype}/downsample")
-            p.mkdir(parents=True, exist_ok=True)
             copyfile(input.reads, output.sub)
             return
         genome_size = get_genome_size(params.genome_size, input.mash_report)

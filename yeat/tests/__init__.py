@@ -21,7 +21,7 @@ FINAL_FILES = {
     "unicycler": "assembly.fasta",
     "flye": "assembly.fasta",
     "canu": "*.contigs.fasta",
-    "hifiasm": "*.bp.p_ctg.fa",
+    "hifiasm": "contigs.bp.p_ctg.gfa",
     "hifiasm_meta": "*.p_ctg.fa",
     "metamdbg": "contigs.fasta.gz",
 }

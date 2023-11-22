@@ -7,12 +7,9 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-import json
-import pandas as pd
 from pathlib import Path
-from random import randint
 from shutil import copyfile
-from yeat.workflows.snakefiles import combine
+from yeat.workflows.snakefiles import *
 
 
 rule copyinput:
@@ -101,29 +98,11 @@ rule downsample:
             copyfile(input.read1, output.sub1)
             copyfile(input.read2, output.sub2)
             return
-        if params.genome_size == 0:
-            df = pd.read_csv(input.mash_report, sep="\t")
-            genome_size = df["Length"].iloc[0]
-        else:
-            genome_size = params.genome_size
-        with open(params.fastp_report, "r") as fh:
-            qcdata = json.load(fh)
-        base_count = qcdata["summary"]["after_filtering"]["total_bases"]
-        read_count = qcdata["summary"]["after_filtering"]["total_reads"]
-        avg_read_length = base_count / read_count
-        if params.downsample == 0:
-            down = int((genome_size * params.coverage) / (2 * avg_read_length))
-        else:
-            down = params.downsample
-        if params.seed == "None":
-            seed = randint(1, 2**16-1)
-        else:
-            seed = params.seed
-        print(f"[yeat] genome size: {genome_size}")
-        print(f"[yeat] average read length: {avg_read_length}")
-        print(f"[yeat] target depth of coverage: {params.coverage}x")
-        print(f"[yeat] number of reads to sample: {down}")
-        print(f"[yeat] random seed for sampling: {seed}")
+        genome_size = get_genome_size(params.genome_size, input.mash_report)
+        avg_read_length = get_avg_read_length(params.fastp_report)
+        down = get_down(params.downsample, genome_size, params.coverage, avg_read_length)
+        seed = get_seed(params.seed)
+        print_downsample_values(genome_size, avg_read_length, params.coverage, down, seed)
         shell("seqtk sample -s {seed} {input.read1} {down} > {params.outdir}/{wildcards.sample}.R1.fq")
         shell("seqtk sample -s {seed} {input.read2} {down} > {params.outdir}/{wildcards.sample}.R2.fq")
         shell("gzip -f {params.outdir}/*")

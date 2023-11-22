@@ -8,6 +8,9 @@
 # -------------------------------------------------------------------------------------------------
 
 from glob import glob
+import json
+import pandas as pd
+from random import randint
 import re
 import shutil
 import subprocess
@@ -38,6 +41,44 @@ def combine(reads, direction, outdir):
     subprocess.run(f"gzip {outdir}/{direction}_combined-reads.fq", shell=True)
 
 
+def get_genome_size(genome_size, mash_report):
+    if genome_size == 0:
+        df = pd.read_csv(mash_report, sep="\t")
+        return df["Length"].iloc[0]
+    else:
+        return genome_size
+
+
+def get_avg_read_length(fastp_report):
+    with open(fastp_report, "r") as fh:
+        qcdata = json.load(fh)
+    base_count = qcdata["summary"]["after_filtering"]["total_bases"]
+    read_count = qcdata["summary"]["after_filtering"]["total_reads"]
+    return base_count / read_count
+
+
+def get_down(downsample, genome_size, coverage, avg_read_length):
+    if downsample == 0:
+        return int((genome_size * coverage) / (2 * avg_read_length))
+    else:
+        return downsample
+
+
+def get_seed(seed):
+    if seed == "None":
+        return randint(1, 2**16-1)
+    else:
+        return seed
+
+
+def print_downsample_values(genome_size, avg_read_length, coverage, down, seed):
+    print(f"[yeat] genome size: {genome_size}")
+    print(f"[yeat] average read length: {avg_read_length}")
+    print(f"[yeat] target depth of coverage: {coverage}x")
+    print(f"[yeat] number of reads to sample: {down}")
+    print(f"[yeat] random seed for sampling: {seed}")
+
+
 def get_expected_files(config):
     run_bandage = check_bandage()
     inputlist = []
@@ -45,9 +86,9 @@ def get_expected_files(config):
         for sample_label in assembly_obj.samples:
             sample_obj = config["samples"][sample_label]
             if assembly_obj.mode in ["paired", "single"]:
-                inputlist.append(get_file(sample_label, sample_obj.short_readtype, assembly_label, assembly_obj.algorithm, run_bandage))
+                inputlist.append(get_file(run_bandage, sample_label, sample_obj.short_readtype, assembly_label, assembly_obj.algorithm))
             elif assembly_obj.mode in ["pacbio", "oxford"]:
-                inputlist.append(get_file(sample_label, sample_obj.long_readtype, assembly_label, assembly_obj.algorithm, run_bandage))
+                inputlist.append(get_file(run_bandage, sample_label, sample_obj.long_readtype, assembly_label, assembly_obj.algorithm))
             if assembly_obj.mode == "paired":
                 inputlist += [f"seq/fastqc/{sample_label}/paired/{direction}_combined-reads_fastqc.html" for direction in ["r1", "r2"]]
             elif assembly_obj.mode == "single":
@@ -69,12 +110,11 @@ def check_bandage():
     if completed_process.returncode == 1:
         print(completed_process.stderr)
         warnings.warn("Unable to run Bandage; skipping Bandage")
-        print("here")
         return False
     return True
 
 
-def get_file(sample, readtype, assembly, algorithm, run_bandage):
+def get_file(run_bandage, sample, readtype, assembly, algorithm):
     if run_bandage:
         return f"analysis/{sample}/{readtype}/{assembly}/{algorithm}/bandage/.done"
     else:

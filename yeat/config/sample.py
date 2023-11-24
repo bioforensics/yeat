@@ -44,8 +44,8 @@ class Sample:
         self.all_reads = []
         for readtype, reads in self.data.items():
             if len(reads) == 0:
-                print("no input reads!")
-                assert 0
+                message = f"Missing input reads for '{self.label}'"
+                raise AssemblyConfigError(message)
             if readtype == "paired":
                 for pair in reads:
                     self.check_paired_reads(pair)
@@ -55,9 +55,8 @@ class Sample:
 
     def check_paired_reads(self, pair):
         if not isinstance(pair, list):
-            print("not list of lists!")
-            # data entry is not a list!
-            assert 0
+            message = f"Input read is not a list '{pair}' for '{self.label}'"
+            raise AssemblyConfigError(message)
         observed = len(pair)
         expected = 2
         if observed == 0:
@@ -72,6 +71,9 @@ class Sample:
 
     def check_reads(self, reads):
         for read in reads:
+            if not isinstance(read, str):
+                message = f"Input read is not a string '{read}' for '{self.label}'"
+                raise AssemblyConfigError(message)
             if not Path(read).is_file():
                 message = f"No such file '{read}' for '{self.label}'"
                 raise FileNotFoundError(message)

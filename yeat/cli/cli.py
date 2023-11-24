@@ -22,29 +22,35 @@ CONFIG_TEMPLATE = {
                 [
                     "yeat/tests/data/short_reads_1.fastq.gz",
                     "yeat/tests/data/short_reads_2.fastq.gz",
-                ],
-            ],
-            "pacbio-corr": [
-                "yeat/tests/data/long_reads_high_depth.fastq.gz",
-            ],
+                ]
+            ]
         },
+        "sample2": {
+            "paired": [
+                ["yeat/tests/data/Animal_289_R1.fq.gz", "yeat/tests/data/Animal_289_R2.fq.gz"]
+            ]
+        },
+        "sample3": {"pacbio-hifi": ["yeat/tests/data/ecoli.fastq.gz"]},
+        "sample4": {"nano-hq": ["yeat/tests/data/ecolk12mg1655_R10_3_guppy_345_HAC.fastq.gz"]},
     },
     "assemblies": {
         "spades-default": {
             "algorithm": "spades",
             "extra_args": "",
-            "samples": [
-                "sample1",
-            ],
+            "samples": ["sample1", "sample2"],
             "mode": "paired",
         },
-        "flye-default": {
+        "hicanu": {
+            "algorithm": "canu",
+            "extra_args": "genomeSize=4.8m",
+            "samples": ["sample3"],
+            "mode": "pacbio",
+        },
+        "flye_ONT": {
             "algorithm": "flye",
             "extra_args": "",
-            "samples": [
-                "sample1",
-            ],
-            "mode": "pacbio",
+            "samples": ["sample4"],
+            "mode": "oxford",
         },
     },
 }

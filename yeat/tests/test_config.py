@@ -46,9 +46,9 @@ def test_linux_only_algorithm():
 
 
 def test_valid_config():
-    data = json.load(open(data_file("configs/paired.cfg")))
-    config = AssemblyConfig(data, 1)
-    assert len(config.samples) == 2
+    data = json.load(open(data_file("configs/example.cfg")))
+    config = AssemblyConfig(data, 4)
+    assert len(config.samples) == 4
     assert len(config.assemblies) == 3
 
 

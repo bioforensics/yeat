@@ -97,11 +97,11 @@ def test_sample_with_duplicate_reads():
     ],
 )
 def test_check_canu_required_params_errors(extra_args, cores, expected):
-    assembler = {
+    data = {
         "algorithm": "canu",
         "extra_args": extra_args,
         "samples": ["sample1"],
         "mode": "pacbio",
     }
     with pytest.raises(ValueError, match=expected):
-        Assembly("label1", assembler, cores)
+        Assembly("label1", data, cores)

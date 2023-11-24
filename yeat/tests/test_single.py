@@ -20,11 +20,11 @@ def test_single_end_assemblers_dry_run(tmp_path):
 
 @pytest.mark.long
 @pytest.mark.illumina
-@pytest.mark.parametrize("algorithm", [("spades"), ("megahit"), ("unicycler")])
+@pytest.mark.parametrize("algorithm", ["spades", "megahit", "unicycler"])
 def test_single_end_assemblers(algorithm, capsys, tmp_path):
     wd = str(tmp_path)
-    config, data = write_config(algorithm, wd, "single.cfg")
+    config = write_config(algorithm, wd, "single.cfg")
     arglist = ["-o", wd, config]
     run_yeat(arglist)
-    expected = get_expected(algorithm, wd, data)
+    expected = get_expected(algorithm, wd, config)
     files_exist(expected)

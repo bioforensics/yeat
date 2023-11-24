@@ -28,38 +28,33 @@ def test_paired_end_assemblers_dry_run(tmp_path):
 @pytest.mark.parametrize("algorithm", ["spades", "megahit", "unicycler"])
 def test_paired_end_assemblers(algorithm, capsys, tmp_path):
     wd = str(tmp_path)
-    config, data = write_config(algorithm, wd, "paired.cfg")
+    config = write_config(algorithm, wd, "paired.cfg")
     arglist = ["-o", wd, config]
     run_yeat(arglist)
-    expected = get_expected(algorithm, wd, data)
+    expected = get_expected(algorithm, wd, config)
     files_exist(expected)
 
 
 @pytest.mark.long
 @pytest.mark.illumina
-def test_multiple_paired_end_assemblers(capsys, tmp_path):
+def test_mutiple_samples_in_assembly(capsys, tmp_path):
     wd = str(tmp_path)
-    arglist = ["-o", wd, data_file(f"configs/paired.cfg")]
+    config = data_file("configs/two_samples.cfg")
+    arglist = ["-o", wd, config]
     run_yeat(arglist)
-    outdirs = {
-        "sample1": Path(wd).resolve() / "analysis" / "sample1" / "paired",
-        "sample2": Path(wd).resolve() / "analysis" / "sample2" / "paired",
-    }
-    for sample, outdir in outdirs.items():
-        assert (outdir / "spades-default" / "spades" / "contigs.fasta").exists()
-        assert (outdir / "megahit-default" / "megahit" / "final.contigs.fa").exists()
-        assert (outdir / "unicycler-default" / "unicycler" / "assembly.fasta").exists()
+    expected = get_expected("spades", wd, config)
+    files_exist(expected)
 
 
 @pytest.mark.long
 @pytest.mark.illumina
-def test_multiple_spades(capsys, tmp_path):
+def test_multiple_spades_in_config(capsys, tmp_path):
     wd = str(tmp_path)
-    arglist = ["-o", wd, data_file(f"configs/two_spades.cfg")]
+    config = data_file("configs/two_spades.cfg")
+    arglist = ["-o", wd, config]
     run_yeat(arglist)
-    paired_dir = Path(wd).resolve() / "analysis" / "sample1" / "paired"
-    assert (paired_dir / "spades-default" / "spades" / "contigs.fasta").exists()
-    assert (paired_dir / "spades-meta" / "spades" / "contigs.fasta").exists()
+    expected = get_expected("spades", wd, config)
+    files_exist(expected)
 
 
 @pytest.mark.long
@@ -74,8 +69,9 @@ def test_custom_downsample_input(
     wd = str(tmp_path)
     arglist = ["-o", wd, "-d", downsample, "--seed", "0", data_file("configs/megahit.cfg")]
     run_yeat(arglist)
-    paired_dir = Path(wd).resolve() / "analysis" / "sample1" / "paired"
-    quast_report = paired_dir / "megahit-default" / "megahit" / "quast" / "report.tsv"
+    sample_dir = Path(wd).resolve() / "analysis" / "Shigella_sonnei_53G"
+    megahit_dir = sample_dir / "paired" / "megahit-default" / "megahit"
+    quast_report = megahit_dir / "quast" / "report.tsv"
     df = pd.read_csv(quast_report, sep="\t")
     assert df.iloc[12]["contigs"] == num_contigs
     assert df.iloc[13]["contigs"] == largest_contig
@@ -89,8 +85,9 @@ def test_custom_coverage_input(coverage, capsys, tmp_path):
     wd = str(tmp_path)
     arglist = ["-o", wd, "-c", coverage, data_file("configs/megahit.cfg")]
     run_yeat(arglist)
-    paired_dir = Path(wd).resolve() / "analysis" / "sample1" / "paired"
-    quast_report = paired_dir / "megahit-default" / "megahit" / "quast" / "report.tsv"
+    sample_dir = Path(wd).resolve() / "analysis" / "Shigella_sonnei_53G"
+    megahit_dir = sample_dir / "paired" / "megahit-default" / "megahit"
+    quast_report = megahit_dir / "quast" / "report.tsv"
     df = pd.read_csv(quast_report, sep="\t")
     num_contigs = df.iloc[12]["contigs"]
     assert num_contigs == 56
@@ -107,8 +104,9 @@ def test_random_downsample_seed(execution_number, capsys, tmp_path):
     wd = str(tmp_path)
     arglist = ["-o", wd, "-d", "2000", data_file("configs/megahit.cfg")]
     run_yeat(arglist)
-    paired_dir = Path(wd).resolve() / "analysis" / "sample1" / "paired"
-    quast_report = paired_dir / "megahit-default" / "megahit" / "quast" / "report.tsv"
+    sample_dir = Path(wd).resolve() / "analysis" / "Shigella_sonnei_53G"
+    megahit_dir = sample_dir / "paired" / "megahit-default" / "megahit"
+    quast_report = megahit_dir / "quast" / "report.tsv"
     df = pd.read_csv(quast_report, sep="\t")
     num_contigs = df.iloc[12]["contigs"]
     assert num_contigs == pytest.approx(76, abs=15)  # 76 +/- 20%
@@ -116,18 +114,6 @@ def test_random_downsample_seed(execution_number, capsys, tmp_path):
     assert largest_contig == pytest.approx(5228, abs=1045)  # 5228 +/- 20%
     total_len = df.iloc[14]["contigs"]
     assert total_len == pytest.approx(74393, abs=14878)  # 74393 +/- 20%
-
-
-def prep_uncompressed_reads(filename, tmp_path):
-    if filename.endswith(".gz"):
-        return data_file(filename)
-    datadir = tmp_path / "data"
-    datadir.mkdir(parents=True, exist_ok=True)
-    gzfile = data_file(f"{filename}.gz")
-    ungzfile = datadir / filename
-    with open(ungzfile, "w") as fh:
-        subprocess.run(["gunzip", "-c", gzfile], stdout=fh)
-    return str(ungzfile)
 
 
 @pytest.mark.long
@@ -149,7 +135,7 @@ def test_uncompressed_input_reads(inread1, inread2, capfd, tmp_path):
     json.dump(cfg_data, open(cfg, "w"))
     arglist = ["-o", wd, cfg]
     run_yeat(arglist)
-    outdir = Path(wd) / "seq" / "input" / "sample1" / "paired"
+    outdir = Path(wd) / "seq" / "input" / "Shigella_sonnei_53G" / "paired"
     uncomp_read1 = outdir / "r1_reads0.fq"
     uncomp_read2 = outdir / "r2_reads0.fq"
     assert uncomp_read1.exists()
@@ -158,5 +144,17 @@ def test_uncompressed_input_reads(inread1, inread2, capfd, tmp_path):
     outread2 = outdir / "r2_combined-reads.fq.gz"
     subprocess.run(["gzip", "-tv", outread1, outread2])
     captured = capfd.readouterr()
-    assert re.search(r"seq/input/sample1/paired/r1_combined-reads.fq.gz:\s*OK", captured.err)
-    assert re.search(r"seq/input/sample1/paired/r2_combined-reads.fq.gz:\s*OK", captured.err)
+    assert re.search(rf"{str(outread1)}:\s*OK", captured.err)
+    assert re.search(rf"{str(outread2)}:\s*OK", captured.err)
+
+
+def prep_uncompressed_reads(filename, tmp_path):
+    if filename.endswith(".gz"):
+        return data_file(filename)
+    datadir = tmp_path / "data"
+    datadir.mkdir(parents=True, exist_ok=True)
+    gzfile = data_file(f"{filename}.gz")
+    ungzfile = datadir / filename
+    with open(ungzfile, "w") as fh:
+        subprocess.run(["gunzip", "-c", gzfile], stdout=fh)
+    return str(ungzfile)

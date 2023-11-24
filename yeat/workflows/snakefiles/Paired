@@ -7,7 +7,6 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from pathlib import Path
 from shutil import copyfile
 from yeat.workflows.snakefiles import *
 

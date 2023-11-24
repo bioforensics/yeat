@@ -24,40 +24,33 @@ def test_pacbio_hifi_assemblers_dry_run(tmp_path):
 def test_pacbio_hifi_read_assemblers(algorithm, capsys, tmp_path):
     wd = str(tmp_path)
     cores = str(get_core_count())
-    config, data = write_config(algorithm, wd, "hifi.cfg")
+    config = write_config(algorithm, wd, "hifi.cfg")
     arglist = ["-o", wd, "-t", cores, config]
     run_yeat(arglist)
-    expected = get_expected(algorithm, wd, data)
+    expected = get_expected(algorithm, wd, config)
     files_exist(expected)
 
 
-# @pytest.mark.long
-# @pytest.mark.hifi
-# @pytest.mark.parametrize(
-#     "labels,expected",
-#     [
-#         (["metaflye-default"], "assembly.fasta"),
-#         (["hifiasm-meta-default"], "zymoBIOMICS_D6331.p_ctg.fa"),
-#     ],
-# )
-# def test_pacbio_hifi_read_metagenomic_assemblers(labels, expected, capsys, tmp_path):
-#     wd = str(tmp_path)
-#     assemblers = write_config(labels, wd, "meta.cfg")
-#     cores = str(get_core_count())
-#     cfg = str(Path(wd) / "meta.cfg")
-#     arglist = ["-o", wd, "-t", cores, cfg]
-#     args = cli.get_parser().parse_args(arglist)
-#     cli.main(args)
-#     files_exist(wd, assemblers, expected)
+@pytest.mark.long
+@pytest.mark.hifi
+@pytest.mark.parametrize("algorithm", ["flye", "hifiasm-meta"])
+def test_pacbio_hifi_read_metagenomic_assemblers(algorithm, capsys, tmp_path):
+    wd = str(tmp_path)
+    cores = str(get_core_count())
+    config = write_config(algorithm, wd, "meta.cfg")
+    arglist = ["-o", wd, "-t", cores, config]
+    run_yeat(arglist)
+    expected = get_expected(algorithm, wd, config)
+    files_exist(expected)
 
 
-# @pytest.mark.linux
-# def test_metaMDBG_assembler(tmp_path):
-#     wd = str(tmp_path)
-#     assemblers = write_config(["metamdbg-default"], wd, "meta.cfg")
-#     cores = str(get_core_count())
-#     cfg = str(Path(wd) / "meta.cfg")
-#     arglist = ["-o", wd, "-t", cores, cfg]
-#     args = cli.get_parser().parse_args(arglist)
-#     cli.main(args)
-#     files_exist(wd, assemblers, "contigs.fasta")
+@pytest.mark.linux
+def test_metaMDBG_assembler(tmp_path):
+    algorithm = "metamdbg"
+    wd = str(tmp_path)
+    cores = str(get_core_count())
+    config = write_config(algorithm, wd, "meta.cfg")
+    arglist = ["-o", wd, "-t", cores, config]
+    run_yeat(arglist)
+    expected = get_expected(algorithm, wd, config)
+    files_exist(expected)

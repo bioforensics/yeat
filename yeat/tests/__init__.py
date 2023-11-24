@@ -21,8 +21,8 @@ FINAL_FILES = {
     "unicycler": "assembly.fasta",
     "flye": "assembly.fasta",
     "canu": "*.contigs.fasta",
-    "hifiasm": "contigs.bp.p_ctg.gfa",
-    "hifiasm_meta": "*.p_ctg.fa",
+    "hifiasm": "*.bp.p_ctg.gfa",
+    "hifiasm_meta": "*.p_ctg.gfa",
     "metamdbg": "contigs.fasta.gz",
 }
 
@@ -46,7 +46,7 @@ def write_config(algorithm, wd, filename):
     data["assemblies"] = assemblies
     config = str(Path(wd) / filename)
     json.dump(data, open(config, "w"))
-    return config, data
+    return config
 
 
 def run_yeat(arglist):
@@ -54,8 +54,9 @@ def run_yeat(arglist):
     main(args)
 
 
-def get_expected(algorithm, wd, data):
+def get_expected(algorithm, wd, config):
     analysis_dir = Path(wd).resolve() / "analysis"
+    data = json.load(open(config))
     expected = []
     for assembly_label, assembly_obj in data["assemblies"].items():
         for sample_label in assembly_obj["samples"]:
@@ -84,5 +85,4 @@ def get_expected(algorithm, wd, data):
 
 
 def files_exist(expected):
-    for x in expected:
-        assert x.exists()
+    assert all([file.exists() for file in expected])

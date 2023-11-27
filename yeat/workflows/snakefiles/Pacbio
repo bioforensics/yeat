@@ -50,7 +50,7 @@ rule hifiasm:
         reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
     threads: 128
     params:
-        prefix="analysis/{sample}/{readtype}/{label}/hifiasm/contigs",
+        prefix="analysis/{sample}/{readtype}/{label}/hifiasm/{sample}",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
@@ -67,7 +67,7 @@ rule hifiasm_meta:
         reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
     threads: 128
     params:
-        prefix="analysis/{sample}/{readtype}/{label}/hifiasm-meta/contigs",
+        prefix="analysis/{sample}/{readtype}/{label}/hifiasm-meta/{sample}",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """

@@ -33,7 +33,7 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'yeat=yeat:main',
+            'yeat=yeat.cli:main',
         ],
     },
     classifiers=[

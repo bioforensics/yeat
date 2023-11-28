@@ -33,7 +33,7 @@ def test_pacbio_hifi_read_assemblers(algorithm, capsys, tmp_path):
 
 @pytest.mark.long
 @pytest.mark.hifi
-@pytest.mark.parametrize("algorithm", ["flye", "hifiasm-meta"])
+@pytest.mark.parametrize("algorithm", ["flye", "hifiasm_meta"])
 def test_pacbio_hifi_read_metagenomic_assemblers(algorithm, capsys, tmp_path):
     wd = str(tmp_path)
     cores = str(get_core_count())

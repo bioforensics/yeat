@@ -114,12 +114,12 @@ rule hifiasm:
 
 rule hifiasm_meta:
     output:
-        status="analysis/{sample}/{readtype}/{label}/hifiasm-meta/bandage/.done"
+        status="analysis/{sample}/{readtype}/{label}/hifiasm_meta/bandage/.done"
     input:
-        report="analysis/{sample}/{readtype}/{label}/hifiasm-meta/quast/report.html"
+        report="analysis/{sample}/{readtype}/{label}/hifiasm_meta/quast/report.html"
     params:
-        gfa=lambda wildcards: glob(f"analysis/{wildcards.sample}/{wildcards.readtype}/{wildcards.label}/hifiasm-meta/*.gfa"),
-        outdir="analysis/{sample}/{readtype}/{label}/hifiasm-meta/bandage"
+        gfa=lambda wildcards: glob(f"analysis/{wildcards.sample}/{wildcards.readtype}/{wildcards.label}/hifiasm_meta/*.gfa"),
+        outdir="analysis/{sample}/{readtype}/{label}/hifiasm_meta/bandage"
     run:
         for gfa in params.gfa:
             filename = Path(gfa).stem

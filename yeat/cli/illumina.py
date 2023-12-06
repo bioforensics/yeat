@@ -10,8 +10,8 @@
 from argparse import ArgumentTypeError
 
 
-def fastp_options(parser):
-    illumina = parser.add_argument_group("fastp arguments")
+def fastp_configuration(parser):
+    illumina = parser.add_argument_group("fastp configuration")
     illumina.add_argument(
         "-l",
         "--length-required",
@@ -22,8 +22,8 @@ def fastp_options(parser):
     )
 
 
-def downsample_options(parser):
-    illumina = parser.add_argument_group("downsample arguments")
+def downsample_configuration(parser):
+    illumina = parser.add_argument_group("downsampling configuration")
     illumina.add_argument(
         "-c",
         "--coverage",

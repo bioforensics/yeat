@@ -12,9 +12,12 @@ from pathlib import Path
 
 
 class Sample:
-    def __init__(self, label, data):
+    def __init__(self, label, sample):
         self.label = label
-        self.data = data
+        self.sample = sample
+        self.all_reads = []
+        self.short_readtype = None
+        self.long_readtype = None
         self.validate()
 
     def validate(self):
@@ -22,7 +25,7 @@ class Sample:
         self.check_input_reads()
 
     def check_one_readtype_limit(self):
-        observed_readtypes = self.data.keys()
+        observed_readtypes = self.sample.keys()
         if len(observed_readtypes) == 0:
             message = f"Missing sample reads for '{self.label}'"
             raise AssemblyConfigError(message)
@@ -37,12 +40,13 @@ class Sample:
         if len(long) > 1:
             message = f"Max of 1 long readtype per sample for '{self.label}'"
             raise AssemblyConfigError(message)
-        self.short_readtype = next(iter(illumina)) if illumina else None
-        self.long_readtype = next(iter(long)) if long else None
+        if illumina:
+            self.short_readtype = next(iter(illumina))
+        if long:
+            self.long_readtype = next(iter(long))
 
     def check_input_reads(self):
-        self.all_reads = []
-        for readtype, reads in self.data.items():
+        for readtype, reads in self.sample.items():
             if len(reads) == 0:
                 message = f"Missing input reads for '{self.label}'"
                 raise AssemblyConfigError(message)

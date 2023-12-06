@@ -10,7 +10,7 @@
 from glob import glob
 from pathlib import Path
 import re
-from yeat.workflows.snakefiles import get_and_filter_contig_files
+from yeat.workflow.aux import get_and_filter_contig_files
 
 
 rule spades:

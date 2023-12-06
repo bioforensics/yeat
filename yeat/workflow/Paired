@@ -8,7 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 from shutil import copyfile
-from yeat.workflows.snakefiles import *
+from yeat.workflow.aux import *
 
 
 rule copyinput:
@@ -16,8 +16,8 @@ rule copyinput:
         read1="seq/input/{sample}/paired/r1_combined-reads.fq.gz",
         read2="seq/input/{sample}/paired/r2_combined-reads.fq.gz"
     input:
-        r1s = lambda wildcards: [read[0] for read in config["samples"][wildcards.sample].data["paired"]],
-        r2s = lambda wildcards: [read[1] for read in config["samples"][wildcards.sample].data["paired"]]
+        r1s = lambda wildcards: [read[0] for read in config["samples"][wildcards.sample].sample["paired"]],
+        r2s = lambda wildcards: [read[1] for read in config["samples"][wildcards.sample].sample["paired"]]
     params:
         outdir="seq/input/{sample}/paired"
     run:

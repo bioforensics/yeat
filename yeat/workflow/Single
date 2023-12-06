@@ -8,7 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 from shutil import copyfile
-from yeat.workflows.snakefiles import *
+from yeat.workflow.aux import *
 
 
 rule fastp:

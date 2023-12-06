@@ -19,7 +19,9 @@ import warnings
 
 def get_and_filter_contig_files(sample, readtype, label):
     pattern = rf"analysis/{sample}/{readtype}/{label}/megahit/intermediate_contigs/k\d+.contigs.fa"
-    contigs = glob(rf"analysis/{sample}/{readtype}/{label}/megahit/intermediate_contigs/k*.contigs.fa")
+    contigs = glob(
+        rf"analysis/{sample}/{readtype}/{label}/megahit/intermediate_contigs/k*.contigs.fa"
+    )
     return filter(re.compile(pattern).match, contigs)
 
 
@@ -37,7 +39,9 @@ def combine(reads, direction, outdir):
             subprocess.run(f"gunzip -c {inread} > {outread}", shell=True)
         else:
             shutil.copyfile(inread, outread)
-    subprocess.run(f"cat {outdir}/{direction}_reads*.fq > {outdir}/{direction}_combined-reads.fq", shell=True)
+    subprocess.run(
+        f"cat {outdir}/{direction}_reads*.fq > {outdir}/{direction}_combined-reads.fq", shell=True
+    )
     subprocess.run(f"gzip {outdir}/{direction}_combined-reads.fq", shell=True)
 
 
@@ -64,7 +68,7 @@ def get_down(downsample, genome_size, coverage, avg_read_length):
 
 def get_seed(seed):
     if seed == "None":
-        return randint(1, 2**16-1)
+        return randint(1, 2**16 - 1)
     return seed
 
 
@@ -83,17 +87,41 @@ def get_expected_files(config):
         for sample_label in assembly_obj.samples:
             sample_obj = config["samples"][sample_label]
             if assembly_obj.mode in ["paired", "single"]:
-                inputlist.append(get_file(run_bandage, sample_label, sample_obj.short_readtype, assembly_label, assembly_obj.algorithm))
+                inputlist.append(
+                    get_file(
+                        run_bandage,
+                        sample_label,
+                        sample_obj.short_readtype,
+                        assembly_label,
+                        assembly_obj.algorithm,
+                    )
+                )
             elif assembly_obj.mode in ["pacbio", "oxford"]:
-                inputlist.append(get_file(run_bandage, sample_label, sample_obj.long_readtype, assembly_label, assembly_obj.algorithm))
+                inputlist.append(
+                    get_file(
+                        run_bandage,
+                        sample_label,
+                        sample_obj.long_readtype,
+                        assembly_label,
+                        assembly_obj.algorithm,
+                    )
+                )
             if assembly_obj.mode == "paired":
-                inputlist += [f"seq/fastqc/{sample_label}/paired/{direction}_combined-reads_fastqc.html" for direction in ["r1", "r2"]]
+                inputlist += [
+                    f"seq/fastqc/{sample_label}/paired/{direction}_combined-reads_fastqc.html"
+                    for direction in ["r1", "r2"]
+                ]
             elif assembly_obj.mode == "single":
                 inputlist.append(f"seq/fastqc/{sample_label}/single/combined-reads_fastqc.html")
             elif assembly_obj.mode == "pacbio":
-                inputlist.append(f"seq/fastqc/{sample_label}/{sample_obj.long_readtype}/combined-reads_fastqc.html")
+                inputlist.append(
+                    f"seq/fastqc/{sample_label}/{sample_obj.long_readtype}/combined-reads_fastqc.html"
+                )
             elif assembly_obj.mode == "oxford":
-                inputlist += [f"seq/nanoplot/{sample_label}/{sample_obj.long_readtype}/{quality}_LengthvsQualityScatterPlot_dot.pdf" for quality in ["raw", "filtered"]]
+                inputlist += [
+                    f"seq/nanoplot/{sample_label}/{sample_obj.long_readtype}/{quality}_LengthvsQualityScatterPlot_dot.pdf"
+                    for quality in ["raw", "filtered"]
+                ]
     return inputlist
 
 

@@ -65,15 +65,17 @@ class InitAction(Action):
 
 def get_parser(exit_on_error=True):
     parser = ArgumentParser(add_help=False, exit_on_error=exit_on_error)
-    optional_options(parser)
-    workflow_options(parser)
-    illumina.fastp_options(parser)
-    illumina.downsample_options(parser)
+    options(parser)
+    workflow_configuration(parser)
+    illumina.fastp_configuration(parser)
+    illumina.downsample_configuration(parser)
+    parser._positionals.title = "required arguments"
     parser.add_argument("config", help="config file", type=lambda p: str(Path(p).resolve()))
     return parser
 
 
-def optional_options(parser):
+def options(parser):
+    parser._optionals.title = "options"
     parser.add_argument(
         "--init",
         action=InitAction,
@@ -94,8 +96,8 @@ def optional_options(parser):
     )
 
 
-def workflow_options(parser):
-    workflow = parser.add_argument_group("workflow arguments")
+def workflow_configuration(parser):
+    workflow = parser.add_argument_group("workflow configuration")
     workflow.add_argument(
         "-n",
         "--dry-run",

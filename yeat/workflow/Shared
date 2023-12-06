@@ -14,7 +14,7 @@ rule copyinput:
     output:
         combined="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
     input:
-        reads=lambda wildcards: config["samples"][wildcards.sample].data[wildcards.readtype]
+        reads=lambda wildcards: config["samples"][wildcards.sample].sample[wildcards.readtype]
     params:
         outdir="seq/input/{sample}/{readtype}"
     run:

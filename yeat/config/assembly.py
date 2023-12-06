@@ -20,12 +20,12 @@ ALGORITHMS = {
 
 
 class Assembly:
-    def __init__(self, label, data, threads):
+    def __init__(self, label, assembly, threads):
         self.label = label
-        self.algorithm = data["algorithm"]
-        self.extra_args = data["extra_args"]
-        self.samples = data["samples"]
-        self.mode = data["mode"]
+        self.algorithm = assembly["algorithm"]
+        self.extra_args = assembly["extra_args"]
+        self.samples = assembly["samples"]
+        self.mode = assembly["mode"]
         self.threads = threads
         self.validate()
 

@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from yeat.workflows.snakefiles import get_canu_readtype_flag
+from yeat.workflow.aux import get_canu_readtype_flag
 
 
 rule flye:

@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from glob import glob
+import glob
 import json
 import pandas as pd
 from random import randint
@@ -19,7 +19,7 @@ import warnings
 
 def get_and_filter_contig_files(sample, readtype, label):
     pattern = rf"analysis/{sample}/{readtype}/{label}/megahit/intermediate_contigs/k\d+.contigs.fa"
-    contigs = glob(
+    contigs = glob.glob(
         rf"analysis/{sample}/{readtype}/{label}/megahit/intermediate_contigs/k*.contigs.fa"
     )
     return filter(re.compile(pattern).match, contigs)
@@ -28,7 +28,7 @@ def get_and_filter_contig_files(sample, readtype, label):
 def get_canu_readtype_flag(readtype):
     if readtype in ["pacbio-raw", "pacbio-corr"]:
         return "-pacbio"
-    elif readtype == "pacbio-hifi":
+    elif readtype == "pacbio-hifi":  # pragma: no cover
         return "-pacbio-hifi"
 
 
@@ -39,10 +39,11 @@ def combine(reads, direction, outdir):
             subprocess.run(f"gunzip -c {inread} > {outread}", shell=True)
         else:
             shutil.copyfile(inread, outread)
-    subprocess.run(
-        f"cat {outdir}/{direction}_reads*.fq > {outdir}/{direction}_combined-reads.fq", shell=True
+    commands = (
+        f"cat {outdir}/{direction}_reads*.fq > {outdir}/{direction}_combined-reads.fq;"
+        f"gzip {outdir}/{direction}_combined-reads.fq"
     )
-    subprocess.run(f"gzip {outdir}/{direction}_combined-reads.fq", shell=True)
+    subprocess.run(commands, shell=True)
 
 
 def get_genome_size(genome_size, mash_report):
@@ -96,7 +97,7 @@ def get_expected_files(config):
                         assembly_obj.algorithm,
                     )
                 )
-            elif assembly_obj.mode in ["pacbio", "oxford"]:
+            elif assembly_obj.mode in ["pacbio", "oxford"]:  # pragma: no cover
                 inputlist.append(
                     get_file(
                         run_bandage,
@@ -117,7 +118,7 @@ def get_expected_files(config):
                 inputlist.append(
                     f"seq/fastqc/{sample_label}/{sample_obj.long_readtype}/combined-reads_fastqc.html"
                 )
-            elif assembly_obj.mode == "oxford":
+            elif assembly_obj.mode == "oxford":  # pragma: no cover
                 inputlist += [
                     f"seq/nanoplot/{sample_label}/{sample_obj.long_readtype}/{quality}_LengthvsQualityScatterPlot_dot.pdf"
                     for quality in ["raw", "filtered"]

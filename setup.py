@@ -8,7 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 import pathlib
-from setuptools import setup, find_packages
+from setuptools import setup
 import versioneer
 
 
@@ -27,7 +27,7 @@ setup(
         "yeat",
         "yeat.cli",
         "yeat.tests",
-        "yeat.workflows",
+        "yeat.workflow",
     ],
     package_data={'yeat': ['yeat/data/*'],},
     include_package_data=True,

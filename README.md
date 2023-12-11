@@ -89,7 +89,7 @@ $ yeat --outdir {path} {config}
 | single  | spades, megahit, unicycler |
 | pacbio-raw  | flye, canu, unicycler |
 | pacbio-corr  | flye, canu, unicycler |
-| pacbio-hifi  | flye, canu, hifiasm, hifiasm-meta, unicycler, metamdbg* |
+| pacbio-hifi  | flye, canu, hifiasm, hifiasm_meta, unicycler, metamdbg* |
 | nano-raw  | flye, canu, unicycler |
 | nano-corr  | flye, canu, unicycler |
 | nano-hq  | flye, canu, unicycler |
@@ -104,14 +104,18 @@ $ yeat --outdir {path} {config}
     "samples": {
         "sample1": {
             "paired": [
-                "yeat/tests/data/short_reads_1.fastq.gz",
-                "yeat/tests/data/short_reads_2.fastq.gz"
+                [
+                    "yeat/tests/data/short_reads_1.fastq.gz",
+                    "yeat/tests/data/short_reads_2.fastq.gz"
+                ]
             ]
         },
         "sample2": {
             "paired": [
-                "yeat/tests/data/Animal_289_R1.fq.gz",
-                "yeat/tests/data/Animal_289_R2.fq.gz"
+                [
+                    "yeat/tests/data/Animal_289_R1.fq.gz",
+                    "yeat/tests/data/Animal_289_R2.fq.gz"
+                ]
             ]
         },
         "sample3": {
@@ -125,32 +129,32 @@ $ yeat --outdir {path} {config}
             ]
         }
     },
-    "assemblers": [
-        {
-            "label": "spades-default",
+    "assemblies": {
+        "spades-default": {
             "algorithm": "spades",
             "extra_args": "",
             "samples": [
                 "sample1",
                 "sample2"
-            ]
+            ],
+            "mode": "paired"
         },
-        {
-            "label": "hicanu",
+        "hicanu": {
             "algorithm": "canu",
             "extra_args": "genomeSize=4.8m",
             "samples": [
                 "sample3"
-            ]
+            ],
+            "mode": "pacbio"
         },
-        {
-            "label": "flye_ONT",
+        "flye_ONT": {
             "algorithm": "flye",
             "extra_args": "",
             "samples": [
                 "sample4"
-            ]
+            ],
+            "mode": "oxford"
         }
-    ]
+    }
 }
 ```

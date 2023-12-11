@@ -8,75 +8,57 @@
 # -------------------------------------------------------------------------------------------------
 
 import json
-from pathlib import Path
 import pytest
 from unittest.mock import patch
-from yeat import cli
-from yeat.cli.config import Assembler, AssemblerConfig, AssemblyConfigurationError, Sample
+from yeat.config import AssemblyConfigError
+from yeat.config.assembly import Assembly
+from yeat.config.config import AssemblyConfig
+from yeat.config.sample import Sample
 from yeat.tests import data_file
 
 pytestmark = pytest.mark.short
 
 
-def test_unsupported_assembly_algorithm():
-    assembler = {
-        "label": "unsuported_algorithm",
-        "algorithm": "unsupported_alogrithm",
+def test_invalid_assembly_algorithm():
+    label = "label1"
+    data = {
+        "algorithm": "INVALID",
         "extra_args": "",
         "samples": ["sample1"],
+        "mode": "paired",
     }
-    pattern = rf"Unsupported assembly algorithm '{assembler['algorithm']}'"
+    pattern = rf"Invalid assembly algorithm '{data['algorithm']}' for '{label}'"
     with pytest.raises(ValueError, match=pattern):
-        Assembler(assembler, 1)
+        Assembly(label, data, 1)
 
 
-@patch("yeat.cli.config.platform", "darwin")
+@patch("yeat.config.assembly.platform", "darwin")
 def test_linux_only_algorithm():
-    assembler = {
-        "label": "metamdbg-default",
+    data = {
         "algorithm": "metamdbg",
         "extra_args": "",
         "samples": ["sample1"],
+        "mode": "pacbio",
     }
-    pattern = r"Assembly algorithm 'metaMDBG' can only run on Linux OS"
+    pattern = r"Assembly algorithm 'metaMDBG' can only run on 'Linux OS'"
     with pytest.raises(ValueError, match=pattern):
-        Assembler(assembler, 1)
-
-
-def test_duplicate_assembly_labels(tmp_path):
-    wd = str(tmp_path)
-    data = json.load(open(data_file("configs/paired.cfg")))
-    data["assemblers"].append(data["assemblers"][0])
-    cfg = str(Path(wd).resolve() / "paired.cfg")
-    json.dump(data, open(cfg, "w"))
-    pattern = r"Duplicate assembly labels: please check config file"
-    with pytest.raises(ValueError, match=pattern):
-        AssemblerConfig.from_json(cfg, 1)
+        Assembly("label1", data, 1)
 
 
 def test_valid_config():
-    cfg = data_file("configs/paired.cfg")
-    config = AssemblerConfig.from_json(cfg, 1)
-    assert len(config.samples) == 2
-    assemblers = [assembler.algorithm for assembler in config.assemblers]
-    assert assemblers == ["spades", "megahit", "unicycler"]
+    data = json.load(open(data_file("configs/example.cfg")))
+    config = AssemblyConfig(data, 4)
+    assert len(config.samples) == 4
+    assert len(config.assemblies) == 3
 
 
-@pytest.mark.parametrize("key,", ["label", "algorithm", "extra_args", "samples"])
+@pytest.mark.parametrize("key,", ["algorithm", "extra_args", "samples", "mode"])
 def test_missing_key_in_config_entry(key):
     data = json.load(open(data_file("configs/paired.cfg")))
-    del data["assemblers"][0][key]
+    del data["assemblies"]["spades-default"][key]
     pattern = rf"Missing assembly configuration setting\(s\) '{key}'"
-    with pytest.raises(AssemblyConfigurationError, match=pattern):
-        AssemblerConfig(data, 1)
-
-
-def test_unsupported_key_in_config_entry():
-    data = json.load(open(data_file("configs/paired.cfg")))
-    data["assemblers"][0]["not"] = "supported"
-    pattern = r"Ignoring unsupported configuration key\(s\) 'not'"
-    with pytest.warns(match=pattern):
-        AssemblerConfig(data, 1)
+    with pytest.raises(AssemblyConfigError, match=pattern):
+        AssemblyConfig(data, 1)
 
 
 @pytest.mark.parametrize(
@@ -88,98 +70,174 @@ def test_unsupported_key_in_config_entry():
     ],
 )
 def test_sample_read_file_not_found(reads, badfile):
-    sample = {"paired": reads}
-    pattern = rf"No such file: '.*{reads[badfile]}'"
+    label = "sample1"
+    data = {"single": reads}
+    pattern = rf"No such file '.*{reads[badfile]}' for '{label}'"
     with pytest.raises(FileNotFoundError, match=pattern):
-        Sample(sample)
+        Sample(label, data)
 
 
 def test_sample_with_duplicate_reads():
-    sample = {"paired": [data_file("short_reads_1.fastq.gz"), data_file("short_reads_1.fastq.gz")]}
-    pattern = rf"Found duplicate read sample: '.*short_reads_1.fastq.gz'"
-    with pytest.raises(AssemblyConfigurationError, match=pattern):
-        Sample(sample)
+    label = "sample1"
+    data = {"paired": [[data_file("short_reads_1.fastq.gz"), data_file("short_reads_1.fastq.gz")]]}
+    pattern = rf"Found duplicate read sample '.*short_reads_1.fastq.gz' for '{label}'"
+    with pytest.raises(AssemblyConfigError, match=pattern):
+        Sample(label, data)
 
 
 @pytest.mark.parametrize(
     "extra_args,cores,expected",
     [
-        ("", 4, r"Missing required input argument from config: 'genomeSize'"),
+        ("", 4, r"Missing required extra argument 'genomeSize' for '*'"),
         (
             "genomeSize=4.8m",
             1,
-            r"Canu requires at least 4 avaliable cores; increase `--threads` to 4 or more",
+            r"Canu requires at least 4 avaliable cores; increase '-t' or '--threads' to 4 or more",
         ),
     ],
 )
 def test_check_canu_required_params_errors(extra_args, cores, expected):
-    assembler = {
-        "label": "label1",
+    data = {
         "algorithm": "canu",
         "extra_args": extra_args,
         "samples": ["sample1"],
+        "mode": "pacbio",
     }
     with pytest.raises(ValueError, match=expected):
-        Assembler(assembler, cores)
+        Assembly("label1", data, cores)
+
+
+def test_check_valid_mode():
+    label = "label1"
+    data = {
+        "algorithm": "spades",
+        "extra_args": "",
+        "samples": ["sample1"],
+        "mode": "INVALID",
+    }
+    pattern = rf"Invalid assembly mode '{data['mode']}' for '{label}'"
+    with pytest.raises(AssemblyConfigError, match=pattern):
+        Assembly(label, data, 1)
+
+
+@pytest.mark.parametrize("layer", ["base", "sample", "assembly"])
+def test_check_valid_keys(layer):
+    data = json.load(open(data_file("configs/paired.cfg")))
+    if layer == "base":
+        data["INVALID1"] = ""
+        data["INVALID2"] = ""
+    elif layer == "sample":
+        data["samples"]["Shigella_sonnei_53G"]["INVALID1"] = ""
+        data["samples"]["Shigella_sonnei_53G"]["INVALID2"] = ""
+    elif layer == "assembly":
+        data["assemblies"]["spades-default"]["INVALID1"] = ""
+        data["assemblies"]["spades-default"]["INVALID2"] = ""
+    pattern = r"Found unsupported configuration key\(s\) 'INVALID1,INVALID2'"
+    with pytest.raises(AssemblyConfigError, match=pattern):
+        AssemblyConfig(data, 1)
 
 
 @pytest.mark.parametrize(
-    "readtype,subsamples,sublabels",
+    "mode,label", [("paired", "spades-default"), ("pacbio", "hicanu"), ("oxford", "flye_ONT")]
+)
+def test_validate_samples_to_assembly_modes(mode, label):
+    data = json.load(open(data_file("configs/example.cfg")))
+    if mode == "paired":
+        data["assemblies"]["spades-default"]["samples"] = ["sample4"]
+    elif mode == "pacbio":
+        data["assemblies"]["hicanu"]["samples"] = ["sample1"]
+    elif mode == "oxford":
+        data["assemblies"]["flye_ONT"]["samples"] = ["sample1"]
+    pattern = rf"No samples can interact with assembly mode '{mode}' for '{label}'"
+    with pytest.raises(AssemblyConfigError, match=pattern):
+        AssemblyConfig(data, 4)
+
+
+@pytest.mark.parametrize(
+    "test,pattern",
     [
-        (
-            "all",
-            ["sample1", "sample2", "sample3", "sample4"],
-            ["spades-default", "hicanu", "flye_ONT"],
-        ),
-        ("paired", ["sample1", "sample2"], ["spades-default"]),
-        ("pacbio", ["sample3"], ["hicanu"]),
-        ("oxford", ["sample4"], ["flye_ONT"]),
+        ("no_reads", r"Missing sample reads for 'sample1'"),
+        ("too_many_reads", r"Max of 2 readtypes per sample for 'sample1'"),
+        ("too_many_shorttypes", r"Max of 1 Illumina readtype per sample for 'sample1'"),
+        ("too_many_longtypes", r"Max of 1 long readtype per sample for 'sample1'"),
     ],
 )
-def test_to_dict(readtype, subsamples, sublabels):
-    arglist = ["-t", "4", data_file("configs/example.cfg")]
-    args = cli.get_parser().parse_args(arglist)
-    config = AssemblerConfig.from_json(args.config, args.threads)
-    observed = config.to_dict(args, readtype)
-    for sample in subsamples:
-        assert sample in observed["samples"]
-    for label in sublabels:
-        assert label in observed["labels"]
-        assert label in observed["assemblers"]
-        assert observed["assemblers"][label] in label
-    assert len(observed["samples"]) == len(subsamples)
-    assert len(observed["labels"]) == len(sublabels)
+def test_check_one_readtype_limit(test, pattern):
+    if test == "no_reads":
+        data = {}
+    elif test == "too_many_reads":
+        data = {
+            "paired": [[data_file("Animal_289_R1.fq.gz"), data_file("Animal_289_R2.fq.gz")]],
+            "single": [data_file("short_reads_1.fastq.gz")],
+            "pacbio-hifi": [data_file("ecoli.fastq.gz")],
+        }
+    elif test == "too_many_shorttypes":
+        data = {
+            "paired": [[data_file("Animal_289_R1.fq.gz"), data_file("Animal_289_R2.fq.gz")]],
+            "single": [data_file("short_reads_1.fastq.gz")],
+        }
+    elif test == "too_many_longtypes":
+        data = {
+            "pacbio-hifi": [data_file("ecoli.fastq.gz")],
+            "nano-hq": [data_file("ecolk12mg1655_R10_3_guppy_345_HAC.fastq.gz")],
+        }
+    with pytest.raises(AssemblyConfigError, match=pattern):
+        Sample("sample1", data)
 
 
-def test_multiple_readtypes_in_sample():
-    data = json.load(open(data_file("configs/ont.cfg")))
-    data["samples"]["Ecoli_K12_MG1655_R10.3_HAC"]["extra_readtype"] = ["long_read.fastq"]
-    pattern = r"Multiple read types in sample 'Ecoli_K12_MG1655_R10.3_HAC'"
-    with pytest.raises(ValueError, match=pattern):
-        AssemblerConfig(data, 1)
+def test_check_input_reads():
+    label = "sample1"
+    data = {"paired": []}
+    pattern = rf"Missing input reads for '{label}'"
+    with pytest.raises(AssemblyConfigError, match=pattern):
+        Sample(label, data)
 
 
-def test_unsupported_readtype_in_sample():
-    data = json.load(open(data_file("configs/ont.cfg")))
-    del data["samples"]["Ecoli_K12_MG1655_R10.3_HAC"]["nano-hq"]
-    data["samples"]["Ecoli_K12_MG1655_R10.3_HAC"]["not"] = ["supported"]
-    pattern = r"Unsupported read type 'not'"
-    with pytest.raises(ValueError, match=pattern):
-        AssemblerConfig(data, 1)
+@pytest.mark.parametrize(
+    "test,pattern",
+    [
+        ("not_list_1", r"Input read is not a list 'INVALID' for 'sample1'"),
+        ("not_list_2", r"Input read is not a list 'INVALID' for 'sample1'"),
+        ("missing_one_pair", r"Missing 2 reads in 'paired' entry for 'sample1'"),
+        ("missing_both_pairs", r"Missing 1 read in 'paired' entry for 'sample1'"),
+        ("too_many_pairs", r"Found more than 2 reads in 'paired' entry for 'sample1'"),
+    ],
+)
+def test_check_paired_reads(test, pattern):
+    if test == "not_list_1":
+        data = {"paired": ["INVALID"]}
+    elif test == "not_list_2":
+        data = {
+            "paired": [
+                [data_file("Animal_289_R1.fq.gz"), data_file("Animal_289_R2.fq.gz")],
+                "INVALID",
+            ]
+        }
+    elif test == "missing_one_pair":
+        data = {"paired": [[]]}
+    elif test == "missing_both_pairs":
+        data = {"paired": [[data_file("Animal_289_R1.fq.gz")]]}
+    elif test == "too_many_pairs":
+        data = {
+            "paired": [
+                [
+                    data_file("Animal_289_R1.fq.gz"),
+                    data_file("Animal_289_R2.fq.gz"),
+                    data_file("short_reads_1.fastq.gz"),
+                ]
+            ]
+        }
+    with pytest.raises(AssemblyConfigError, match=pattern):
+        Sample("sample1", data)
 
 
-def test_batch():
-    data = json.load(open(data_file("configs/example.cfg")))
-    config = AssemblerConfig(data, 4)
-    paired_samples = set(config.batch["paired"]["samples"].keys())
-    paired_algorithms = [assembler.algorithm for assembler in config.batch["paired"]["assemblers"]]
-    assert paired_samples == {"sample1", "sample2"}
-    assert paired_algorithms == ["spades"]
-    pacbio_samples = set(config.batch["pacbio"]["samples"].keys())
-    pacbio_algorithms = [assembler.algorithm for assembler in config.batch["pacbio"]["assemblers"]]
-    assert pacbio_samples == {"sample3"}
-    assert pacbio_algorithms == ["canu"]
-    oxford_samples = set(config.batch["oxford"]["samples"].keys())
-    oxford_algorithms = [assembler.algorithm for assembler in config.batch["oxford"]["assemblers"]]
-    assert oxford_samples == {"sample4"}
-    assert oxford_algorithms == ["flye"]
+@pytest.mark.parametrize("test", ["flat_list", "nested_lists"])
+def test_check_reads(test):
+    label = "sample1"
+    if test == "flat_list":
+        data = {"single": [[]]}
+    elif test == "nested_lists":
+        data = {"paired": [[data_file("Animal_289_R1.fq.gz"), []]]}
+    pattern = rf"Input read is not a string '\[\]' for '{label}'"
+    with pytest.raises(AssemblyConfigError, match=pattern):
+        Sample(label, data)

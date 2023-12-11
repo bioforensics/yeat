@@ -10,8 +10,8 @@
 from argparse import ArgumentError
 import json
 import pytest
-from yeat import cli
-from yeat.cli import InitAction, illumina
+from yeat.cli import cli
+from yeat.cli.cli import InitAction, illumina
 from yeat.tests import data_file
 
 pytestmark = pytest.mark.short

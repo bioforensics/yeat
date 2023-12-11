@@ -1,0 +1,63 @@
+# -------------------------------------------------------------------------------------------------
+# Copyright (c) 2023, DHS. This file is part of YEAT: http://github.com/bioforensics/yeat
+#
+# This software was prepared for the Department of Homeland Security (DHS) by the Battelle National
+# Biodefense Institute, LLC (BNBI) as part of contract HSHQDC-15-C-00064 to manage and operate the
+# National Biodefense Analysis and Countermeasures Center (NBACC), a Federally Funded Research and
+# Development Center.
+# -------------------------------------------------------------------------------------------------
+
+from yeat.config.config import AssemblyConfig
+from yeat.workflow.aux import get_expected_files
+
+
+cfg = AssemblyConfig(config["data"], config["threads"])
+config["samples"] = cfg.samples
+config["assemblies"] = cfg.assemblies
+
+
+rule all:
+    input:
+        get_expected_files(config)
+
+
+module shared_workflow:
+    snakefile: "Shared"
+    config: config
+
+use rule * from shared_workflow as shared_*
+
+
+module paired_workflow:
+    snakefile: "Paired"
+    config: config
+
+use rule * from paired_workflow as paired_*
+
+
+module single_workflow:
+    snakefile: "Single"
+    config: config
+
+use rule * from single_workflow as single_*
+
+
+module pacbio_workflow:
+    snakefile: "Pacbio"
+    config: config
+
+use rule * from pacbio_workflow as pacbio_*
+
+
+module oxford_workflow:
+    snakefile: "Oxford"
+    config: config
+
+use rule * from oxford_workflow as oxford_*
+
+
+module bandage_workflow:
+    snakefile: "Bandage"
+    config: config
+
+use rule * from bandage_workflow as bandage_*

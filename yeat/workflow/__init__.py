@@ -17,14 +17,27 @@ def run_workflow(args):
     snakefile = files("yeat") / "workflow" / "Snakefile"
     config = vars(args)
     config["data"] = resolve_paths(config["config"])
-    success = snakemake(
-        snakefile,
-        config=config,
-        cores=args.threads,
-        dryrun=args.dry_run,
-        printshellcmds=True,
-        workdir=args.outdir,
-    )
+    if args.grid:
+        success = snakemake(
+            snakefile,
+            config=config,
+            dryrun=args.dry_run,
+            printshellcmds=True,
+            workdir=args.outdir,
+            local_cores=args.threads,
+            nodes=args.grid_limit,
+            drmaa=setup_grid_args(args),
+            drmaa_log_dir=f"{args.outdir}/gridlogs",
+        )
+    else:
+        success = snakemake(
+            snakefile,
+            config=config,
+            cores=args.threads,
+            dryrun=args.dry_run,
+            printshellcmds=True,
+            workdir=args.outdir,
+        )
     if not success:
         raise RuntimeError("Snakemake Failed")  # pragma: no cover
 
@@ -41,3 +54,12 @@ def resolve_paths(infile):
                     resolved_paths.append(str(Path(read).resolve()))
         sample[readtype] = resolved_paths
     return data
+
+
+def setup_grid_args(args):
+    if args.grid_args is not None:
+        return args.grid_args
+    grid_args = " -V "
+    if args.threads > 1:
+        grid_args = f" -V -pe threads {args.threads} "
+    return grid_args

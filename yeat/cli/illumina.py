@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from argparse import ArgumentTypeError
+from .aux import check_positive
 
 
 def fastp_configuration(parser):
@@ -56,13 +56,3 @@ def downsample_configuration(parser):
         metavar="S",
         type=int,
     )
-
-
-def check_positive(value):
-    try:
-        value = int(value)
-        if value <= 0:
-            raise ArgumentTypeError(f"{value} is not a positive integer")
-    except ValueError:
-        raise ArgumentTypeError(f"{value} is not an integer")
-    return value

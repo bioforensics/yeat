@@ -21,10 +21,10 @@ def run_workflow(args):
         success = snakemake(
             snakefile,
             config=config,
+            cores=args.threads,
             dryrun=args.dry_run,
             printshellcmds=True,
             workdir=args.outdir,
-            local_cores=args.threads,
             nodes=args.grid_limit,
             drmaa=setup_grid_args(args),
             drmaa_log_dir="gridlogs",

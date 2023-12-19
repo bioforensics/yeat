@@ -35,8 +35,7 @@ rule canu:
     params:
         readtype_flag=lambda wildcards: get_canu_readtype_flag(wildcards.readtype),
         outdir="analysis/{sample}/{readtype}/{label}/canu",
-        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args,
-        grid=config["grid"]
+        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
         canu {params.readtype_flag} {input.reads} maxThreads={threads} -p {wildcards.sample} -d {params.outdir} {params.extra_args} useGrid=false

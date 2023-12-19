@@ -27,7 +27,7 @@ def run_workflow(args):
             local_cores=args.threads,
             nodes=args.grid_limit,
             drmaa=setup_grid_args(args),
-            drmaa_log_dir=f"{args.outdir}/gridlogs",
+            drmaa_log_dir="gridlogs",
         )
     else:
         success = snakemake(

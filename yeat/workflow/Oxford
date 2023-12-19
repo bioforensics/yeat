@@ -65,7 +65,8 @@ rule canu:
     threads: 128
     params:
         outdir="analysis/{sample}/{readtype}/{label}/canu",
-        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
+        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args,
+        grid=config["grid"]
     shell:
         """
         canu -nanopore {input.reads} maxThreads={threads} -p {wildcards.sample} -d {params.outdir} {params.extra_args} useGrid=false

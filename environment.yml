@@ -27,4 +27,3 @@ dependencies:
     - hifiasm>=0.19
     - hifiasm_meta>=hamtv0.3
     - gfatools>=0.5
-    - drmaa>=0.7

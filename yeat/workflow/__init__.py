@@ -25,6 +25,7 @@ def run_workflow(args):
             dryrun=args.dry_run,
             printshellcmds=True,
             workdir=args.outdir,
+            local_cores=args.threads,
             nodes=args.grid_limit,
             drmaa=setup_grid_args(args),
             drmaa_log_dir="gridlogs",

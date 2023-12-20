@@ -75,6 +75,20 @@ make nanodata
 make metadata
 ```
 
+### Running YEAT with SGE
+
+To run YEAT on SGE, append the following flags to the YEAT command.
+
+```
+grid configuration:
+  --grid                run snakemake using grid support
+  --grid-limit N        limit on the number of concurrent jobs to submit to the grid scheduler; by default, N=1024
+  --grid-args A         additional arguments passed to the scheduler to configure grid execution; " -V " is passed by default, or " -V -pe
+                        threads <T> " if --threads is set; this can be used for example to configure grid queue or priority, e.g., " -q
+                        largemem -p -1000 "; note that when overriding the defaults, the user must explicitly add the " -V " and threads
+                        configuration if those are still desired
+```
+
 ## Usage:
 
 ```

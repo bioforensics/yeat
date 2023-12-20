@@ -37,7 +37,7 @@ testlinux:
 
 ## testgrid:    run only grid required automated tests
 testgrid:
-	pytest --cov=yeat -m grid --basetemp=yeat/tests/data/tmp
+	pytest --cov=yeat -m grid --basetemp=tmp
 
 ## testall:     run all tests but Bandage and linux required tests
 testall:

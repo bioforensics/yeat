@@ -36,3 +36,10 @@ def test_grid(tmp_path):
     wd = str(tmp_path)
     arglist = ["-o", wd, "-t", "200", "--grid", data_file("configs/single.cfg")]
     run_yeat(arglist)
+    expected = [
+        "analysis/Shigella_sonnei_53G/single/spades-default/spades/contigs.fasta",
+        "analysis/Shigella_sonnei_53G/single/megahit-default/megahit/contigs.fasta",
+        "analysis/Shigella_sonnei_53G/single/unicycler-default/unicycler/contigs.fasta",
+    ]
+    for contig in expected:
+        assert (Path(wd) / contig).exists()

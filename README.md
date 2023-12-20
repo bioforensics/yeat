@@ -77,7 +77,16 @@ make metadata
 
 ### Running YEAT with SGE
 
-To run YEAT on SGE, append the following flags to the YEAT command.
+To run YEAT on SGE, install DRMAA python bindings, set up environment variables, and append the following flags to the YEAT command.
+
+```
+# Install DRMAA python bindings
+conda install drmaa
+# Set environment variables
+export DRMAA_LIBRARY_PATH=/usr/lib/libdrmaa.so.1.0
+export SGE_ROOT=/path/to/qsub/bin
+export SGE_CELL=default
+```
 
 ```
 grid configuration:

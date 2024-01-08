@@ -75,9 +75,9 @@ make nanodata
 make metadata
 ```
 
-### Running YEAT with SGE
+### Running YEAT with DRMAA
 
-To run YEAT on SGE, install DRMAA python bindings, set up environment variables, and append the following flags to the YEAT command.
+To run YEAT with DRMAA, install DRMAA python bindings, set up environment variables, and append the following flags to the YEAT command.
 
 ```
 # Install DRMAA python bindings

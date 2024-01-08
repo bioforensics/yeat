@@ -8,6 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 from . import illumina
+from .aux import check_positive
 from argparse import Action, ArgumentParser
 import json
 from pathlib import Path
@@ -67,6 +68,7 @@ def get_parser(exit_on_error=True):
     parser = ArgumentParser(add_help=False, exit_on_error=exit_on_error)
     options(parser)
     workflow_configuration(parser)
+    grid_configuration(parser)
     illumina.fastp_configuration(parser)
     illumina.downsample_configuration(parser)
     parser._positionals.title = "required arguments"
@@ -116,7 +118,33 @@ def workflow_configuration(parser):
         "-t",
         "--threads",
         default=1,
-        help="execute workflow with T threads; by default, T=1",
+        help="number of available T threads for sequential and parallel processing jobs; by default, T=1",
         metavar="T",
         type=int,
+    )
+
+
+def grid_configuration(parser):
+    grid = parser.add_argument_group("grid configuration")
+    grid.add_argument(
+        "--grid",
+        action="store_true",
+        help="run snakemake using grid support",
+    )
+    grid.add_argument(
+        "--grid-limit",
+        default=1024,
+        help="limit on the number of concurrent jobs to submit to the grid scheduler; by default, N=1024",
+        metavar="N",
+        type=check_positive,
+    )
+    grid.add_argument(
+        "--grid-args",
+        default=None,
+        help='additional arguments passed to the scheduler to configure grid execution; " -V " '
+        'is passed by default, or " -V -pe threads <T> " if --threads is set; this can be used '
+        'for example to configure grid queue or priority, e.g., " -q largemem -p -1000 "; note '
+        'that when overriding the defaults, the user must explicitly add the " -V " and threads '
+        "configuration if those are still desired",
+        metavar="A",
     )

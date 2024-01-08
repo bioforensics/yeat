@@ -35,9 +35,13 @@ testbandage:
 testlinux:
 	pytest --cov=yeat -m linux
 
+## testgrid:    run only grid required automated tests
+testgrid:
+	pytest --cov=yeat -m grid --basetemp=tmp
+
 ## testall:     run all tests but Bandage and linux required tests
 testall:
-	pytest --cov=yeat -m 'not bandage and not linux'
+	pytest --cov=yeat -m 'not bandage and not linux and not grid'
 
 ## hifidata:    download PacBio HiFi-read test data for test suite
 hifidata:

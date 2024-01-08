@@ -75,6 +75,29 @@ make nanodata
 make metadata
 ```
 
+### Running YEAT with DRMAA
+
+To run YEAT with DRMAA, install DRMAA python bindings, set up environment variables, and append the following flags to the YEAT command. (Note: This have only been tested with SGE.)
+
+```
+# Install DRMAA python bindings
+conda install drmaa
+# Set environment variables
+export DRMAA_LIBRARY_PATH=/usr/lib/libdrmaa.so.1.0
+export SGE_ROOT=/path/to/qsub/bin
+export SGE_CELL=default
+```
+
+```
+grid configuration:
+  --grid                run snakemake using grid support
+  --grid-limit N        limit on the number of concurrent jobs to submit to the grid scheduler; by default, N=1024
+  --grid-args A         additional arguments passed to the scheduler to configure grid execution; " -V " is passed by default, or " -V -pe
+                        threads <T> " if --threads is set; this can be used for example to configure grid queue or priority, e.g., " -q
+                        largemem -p -1000 "; note that when overriding the defaults, the user must explicitly add the " -V " and threads
+                        configuration if those are still desired
+```
+
 ## Usage:
 
 ```

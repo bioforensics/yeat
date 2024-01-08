@@ -39,7 +39,7 @@ testlinux:
 testgrid:
 	pytest --cov=yeat -m grid --basetemp=tmp
 
-## testall:     run all tests but Bandage and linux required tests
+## testall:     run all tests but Bandage, Linux, and grid required tests
 testall:
 	pytest --cov=yeat -m 'not bandage and not linux and not grid'
 

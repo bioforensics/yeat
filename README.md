@@ -77,7 +77,7 @@ make metadata
 
 ### Running YEAT with DRMAA
 
-To run YEAT with DRMAA, install DRMAA python bindings, set up environment variables, and append the following flags to the YEAT command.
+To run YEAT with DRMAA, install DRMAA python bindings, set up environment variables, and append the following flags to the YEAT command. (Note: This have only been tested with SGE.)
 
 ```
 # Install DRMAA python bindings

@@ -23,7 +23,7 @@ FINAL_FILES = {
     "canu": "*.contigs.fasta",
     "hifiasm": "*.bp.p_ctg.gfa",
     "hifiasm_meta": "*.p_ctg.gfa",
-    "metamdbg": "contigs.fasta.gz",
+    "metamdbg": "contigs.fasta",
 }
 
 

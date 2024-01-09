@@ -25,6 +25,7 @@ def run_workflow(args):
             dryrun=args.dry_run,
             printshellcmds=True,
             workdir=args.outdir,
+            use_conda=True,
             local_cores=args.threads,
             nodes=args.grid_limit,
             drmaa=setup_grid_args(args),
@@ -38,6 +39,7 @@ def run_workflow(args):
             dryrun=args.dry_run,
             printshellcmds=True,
             workdir=args.outdir,
+            use_conda=True,
         )
     if not success:
         raise RuntimeError("Snakemake Failed")  # pragma: no cover

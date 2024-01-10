@@ -6,3 +6,10 @@ branch = True
 omit = 
     */yeat/_version.py
     */yeat/tests/*
+    */yeat/workflow/Bandage
+    */yeat/workflow/Oxford
+    */yeat/workflow/Pacbio
+    */yeat/workflow/Paired
+    */yeat/workflow/Shared
+    */yeat/workflow/Single
+    */yeat/workflow/Snakefile

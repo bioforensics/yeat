@@ -63,8 +63,13 @@ class AssemblyConfig:
                     check = True if assembly.mode in sample.sample else False
                 elif assembly.mode == "pacbio":
                     check = True if set(PACBIO_READS).intersection(sample.sample) else False
-                elif assembly.mode == "oxford":  # pragma: no cover
+                elif assembly.mode == "oxford":
                     check = True if set(OXFORD_READS).intersection(sample.sample) else False
+                elif assembly.mode == "hybrid":  # pragma: no cover
+                    condition = (
+                        sample.short_readtype == "paired" and sample.long_readtype is not None
+                    )
+                    check = True if condition else False
             if check == False:
                 message = f"No samples can interact with assembly mode '{assembly.mode}' for '{assembly_label}'"
                 raise AssemblyConfigError(message)

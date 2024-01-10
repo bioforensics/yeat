@@ -61,3 +61,10 @@ module bandage_workflow:
     config: config
 
 use rule * from bandage_workflow as bandage_*
+
+
+module hybrid_workflow:
+    snakefile: "Hybrid"
+    config: config
+
+use rule * from hybrid_workflow as hybrid_*

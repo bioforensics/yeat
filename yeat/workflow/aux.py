@@ -97,7 +97,7 @@ def get_expected_files(config):
                         assembly_obj.algorithm,
                     )
                 )
-            elif assembly_obj.mode in ["pacbio", "oxford"]:  # pragma: no cover
+            elif assembly_obj.mode in ["pacbio", "oxford"]:
                 inputlist.append(
                     get_file(
                         run_bandage,
@@ -107,18 +107,27 @@ def get_expected_files(config):
                         assembly_obj.algorithm,
                     )
                 )
-            if assembly_obj.mode == "paired":
+            elif assembly_obj.mode == "hybrid":  # pragma: no cover
+                inputlist.append(
+                    get_file(
+                        run_bandage, sample_label, "hybrid", assembly_label, assembly_obj.algorithm
+                    )
+                    # idk what to do here.
+                    # take a look at the "{short|long}_readtype..."
+                )
+
+            if assembly_obj.mode in ["paired", "hybrid"]:
                 inputlist += [
                     f"seq/fastqc/{sample_label}/paired/{direction}_combined-reads_fastqc.html"
                     for direction in ["r1", "r2"]
                 ]
-            elif assembly_obj.mode == "single":
+            if assembly_obj.mode == "single":
                 inputlist.append(f"seq/fastqc/{sample_label}/single/combined-reads_fastqc.html")
-            elif assembly_obj.mode == "pacbio":
+            if assembly_obj.mode in ["pacbio", "hybrid"]:
                 inputlist.append(
                     f"seq/fastqc/{sample_label}/{sample_obj.long_readtype}/combined-reads_fastqc.html"
                 )
-            elif assembly_obj.mode == "oxford":  # pragma: no cover
+            if assembly_obj.mode == ["oxford", "hybrid"]:
                 inputlist += [
                     f"seq/nanoplot/{sample_label}/{sample_obj.long_readtype}/{quality}_LengthvsQualityScatterPlot_dot.pdf"
                     for quality in ["raw", "filtered"]

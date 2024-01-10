@@ -16,6 +16,7 @@ ALGORITHMS = {
     "single": ("spades", "megahit", "unicycler"),
     "pacbio": ("canu", "flye", "hifiasm", "hifiasm_meta", "unicycler", "metamdbg"),
     "oxford": ("canu", "flye", "unicycler"),
+    "hybrid": ("unicycler"),
 }
 
 

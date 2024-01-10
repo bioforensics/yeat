@@ -10,7 +10,101 @@
 from shutil import copyfile
 
 
-rule copyinput:
+rule copyinput_paired:
+    output:
+        read1="seq/input/{sample}/paired/r1_combined-reads.fq.gz",
+        read2="seq/input/{sample}/paired/r2_combined-reads.fq.gz"
+    input:
+        r1s = lambda wildcards: [read[0] for read in config["samples"][wildcards.sample].sample["paired"]],
+        r2s = lambda wildcards: [read[1] for read in config["samples"][wildcards.sample].sample["paired"]]
+    params:
+        outdir="seq/input/{sample}/paired"
+    run:
+        combine(input.r1s, "r1", params.outdir)
+        combine(input.r2s, "r2", params.outdir)
+
+
+rule fastqc_paired:
+    output:
+        out1="seq/fastqc/{sample}/paired/r1_combined-reads_fastqc.html",
+        out2="seq/fastqc/{sample}/paired/r2_combined-reads_fastqc.html"
+    input:
+        read1="seq/input/{sample}/paired/r1_combined-reads.fq.gz",
+        read2="seq/input/{sample}/paired/r2_combined-reads.fq.gz"
+    threads: 128
+    params:
+        outdir="seq/fastqc/{sample}/paired"
+    shell:
+        """
+        fastqc {input.read1} {input.read2} -t {threads} -o {params.outdir}
+        """
+
+
+rule fastp:
+    output:
+        out1="seq/fastp/{sample}/paired/{sample}.R1.fq.gz",
+        out2="seq/fastp/{sample}/paired/{sample}.R2.fq.gz"
+    input:
+        read1="seq/input/{sample}/paired/r1_combined-reads.fq.gz",
+        read2="seq/input/{sample}/paired/r2_combined-reads.fq.gz"
+    params:
+        length_required=config["length_required"],
+        html_report="seq/fastp/{sample}/paired/fastp.html",
+        json_report="seq/fastp/{sample}/paired/fastp.json",
+        txt_report="seq/fastp/{sample}/paired/report.txt"
+    shell:
+        """
+        fastp -i {input.read1} -I {input.read2} -o {output.out1} -O {output.out2} \
+            -l {params.length_required} --detect_adapter_for_pe \
+            --html {params.html_report} --json {params.json_report} \
+            2> {params.txt_report}
+        """
+
+
+rule mash:
+    output:
+        sketch="seq/mash/{sample}/paired/{sample}.R1.fq.gz.msh",
+        mash_report="seq/mash/{sample}/paired/{sample}.report.tsv"
+    input:
+        read1="seq/fastp/{sample}/paired/{sample}.R1.fq.gz"
+    shell:
+        """
+        mash sketch {input.read1} -o {output.sketch}
+        mash info -t {output.sketch} > {output.mash_report}
+        """
+
+
+rule downsample:
+    output:
+        sub1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
+        sub2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz"
+    input:
+        read1="seq/fastp/{sample}/paired/{sample}.R1.fq.gz",
+        read2="seq/fastp/{sample}/paired/{sample}.R2.fq.gz",
+        mash_report="seq/mash/{sample}/paired/{sample}.report.tsv"
+    params:
+        coverage=config["coverage"],
+        downsample=config["downsample"],
+        fastp_report="seq/fastp/{sample}/paired/fastp.json",
+        genome_size=config["genome_size"],
+        seed=config["seed"],
+        outdir="seq/downsample/{sample}/paired"
+    run:
+        if params.downsample == -1:
+            copyfile(input.read1, output.sub1)
+            copyfile(input.read2, output.sub2)
+            return
+        genome_size = get_genome_size(params.genome_size, input.mash_report)
+        avg_read_length = get_avg_read_length(params.fastp_report)
+        down = get_down(params.downsample, genome_size, params.coverage, avg_read_length)
+        seed = get_seed(params.seed)
+        print_downsample_values(genome_size, avg_read_length, params.coverage, down, seed)
+        shell("seqtk sample -s {seed} {input.read1} {down} > {params.outdir}/{wildcards.sample}.R1.fq")
+        shell("seqtk sample -s {seed} {input.read2} {down} > {params.outdir}/{wildcards.sample}.R2.fq")
+        shell("gzip -f {params.outdir}/*")
+
+
+rule copyinput_single:
     output:
         combined="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
     input:
@@ -28,7 +122,7 @@ rule copyinput:
         shell("gzip {params.outdir}/combined-reads.fq")
 
 
-rule fastqc:
+rule fastqc_single:
     output:
         report="seq/fastqc/{sample}/{readtype}/combined-reads_fastqc.html"
     input:

@@ -123,7 +123,7 @@ $ yeat --outdir {path} {config}
 
 To enable Hybrid assembly, add the following to the configuration file.
 
-1. Add two read types to sample:
+1. Add two read types to a sample:
     - Paired-end reads
     - Any type of long read
 2. Set the Unicycler assembly `"mode"` to `"hybrid"`.

@@ -112,10 +112,7 @@ def get_expected_files(config):
                     get_file(
                         run_bandage, sample_label, "hybrid", assembly_label, assembly_obj.algorithm
                     )
-                    # idk what to do here.
-                    # take a look at the "{short|long}_readtype..."
                 )
-
             if assembly_obj.mode in ["paired", "hybrid"]:
                 inputlist += [
                     f"seq/fastqc/{sample_label}/paired/{direction}_combined-reads_fastqc.html"

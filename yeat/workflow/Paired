@@ -7,8 +7,6 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from shutil import copyfile
-
 
 rule spades:
     output:

@@ -7,7 +7,6 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-
 rule spades:
     output:
         contigs="analysis/{sample}/paired/{label}/spades/contigs.fasta"

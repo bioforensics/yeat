@@ -7,6 +7,7 @@ omit =
     */yeat/_version.py
     */yeat/tests/*
     */yeat/workflow/Bandage
+    */yeat/workflow/Hybrid
     */yeat/workflow/Oxford
     */yeat/workflow/Pacbio
     */yeat/workflow/Paired

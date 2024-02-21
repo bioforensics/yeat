@@ -143,11 +143,23 @@ def test_get_expected_files():
     "run_bandage,file",
     [(True, "bandage/.done"), (False, "quast/report.html")],
 )
-def test_get_file(run_bandage, file):
+def test_get_bandage_file(run_bandage, file):
     sample = "sample1"
     readtype = "single"
     assembly = "spades-default"
     algorithm = "spades"
-    observed = aux.get_file(run_bandage, sample, readtype, assembly, algorithm)
+    observed = aux.get_bandage_file(sample, readtype, assembly, algorithm, run_bandage=run_bandage)
     expected = f"analysis/{sample}/{readtype}/{assembly}/{algorithm}/{file}"
+    assert observed == expected
+
+
+@pytest.mark.parametrize(
+    "long_readtype,expected",
+    [
+        ("nano-corr", "seq/nanofilt/sample1/nano-corr/highQuality-reads.fq.gz"),
+        ("pacbio-hifi", "seq/input/sample1/pacbio-hifi/combined-reads.fq.gz"),
+    ],
+)
+def test_get_longread_file(long_readtype, expected):
+    observed = aux.get_longread_file("sample1", long_readtype)
     assert observed == expected

@@ -27,6 +27,10 @@ testhifi:
 testnano:
 	pytest --cov=yeat -m nano
 
+## testhybrid:  run only Hybrid automated tests
+testhybrid:
+	pytest --cov=yeat -m hybrid
+
 ## testbandage: run only Bandage required automated tests
 testbandage:
 	pytest --cov=yeat -m bandage

@@ -18,6 +18,87 @@ import warnings
 from yeat.config import PACBIO_READS, OXFORD_READS
 
 
+def get_expected_files(config):
+    inputlist = []
+    run_bandage = check_bandage()
+    for assembly_label, assembly_obj in config["assemblies"].items():
+        for sample_label in assembly_obj.samples:
+            sample_obj = config["samples"][sample_label]
+            inputlist.append(
+                get_assembly_analysis_final_file(
+                    assembly_obj, assembly_label, sample_obj, sample_label, run_bandage=run_bandage
+                )
+            )
+            if assembly_obj.mode in ["paired", "hybrid"]:
+                inputlist += [
+                    f"seq/fastqc/{sample_label}/paired/{direction}_combined-reads_fastqc.html"
+                    for direction in ["r1", "r2"]
+                ]
+            if assembly_obj.mode == "single":
+                inputlist.append(f"seq/fastqc/{sample_label}/single/combined-reads_fastqc.html")
+            if (
+                assembly_obj.mode in ["pacbio", "hybrid"]
+                and sample_obj.long_readtype in PACBIO_READS
+            ):
+                inputlist.append(
+                    f"seq/fastqc/{sample_label}/{sample_obj.long_readtype}/combined-reads_fastqc.html"
+                )
+            if (
+                assembly_obj.mode in ["oxford", "hybrid"]
+                and sample_obj.long_readtype in OXFORD_READS
+            ):
+                inputlist += [
+                    f"seq/nanoplot/{sample_label}/{sample_obj.long_readtype}/{quality}_LengthvsQualityScatterPlot_dot.pdf"
+                    for quality in ["raw", "filtered"]
+                ]
+    return inputlist
+
+
+def check_bandage():
+    try:
+        completed_process = subprocess.run(["Bandage", "--help"], capture_output=True, text=True)
+    except Exception as exception:
+        print(f"{type(exception).__name__}: {exception}")
+        warnings.warn("Unable to run Bandage; skipping Bandage")
+        return False
+    if completed_process.returncode == 1:
+        print(completed_process.stderr)
+        warnings.warn("Unable to run Bandage; skipping Bandage")
+        return False
+    return True
+
+
+def get_assembly_analysis_final_file(
+    assembly_obj, assembly_label, sample_obj, sample_label, run_bandage=False
+):
+    if assembly_obj.mode in ["paired", "single"]:
+        return get_bandage_file(
+            sample_label,
+            sample_obj.short_readtype,
+            assembly_label,
+            assembly_obj.algorithm,
+            run_bandage=run_bandage,
+        )
+    elif assembly_obj.mode in ["pacbio", "oxford"]:
+        return get_bandage_file(
+            sample_label,
+            sample_obj.long_readtype,
+            assembly_label,
+            assembly_obj.algorithm,
+            run_bandage=run_bandage,
+        )
+    elif assembly_obj.mode == "hybrid":  # pragma: no cover
+        return get_bandage_file(
+            sample_label, "hybrid", assembly_label, assembly_obj.algorithm, run_bandage=run_bandage
+        )
+
+
+def get_bandage_file(sample, readtype, assembly, algorithm, run_bandage=False):
+    if run_bandage:
+        return f"analysis/{sample}/{readtype}/{assembly}/{algorithm}/bandage/.done"
+    return f"analysis/{sample}/{readtype}/{assembly}/{algorithm}/quast/report.html"
+
+
 def get_and_filter_contig_files(sample, readtype, label):
     pattern = rf"analysis/{sample}/{readtype}/{label}/megahit/intermediate_contigs/k\d+.contigs.fa"
     contigs = glob.glob(
@@ -82,85 +163,8 @@ def print_downsample_values(genome_size, avg_read_length, coverage, down, seed):
     print(f"[yeat] random seed for sampling: {seed}")
 
 
-def get_expected_files(config):
-    run_bandage = check_bandage()
-    inputlist = []
-    for assembly_label, assembly_obj in config["assemblies"].items():
-        for sample_label in assembly_obj.samples:
-            sample_obj = config["samples"][sample_label]
-            if assembly_obj.mode in ["paired", "single"]:
-                inputlist.append(
-                    get_file(
-                        run_bandage,
-                        sample_label,
-                        sample_obj.short_readtype,
-                        assembly_label,
-                        assembly_obj.algorithm,
-                    )
-                )
-            elif assembly_obj.mode in ["pacbio", "oxford"]:
-                inputlist.append(
-                    get_file(
-                        run_bandage,
-                        sample_label,
-                        sample_obj.long_readtype,
-                        assembly_label,
-                        assembly_obj.algorithm,
-                    )
-                )
-            elif assembly_obj.mode == "hybrid":  # pragma: no cover
-                inputlist.append(
-                    get_file(
-                        run_bandage, sample_label, "hybrid", assembly_label, assembly_obj.algorithm
-                    )
-                )
-            if assembly_obj.mode in ["paired", "hybrid"]:
-                inputlist += [
-                    f"seq/fastqc/{sample_label}/paired/{direction}_combined-reads_fastqc.html"
-                    for direction in ["r1", "r2"]
-                ]
-            if assembly_obj.mode == "single":
-                inputlist.append(f"seq/fastqc/{sample_label}/single/combined-reads_fastqc.html")
-            if (
-                assembly_obj.mode in ["pacbio", "hybrid"]
-                and sample_obj.long_readtype in PACBIO_READS
-            ):
-                inputlist.append(
-                    f"seq/fastqc/{sample_label}/{sample_obj.long_readtype}/combined-reads_fastqc.html"
-                )
-            if (
-                assembly_obj.mode in ["oxford", "hybrid"]
-                and sample_obj.long_readtype in OXFORD_READS
-            ):
-                inputlist += [
-                    f"seq/nanoplot/{sample_label}/{sample_obj.long_readtype}/{quality}_LengthvsQualityScatterPlot_dot.pdf"
-                    for quality in ["raw", "filtered"]
-                ]
-    return inputlist
-
-
-def check_bandage():
-    try:
-        completed_process = subprocess.run(["Bandage", "--help"], capture_output=True, text=True)
-    except Exception as exception:
-        print(f"{type(exception).__name__}: {exception}")
-        warnings.warn("Unable to run Bandage; skipping Bandage")
-        return False
-    if completed_process.returncode == 1:
-        print(completed_process.stderr)
-        warnings.warn("Unable to run Bandage; skipping Bandage")
-        return False
-    return True
-
-
-def get_file(run_bandage, sample, readtype, assembly, algorithm):
-    if run_bandage:
-        return f"analysis/{sample}/{readtype}/{assembly}/{algorithm}/bandage/.done"
-    return f"analysis/{sample}/{readtype}/{assembly}/{algorithm}/quast/report.html"
-
-
-def get_longread(sample, long_readtype):
+def get_longread_file(sample, long_readtype):
     if long_readtype in PACBIO_READS:
         return f"seq/input/{sample}/{long_readtype}/combined-reads.fq.gz"
-    elif long_readtype in OXFORD_READS:
+    elif long_readtype in OXFORD_READS:  # pragma: no cover
         return f"seq/nanofilt/{sample}/{long_readtype}/highQuality-reads.fq.gz"

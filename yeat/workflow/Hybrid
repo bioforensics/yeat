@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from yeat.workflow.aux import get_longread
+from yeat.workflow.aux import get_longread_file
 
 
 rule unicycler:
@@ -16,7 +16,7 @@ rule unicycler:
     input:
         read1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
         read2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz",
-        longread=lambda wildcards: get_longread(wildcards.sample, config["samples"][wildcards.sample].long_readtype)
+        longread=lambda wildcards: get_longread_file(wildcards.sample, config["samples"][wildcards.sample].long_readtype)
     threads: 128
     params:
         outdir="analysis/{sample}/hybrid/{label}/unicycler",

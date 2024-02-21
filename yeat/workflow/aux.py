@@ -15,6 +15,7 @@ import re
 import shutil
 import subprocess
 import warnings
+from yeat.config import PACBIO_READS, OXFORD_READS
 
 
 def get_and_filter_contig_files(sample, readtype, label):
@@ -120,11 +121,17 @@ def get_expected_files(config):
                 ]
             if assembly_obj.mode == "single":
                 inputlist.append(f"seq/fastqc/{sample_label}/single/combined-reads_fastqc.html")
-            if assembly_obj.mode in ["pacbio", "hybrid"]:
+            if (
+                assembly_obj.mode in ["pacbio", "hybrid"]
+                and sample_obj.long_readtype in PACBIO_READS
+            ):
                 inputlist.append(
                     f"seq/fastqc/{sample_label}/{sample_obj.long_readtype}/combined-reads_fastqc.html"
                 )
-            if assembly_obj.mode == ["oxford", "hybrid"]:
+            if (
+                assembly_obj.mode in ["oxford", "hybrid"]
+                and sample_obj.long_readtype in OXFORD_READS
+            ):
                 inputlist += [
                     f"seq/nanoplot/{sample_label}/{sample_obj.long_readtype}/{quality}_LengthvsQualityScatterPlot_dot.pdf"
                     for quality in ["raw", "filtered"]
@@ -153,8 +160,7 @@ def get_file(run_bandage, sample, readtype, assembly, algorithm):
 
 
 def get_longread(sample, long_readtype):
-    if long_readtype in ["nano-raw", "nano-corr", "nano-hq"]:
-        return f"seq/nanofilt/{sample}/{long_readtype}/highQuality-reads.fq.gz"
-    if long_readtype in ["pacbio-raw", "pacbio-corr", "pacbio-hifi"]:
+    if long_readtype in PACBIO_READS:
         return f"seq/input/{sample}/{long_readtype}/combined-reads.fq.gz"
-    assert 0  # should never get here
+    elif long_readtype in OXFORD_READS:
+        return f"seq/nanofilt/{sample}/{long_readtype}/highQuality-reads.fq.gz"

@@ -7,19 +7,22 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+from yeat.workflow.aux import get_longread
+
+
 rule unicycler:
     output:
         contigs="analysis/{sample}/hybrid/{label}/unicycler/contigs.fasta"
     input:
         read1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
         read2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz",
-        longread=""
+        longread=lambda wildcards: get_longread(wildcards.sample, config["samples"][wildcards.sample].long_readtype)
     threads: 128
     params:
-        outdir="analysis/{sample}/{readtype}/{label}/unicycler",
+        outdir="analysis/{sample}/hybrid/{label}/unicycler",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
-        unicycler -l {input.reads} -t {threads} -o {params.outdir} {params.extra_args}
+        unicycler -1 {input.read1} -2 {input.read2} -l {input.longread} -t {threads} -o {params.outdir} {params.extra_args}
         ln -s assembly.fasta {output.contigs}
         """

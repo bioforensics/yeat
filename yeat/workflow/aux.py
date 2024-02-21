@@ -153,3 +153,11 @@ def get_file(run_bandage, sample, readtype, assembly, algorithm):
     if run_bandage:
         return f"analysis/{sample}/{readtype}/{assembly}/{algorithm}/bandage/.done"
     return f"analysis/{sample}/{readtype}/{assembly}/{algorithm}/quast/report.html"
+
+
+def get_longread(sample, long_readtype):
+    if long_readtype in ["nano-raw", "nano-corr", "nano-hq"]:
+        return f"seq/nanofilt/{sample}/{long_readtype}/highQuality-reads.fq.gz"
+    if long_readtype in ["pacbio-raw", "pacbio-corr", "pacbio-hifi"]:
+        return f"seq/input/{sample}/{long_readtype}/combined-reads.fq.gz"
+    assert 0  # should never get here

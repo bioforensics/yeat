@@ -8,6 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 from shutil import copyfile
+from yeat.workflow.aux import *
 
 
 rule copyinput_paired:

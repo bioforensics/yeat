@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import ILLUMINA_READS, LONG_READS, AssemblyConfigError
+from . import *
 from pathlib import Path
 
 
@@ -16,34 +16,22 @@ class Sample:
         self.label = label
         self.sample = sample
         self.all_reads = []
-        self.short_readtype = None
-        self.long_readtype = None
-        self.validate()
+        self.validate_sample_configuration()
+        self.short_readtype = self.get_short_readtype()
+        self.long_readtype = self.get_long_readtype()
+        self.expected_files = self.get_expected_files()
 
-    def validate(self):
-        self.check_one_readtype_limit()
+    def validate_sample_configuration(self):
+        self.check_enough_readtypes()
         self.check_input_reads()
 
-    def check_one_readtype_limit(self):
-        observed_readtypes = self.sample.keys()
-        if len(observed_readtypes) == 0:
+    def check_enough_readtypes(self):
+        if len(self.sample.keys()) == 0:
             message = f"Missing sample reads for '{self.label}'"
             raise AssemblyConfigError(message)
-        if len(observed_readtypes) > 2:
+        if len(self.sample.keys()) > 2:
             message = f"Max of 2 readtypes per sample for '{self.label}'"
             raise AssemblyConfigError(message)
-        illumina = set.intersection(set(observed_readtypes), set(ILLUMINA_READS))
-        if len(illumina) > 1:
-            message = f"Max of 1 Illumina readtype per sample for '{self.label}'"
-            raise AssemblyConfigError(message)
-        long = set.intersection(set(observed_readtypes), set(LONG_READS))
-        if len(long) > 1:
-            message = f"Max of 1 long readtype per sample for '{self.label}'"
-            raise AssemblyConfigError(message)
-        if illumina:
-            self.short_readtype = next(iter(illumina))
-        if long:
-            self.long_readtype = next(iter(long))
 
     def check_input_reads(self):
         for readtype, reads in self.sample.items():
@@ -85,3 +73,37 @@ class Sample:
                 message = f"Found duplicate read sample '{read}' for '{self.label}'"
                 raise AssemblyConfigError(message)
             self.all_reads.append(read)
+
+    def get_short_readtype(self):
+        illumina = set.intersection(set(self.sample.keys()), set(ILLUMINA_READS))
+        if len(illumina) > 1:
+            message = f"Max of 1 Illumina readtype per sample for '{self.label}'"
+            raise AssemblyConfigError(message)
+        return next(iter(illumina), None)
+
+    def get_long_readtype(self):
+        long = set.intersection(set(self.sample.keys()), set(LONG_READS))
+        if len(long) > 1:
+            message = f"Max of 1 long readtype per sample for '{self.label}'"
+            raise AssemblyConfigError(message)
+        return next(iter(long), None)
+
+    def get_expected_files(self):
+        expected_files = []
+        for readtype in self.sample.keys():
+            expected_files += self.get_qc_files(readtype)
+        return expected_files
+
+    def get_qc_files(self, readtype):
+        if readtype == "paired":
+            return [
+                f"seq/fastqc/{self.label}/paired/{direction}_combined-reads_fastqc.html"
+                for direction in ["r1", "r2"]
+            ]
+        elif readtype in ("single",) + PACBIO_READS:
+            return [f"seq/fastqc/{self.label}/{readtype}/combined-reads_fastqc.html"]
+        elif readtype in OXFORD_READS:
+            return [
+                f"seq/nanoplot/{self.label}/{readtype}/{quality}_LengthvsQualityScatterPlot_dot.pdf"
+                for quality in ["raw", "filtered"]
+            ]

@@ -11,12 +11,15 @@ from importlib.resources import files
 import json
 from pathlib import Path
 from snakemake import snakemake
+import subprocess
+import warnings
 
 
 def run_workflow(args):
     snakefile = files("yeat") / "workflow" / "Snakefile"
     config = vars(args)
     config["data"] = resolve_paths(config["config"])
+    config["bandage"] = check_bandage()
     if args.grid:
         success = snakemake(
             snakefile,
@@ -57,6 +60,20 @@ def resolve_paths(infile):
                     resolved_paths.append(str(Path(read).resolve()))
             sample[readtype] = resolved_paths
     return data
+
+
+def check_bandage():
+    try:
+        completed_process = subprocess.run(["Bandage", "--help"], capture_output=True, text=True)
+    except Exception as exception:
+        print(f"{type(exception).__name__}: {exception}")
+        warnings.warn("Unable to run Bandage; skipping Bandage")
+        return False
+    if completed_process.returncode == 1:
+        print(completed_process.stderr)
+        warnings.warn("Unable to run Bandage; skipping Bandage")
+        return False
+    return True
 
 
 def setup_grid_args(args):

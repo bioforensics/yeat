@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import PACBIO_READS, OXFORD_READS, LONG_READS, AssemblyConfigError
+from . import *
 from sys import platform
 
 

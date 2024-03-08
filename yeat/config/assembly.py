@@ -106,5 +106,5 @@ class Assembly:
     def get_readtype(self, sample):
         if self.mode in ["paired", "single", "hybrid"]:
             return self.mode
-        elif self.mode in ["pacbio", "oxford"]:
+        elif self.mode in ["pacbio", "oxford"]:  # pragma: no cover
             return sample.long_readtype

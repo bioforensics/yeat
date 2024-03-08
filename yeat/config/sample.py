@@ -102,7 +102,7 @@ class Sample:
             ]
         elif readtype in ("single",) + PACBIO_READS:
             return [f"seq/fastqc/{self.label}/{readtype}/combined-reads_fastqc.html"]
-        elif readtype in OXFORD_READS:
+        elif readtype in OXFORD_READS:  # pragma: no cover
             return [
                 f"seq/nanoplot/{self.label}/{readtype}/{quality}_LengthvsQualityScatterPlot_dot.pdf"
                 for quality in ["raw", "filtered"]

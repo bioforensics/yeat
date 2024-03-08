@@ -50,7 +50,7 @@ def run_workflow(args):
 
 def resolve_paths(infile):
     data = json.load(open(infile))
-    for label, sample in data["samples"].items():
+    for sample in data["samples"].values:
         for readtype, reads in sample.items():
             resolved_paths = []
             for read in reads:

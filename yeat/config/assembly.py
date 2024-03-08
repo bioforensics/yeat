@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import AssemblyConfigError
+from . import PACBIO_READS, OXFORD_READS, LONG_READS, AssemblyConfigError
 from sys import platform
 
 
@@ -65,20 +65,29 @@ class Assembly:
 
     def check_sample_readtypes_match_assembly_mode(self):
         for sample in self.samples.values():
-            check = True
-            if self.mode in ["paired", "single"] and sample.short_readtype is None:
-                check = False
-            elif self.mode in ["pacbio", "oxford"] and sample.long_readtype is None:
-                check = False
-            elif self.mode == "hybrid" and (
-                sample.short_readtype != "paired" or sample.long_readtype is None
-            ):
-                check = False
-            self.temp(check, sample)
+            check = self.is_mode_and_sample_readtypes_match(sample)
+            self.check_sample_readtypes_match(check, sample)
 
-    def temp(self, check, sample):
+    def is_mode_and_sample_readtypes(self, sample):
+        if self.mode == "paired" and sample.short_readtype != "paired":
+            return False
+        elif self.mode == "single" and sample.short_readtype != "single":
+            return False
+        elif self.mode == "pacbio" and sample.long_readtype not in PACBIO_READS:
+            return False
+        elif self.mode == "oxford" and sample.long_readtype not in OXFORD_READS:
+            return False
+        elif (
+            self.mode == "hybrid"
+            and sample.short_readtype != "paired"
+            or sample.long_readtype not in LONG_READS
+        ):
+            return False
+        return True
+
+    def check_sample_readtypes_match(self, check, sample):
         if check == False:
-            message = f"No readtype in sample '{sample.label}' can be used with assembly mode '{self.mode}'"
+            message = f"No readtypes in sample '{sample.label}' match assembly mode '{self.mode}'"
             raise AssemblyConfigError(message)
 
     def get_expected_files(self):
@@ -89,13 +98,10 @@ class Assembly:
 
     def get_qa_file(self, sample):
         readtype = self.get_readtype(sample)
+        algorithm_dir = f"analysis/{sample.label}/{readtype}/{self.label}/{self.algorithm}"
         if self.bandage:
-            return (
-                f"analysis/{sample.label}/{readtype}/{self.label}/{self.algorithm}/bandage/.done"
-            )
-        return (
-            f"analysis/{sample.label}/{readtype}/{self.label}/{self.algorithm}/quast/report.html"
-        )
+            return f"{algorithm_dir}/bandage/.done"
+        return f"{algorithm_dir}/quast/report.html"
 
     def get_readtype(self, sample):
         if self.mode in ["paired", "single", "hybrid"]:

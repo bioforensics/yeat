@@ -52,14 +52,18 @@ def resolve_paths(infile):
     data = json.load(open(infile))
     for sample in data["samples"].values():
         for readtype, reads in sample.items():
-            resolved_paths = []
-            for read in reads:
-                if isinstance(read, list):
-                    resolved_paths.append([str(Path(direction).resolve()) for direction in read])
-                else:
-                    resolved_paths.append(str(Path(read).resolve()))
-            sample[readtype] = resolved_paths
+            sample[readtype] = get_resolved_paths(reads)
     return data
+
+
+def get_resolved_paths(reads):
+    resolved_paths = []
+    for read in reads:
+        if isinstance(read, list):
+            resolved_paths.append([str(Path(direction).resolve()) for direction in read])
+        else:
+            resolved_paths.append(str(Path(read).resolve()))
+    return resolve_paths
 
 
 def check_bandage():

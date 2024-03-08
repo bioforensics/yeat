@@ -65,7 +65,7 @@ class Assembly:
 
     def check_sample_readtypes_match_assembly_mode(self):
         for sample in self.samples.values():
-            check = self.is_mode_and_sample_readtypes_match(sample)
+            check = self.is_mode_and_sample_readtypes(sample)
             self.check_sample_readtypes_match(check, sample)
 
     def is_mode_and_sample_readtypes(self, sample):

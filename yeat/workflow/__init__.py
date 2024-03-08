@@ -63,7 +63,7 @@ def get_resolved_paths(reads):
             resolved_paths.append([str(Path(direction).resolve()) for direction in read])
         else:
             resolved_paths.append(str(Path(read).resolve()))
-    return resolve_paths
+    return resolved_paths
 
 
 def check_bandage():

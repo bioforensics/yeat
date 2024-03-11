@@ -15,12 +15,12 @@ import shutil
 import subprocess
 from unittest.mock import patch
 from yeat.tests import data_file
-from yeat.workflow import aux
+from yeat.workflow import check_bandage
 
 
 @pytest.mark.bandage
 def test_check_bandage():
-    assert aux.check_bandage()
+    assert check_bandage()
 
 
 @pytest.mark.bandage
@@ -28,14 +28,14 @@ def test_check_bandage():
 def test_bandage_subprocess_failed(function_mock):
     function_mock.return_value = subprocess.CompletedProcess(["Bandage", "--help"], 1)
     with pytest.warns(UserWarning, match=r"Unable to run Bandage; skipping Bandage"):
-        assert aux.check_bandage() == False
+        assert check_bandage() == False
 
 
 @pytest.mark.short
 @patch.dict(os.environ, {"PATH": "DNE"})
 def test_env_path_has_no_path_to_bandage(capsys):
     with pytest.warns(UserWarning, match=r"Unable to run Bandage; skipping Bandage"):
-        aux.check_bandage()
+        check_bandage()
     out, err = capsys.readouterr()
     assert "No such file or directory: 'Bandage'" in out
 

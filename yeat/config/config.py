@@ -17,7 +17,7 @@ ASSEMBLY_KEYS = ("algorithm", "extra_args", "samples", "mode")
 
 
 class AssemblyConfig:
-    def __init__(self, config, threads, bandage):
+    def __init__(self, config, threads=1, bandage=False):
         self.config = config
         self.validate_config_keys()
         self.threads = threads

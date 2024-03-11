@@ -31,8 +31,7 @@ def test_paired_end_assemblers(algorithm, capsys, tmp_path):
     config = write_config(algorithm, wd, "paired.cfg")
     arglist = ["-o", wd, config]
     run_yeat(arglist)
-    expected = get_expected(algorithm, wd, config)
-    files_exist(expected)
+    expected_files_exist(wd, config)
 
 
 @pytest.mark.long
@@ -42,8 +41,7 @@ def test_mutiple_samples_in_assembly(capsys, tmp_path):
     config = data_file("configs/two_samples.cfg")
     arglist = ["-o", wd, config]
     run_yeat(arglist)
-    expected = get_expected("spades", wd, config)
-    files_exist(expected)
+    expected_files_exist(wd, config)
 
 
 @pytest.mark.long
@@ -53,8 +51,7 @@ def test_multiple_spades_in_config(capsys, tmp_path):
     config = data_file("configs/two_spades.cfg")
     arglist = ["-o", wd, config]
     run_yeat(arglist)
-    expected = get_expected("spades", wd, config)
-    files_exist(expected)
+    expected_files_exist(wd, config)
 
 
 @pytest.mark.long

@@ -26,5 +26,4 @@ def test_single_end_assemblers(algorithm, capsys, tmp_path):
     config = write_config(algorithm, wd, "single.cfg")
     arglist = ["-o", wd, config]
     run_yeat(arglist)
-    expected = get_expected(algorithm, wd, config)
-    files_exist(expected)
+    expected_files_exist(wd, config)

@@ -21,7 +21,7 @@ ALGORITHMS = {
 
 
 class Assembly:
-    def __init__(self, label, assembly, threads, bandage):
+    def __init__(self, label, assembly, threads=1, bandage=False):
         self.label = label
         self.algorithm = assembly["algorithm"]
         self.extra_args = assembly["extra_args"]
@@ -77,17 +77,15 @@ class Assembly:
             return False
         elif self.mode == "oxford" and sample.long_readtype not in OXFORD_READS:
             return False
-        elif (
-            self.mode == "hybrid"
-            and sample.short_readtype != "paired"
-            or sample.long_readtype not in LONG_READS
-        ):
+        elif self.mode == "hybrid" and (
+            sample.short_readtype != "paired" or sample.long_readtype not in LONG_READS
+        ):  # pragma: no cover
             return False
         return True
 
     def check_sample_readtypes_match(self, check, sample):
         if check == False:
-            message = f"No readtypes in sample '{sample.label}' match assembly mode '{self.mode}'"
+            message = f"No readtypes in '{sample.label}' match '{self.label}' assembly mode '{self.mode}'"
             raise AssemblyConfigError(message)
 
     def get_expected_files(self):

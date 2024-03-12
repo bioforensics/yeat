@@ -54,6 +54,6 @@ def run_yeat(arglist):
     main(args)
 
 
-def expected_files_exist(wd, config):
-    cfg = AssemblyConfig(json.load(open(config)))
+def expected_files_exist(wd, config, threads=1):
+    cfg = AssemblyConfig(json.load(open(config)), threads)
     assert all([(Path(wd) / file).exists() for file in cfg.expected_files])

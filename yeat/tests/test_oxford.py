@@ -27,4 +27,4 @@ def test_oxford_nanopore_read_assemblers(algorithm, capsys, tmp_path):
     config = write_config(algorithm, wd, "ont.cfg")
     arglist = ["-o", wd, "-t", cores, config]
     run_yeat(arglist)
-    expected_files_exist(wd, config)
+    expected_files_exist(wd, config, cores)

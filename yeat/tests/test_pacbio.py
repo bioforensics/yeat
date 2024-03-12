@@ -27,7 +27,7 @@ def test_pacbio_hifi_read_assemblers(algorithm, capsys, tmp_path):
     config = write_config(algorithm, wd, "hifi.cfg")
     arglist = ["-o", wd, "-t", cores, config]
     run_yeat(arglist)
-    expected_files_exist(wd, config)
+    expected_files_exist(wd, config, cores)
 
 
 @pytest.mark.long
@@ -39,7 +39,7 @@ def test_pacbio_hifi_read_metagenomic_assemblers(algorithm, capsys, tmp_path):
     config = write_config(algorithm, wd, "meta.cfg")
     arglist = ["-o", wd, "-t", cores, config]
     run_yeat(arglist)
-    expected_files_exist(wd, config)
+    expected_files_exist(wd, config, cores)
 
 
 @pytest.mark.linux
@@ -50,4 +50,4 @@ def test_metaMDBG_assembler(tmp_path):
     config = write_config(algorithm, wd, "meta.cfg")
     arglist = ["-o", wd, "-t", cores, config]
     run_yeat(arglist)
-    expected_files_exist(wd, config)
+    expected_files_exist(wd, config, cores)

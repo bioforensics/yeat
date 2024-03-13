@@ -23,8 +23,8 @@ def test_oxford_nanopore_assemblers_dry_run(tmp_path):
 @pytest.mark.parametrize("algorithm", ["flye", "canu", "unicycler"])
 def test_oxford_nanopore_read_assemblers(algorithm, capsys, tmp_path):
     wd = str(tmp_path)
-    cores = str(get_core_count())
+    cores = get_core_count()
     config = write_config(algorithm, wd, "ont.cfg")
-    arglist = ["-o", wd, "-t", cores, config]
+    arglist = ["-o", wd, "-t", str(cores), config]
     run_yeat(arglist)
     expected_files_exist(wd, config, cores)

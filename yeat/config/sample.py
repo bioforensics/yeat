@@ -108,8 +108,11 @@ class Sample:
             ]
         elif readtype in ("single",) + PACBIO_READS:
             return [f"seq/fastqc/{self.label}/{readtype}/combined-reads_fastqc.html"]
-        elif readtype in OXFORD_READS:  # pragma: no cover
+        elif readtype in OXFORD_READS:
             return [
                 f"seq/nanoplot/{self.label}/{readtype}/{quality}_LengthvsQualityScatterPlot_dot.pdf"
                 for quality in ["raw", "filtered"]
             ]
+        else:
+            message = f"Invalid readtype '{readtype}'"
+            raise AssemblyConfigError(message)

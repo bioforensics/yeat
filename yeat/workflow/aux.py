@@ -28,8 +28,11 @@ def get_and_filter_contig_files(sample, readtype, label):
 def get_canu_readtype_flag(readtype):
     if readtype in ["pacbio-raw", "pacbio-corr"]:
         return "-pacbio"
-    elif readtype == "pacbio-hifi":  # pragma: no cover
+    elif readtype == "pacbio-hifi":
         return "-pacbio-hifi"
+    else:
+        message = f"Invalid readtype '{readtype}'"
+        raise ValueError()
 
 
 def combine(reads, direction, outdir):
@@ -84,5 +87,8 @@ def print_downsample_values(genome_size, avg_read_length, coverage, down, seed):
 def get_longread_file(sample, long_readtype):
     if long_readtype in PACBIO_READS:
         return f"seq/input/{sample}/{long_readtype}/combined-reads.fq.gz"
-    elif long_readtype in OXFORD_READS:  # pragma: no cover
+    elif long_readtype in OXFORD_READS:
         return f"seq/nanofilt/{sample}/{long_readtype}/highQuality-reads.fq.gz"
+    else:
+        message = f"Invalid long readtype '{long_readtype}'"
+        raise ValueError(message)

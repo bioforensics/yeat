@@ -8,17 +8,16 @@
 # -------------------------------------------------------------------------------------------------
 
 from yeat.config.config import AssemblyConfig
-from yeat.workflow.aux import get_expected_files
 
 
-cfg = AssemblyConfig(config["data"], config["threads"])
+cfg = AssemblyConfig(config["data"], config["threads"], config["bandage"])
 config["samples"] = cfg.samples
 config["assemblies"] = cfg.assemblies
 
 
 rule all:
     input:
-        get_expected_files(config)
+        cfg.target_files
 
 
 module shared_workflow:
@@ -61,3 +60,10 @@ module bandage_workflow:
     config: config
 
 use rule * from bandage_workflow as bandage_*
+
+
+module hybrid_workflow:
+    snakefile: "Hybrid"
+    config: config
+
+use rule * from hybrid_workflow as hybrid_*

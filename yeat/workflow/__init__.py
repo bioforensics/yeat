@@ -11,12 +11,15 @@ from importlib.resources import files
 import json
 from pathlib import Path
 from snakemake import snakemake
+import subprocess
+import warnings
 
 
 def run_workflow(args):
     snakefile = files("yeat") / "workflow" / "Snakefile"
     config = vars(args)
     config["data"] = resolve_paths(config["config"])
+    config["bandage"] = check_bandage()
     if args.grid:
         success = snakemake(
             snakefile,
@@ -47,16 +50,34 @@ def run_workflow(args):
 
 def resolve_paths(infile):
     data = json.load(open(infile))
-    for label, sample in data["samples"].items():
-        resolved_paths = []
+    for sample in data["samples"].values():
         for readtype, reads in sample.items():
-            for read in reads:
-                if isinstance(read, list):
-                    resolved_paths.append([str(Path(direction).resolve()) for direction in read])
-                else:
-                    resolved_paths.append(str(Path(read).resolve()))
-        sample[readtype] = resolved_paths
+            sample[readtype] = get_resolved_paths(reads)
     return data
+
+
+def get_resolved_paths(reads):
+    resolved_paths = []
+    for read in reads:
+        if isinstance(read, list):
+            resolved_paths.append([str(Path(direction).resolve()) for direction in read])
+        else:
+            resolved_paths.append(str(Path(read).resolve()))
+    return resolved_paths
+
+
+def check_bandage():
+    try:
+        completed_process = subprocess.run(["Bandage", "--help"], capture_output=True, text=True)
+    except Exception as exception:
+        print(f"{type(exception).__name__}: {exception}")
+        warnings.warn("Unable to run Bandage; skipping Bandage")
+        return False
+    if completed_process.returncode == 1:
+        print(completed_process.stderr)
+        warnings.warn("Unable to run Bandage; skipping Bandage")
+        return False
+    return True
 
 
 def setup_grid_args(args):

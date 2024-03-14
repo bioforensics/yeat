@@ -29,7 +29,7 @@ def test_invalid_assembly_algorithm():
     }
     pattern = rf"Invalid assembly algorithm '{data['algorithm']}' for '{label}'"
     with pytest.raises(ValueError, match=pattern):
-        Assembly(label, data, 1)
+        Assembly(label, data)
 
 
 @patch("yeat.config.assembly.platform", "darwin")
@@ -42,7 +42,7 @@ def test_linux_only_algorithm():
     }
     pattern = r"Assembly algorithm 'metaMDBG' can only run on 'Linux OS'"
     with pytest.raises(ValueError, match=pattern):
-        Assembly("label1", data, 1)
+        Assembly("label1", data)
 
 
 def test_valid_config():
@@ -58,7 +58,7 @@ def test_missing_key_in_config_entry(key):
     del data["assemblies"]["spades-default"][key]
     pattern = rf"Missing assembly configuration setting\(s\) '{key}'"
     with pytest.raises(AssemblyConfigError, match=pattern):
-        AssemblyConfig(data, 1)
+        AssemblyConfig(data)
 
 
 @pytest.mark.parametrize(
@@ -117,7 +117,7 @@ def test_check_valid_mode():
     }
     pattern = rf"Invalid assembly mode '{data['mode']}' for '{label}'"
     with pytest.raises(AssemblyConfigError, match=pattern):
-        Assembly(label, data, 1)
+        Assembly(label, data)
 
 
 @pytest.mark.parametrize("layer", ["base", "sample", "assembly"])
@@ -134,21 +134,26 @@ def test_check_valid_keys(layer):
         data["assemblies"]["spades-default"]["INVALID2"] = ""
     pattern = r"Found unsupported configuration key\(s\) 'INVALID1,INVALID2'"
     with pytest.raises(AssemblyConfigError, match=pattern):
-        AssemblyConfig(data, 1)
+        AssemblyConfig(data)
 
 
 @pytest.mark.parametrize(
-    "mode,label", [("paired", "spades-default"), ("pacbio", "hicanu"), ("oxford", "flye_ONT")]
+    "mode,sample,assembly",
+    [
+        ("paired", "sample4", "spades-default"),
+        ("pacbio", "sample1", "hicanu"),
+        ("oxford", "sample1", "flye_ONT"),
+    ],
 )
-def test_validate_samples_to_assembly_modes(mode, label):
+def test_check_sample_readtypes_match_assembly_mode(mode, sample, assembly):
     data = json.load(open(data_file("configs/example.cfg")))
     if mode == "paired":
-        data["assemblies"]["spades-default"]["samples"] = ["sample4"]
+        data["assemblies"]["spades-default"]["samples"] = [sample]
     elif mode == "pacbio":
-        data["assemblies"]["hicanu"]["samples"] = ["sample1"]
+        data["assemblies"]["hicanu"]["samples"] = [sample]
     elif mode == "oxford":
-        data["assemblies"]["flye_ONT"]["samples"] = ["sample1"]
-    pattern = rf"No samples can interact with assembly mode '{mode}' for '{label}'"
+        data["assemblies"]["flye_ONT"]["samples"] = [sample]
+    pattern = rf"No readtypes in '{sample}' match '{assembly}' assembly mode '{mode}'"
     with pytest.raises(AssemblyConfigError, match=pattern):
         AssemblyConfig(data, 4)
 
@@ -241,3 +246,23 @@ def test_check_reads(test):
     pattern = rf"Input read is not a string '\[\]' for '{label}'"
     with pytest.raises(AssemblyConfigError, match=pattern):
         Sample(label, data)
+
+
+def test_get_target_files():
+    data = json.load(open(data_file("configs/example.cfg")))
+    cfg = AssemblyConfig(data, 4)
+    observed = cfg.target_files
+    expected = [
+        "seq/fastqc/sample1/paired/r1_combined-reads_fastqc.html",
+        "seq/fastqc/sample1/paired/r2_combined-reads_fastqc.html",
+        "seq/fastqc/sample2/paired/r1_combined-reads_fastqc.html",
+        "seq/fastqc/sample2/paired/r2_combined-reads_fastqc.html",
+        "seq/fastqc/sample3/pacbio-hifi/combined-reads_fastqc.html",
+        "seq/nanoplot/sample4/nano-hq/raw_LengthvsQualityScatterPlot_dot.pdf",
+        "seq/nanoplot/sample4/nano-hq/filtered_LengthvsQualityScatterPlot_dot.pdf",
+        "analysis/sample1/paired/spades-default/spades/quast/report.html",
+        "analysis/sample2/paired/spades-default/spades/quast/report.html",
+        "analysis/sample3/pacbio-hifi/hicanu/canu/quast/report.html",
+        "analysis/sample4/nano-hq/flye_ONT/flye/quast/report.html",
+    ]
+    assert observed == expected

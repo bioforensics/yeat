@@ -12,7 +12,7 @@ import multiprocessing
 from pathlib import Path
 from importlib.resources import files
 from yeat.cli import main, cli
-from yeat.config import ILLUMINA_READS, LONG_READS
+from yeat.config.config import AssemblyConfig
 
 
 FINAL_FILES = {
@@ -54,35 +54,6 @@ def run_yeat(arglist):
     main(args)
 
 
-def get_expected(algorithm, wd, config):
-    analysis_dir = Path(wd).resolve() / "analysis"
-    data = json.load(open(config))
-    expected = []
-    for assembly_label, assembly_obj in data["assemblies"].items():
-        for sample_label in assembly_obj["samples"]:
-            sample_obj = data["samples"][sample_label]
-            short_readtype = set(sample_obj).intersection(ILLUMINA_READS)
-            long_readtype = set(sample_obj).intersection(LONG_READS)
-            if assembly_obj["mode"] in ["paired", "single"]:
-                expected.append(
-                    analysis_dir
-                    / sample_label
-                    / next(iter(short_readtype))
-                    / assembly_label
-                    / assembly_obj["algorithm"]
-                    / FINAL_FILES[algorithm].replace("*", sample_label)
-                )
-            elif assembly_obj["mode"] in ["pacbio", "oxford"]:
-                expected.append(
-                    analysis_dir
-                    / sample_label
-                    / next(iter(long_readtype))
-                    / assembly_label
-                    / assembly_obj["algorithm"]
-                    / FINAL_FILES[algorithm].replace("*", sample_label)
-                )
-    return expected
-
-
-def files_exist(expected):
-    assert all([file.exists() for file in expected])
+def expected_files_exist(wd, config, threads=1):
+    cfg = AssemblyConfig(json.load(open(config)), threads)
+    assert all([(Path(wd) / file).exists() for file in cfg.expected_files])

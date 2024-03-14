@@ -1,5 +1,5 @@
 # -------------------------------------------------------------------------------------------------
-# Copyright (c) 2023, DHS. This file is part of YEAT: http://github.com/bioforensics/yeat
+# Copyright (c) 2024, DHS. This file is part of YEAT: http://github.com/bioforensics/yeat
 #
 # This software was prepared for the Department of Homeland Security (DHS) by the Battelle National
 # Biodefense Institute, LLC (BNBI) as part of contract HSHQDC-15-C-00064 to manage and operate the
@@ -8,23 +8,22 @@
 # -------------------------------------------------------------------------------------------------
 
 import pytest
-from yeat.tests import data_file, get_core_count, write_config, run_yeat, expected_files_exist
+from yeat.tests import data_file, write_config, run_yeat, expected_files_exist
 
 
 @pytest.mark.short
-def test_oxford_nanopore_assemblers_dry_run(tmp_path):
+def test_hybrid_assemblers_dry_run(tmp_path):
     wd = str(tmp_path)
-    arglist = ["-o", wd, "-n", "-t", "4", data_file("configs/ont.cfg")]
+    arglist = ["-o", wd, "-n", data_file("configs/hybrid.cfg")]
     run_yeat(arglist)
 
 
 @pytest.mark.long
-@pytest.mark.nano
-@pytest.mark.parametrize("algorithm", ["flye", "canu", "unicycler"])
-def test_oxford_nanopore_read_assemblers(algorithm, capsys, tmp_path):
+@pytest.mark.hybrid
+@pytest.mark.parametrize("algorithm", ["unicycler"])
+def test_hybrid_assemblers(algorithm, capsys, tmp_path):
     wd = str(tmp_path)
-    cores = get_core_count()
-    config = write_config(algorithm, wd, "ont.cfg")
-    arglist = ["-o", wd, "-t", str(cores), config]
+    config = write_config(algorithm, wd, "hybrid.cfg")
+    arglist = ["-o", wd, config]
     run_yeat(arglist)
-    expected_files_exist(wd, config, cores)
+    expected_files_exist(wd, config)

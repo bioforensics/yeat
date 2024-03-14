@@ -7,13 +7,11 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-import json
 import numpy
 from pathlib import Path
 import pytest
 import subprocess
 from unittest.mock import patch
-from yeat.config.config import AssemblyConfig
 from yeat.tests import data_file
 from yeat.workflow import aux
 
@@ -118,36 +116,13 @@ def test_print_downsample_values(capsys):
     assert captured.out == expected
 
 
-def test_get_expected_files():
-    data = json.load(open(data_file("configs/example.cfg")))
-    cfg = AssemblyConfig(data, 4)
-    config = {"samples": cfg.samples, "assemblies": cfg.assemblies}
-    observed = aux.get_expected_files(config)
-    expected = [
-        "analysis/sample1/paired/spades-default/spades/bandage/.done",
-        "seq/fastqc/sample1/paired/r1_combined-reads_fastqc.html",
-        "seq/fastqc/sample1/paired/r2_combined-reads_fastqc.html",
-        "analysis/sample2/paired/spades-default/spades/bandage/.done",
-        "seq/fastqc/sample2/paired/r1_combined-reads_fastqc.html",
-        "seq/fastqc/sample2/paired/r2_combined-reads_fastqc.html",
-        "analysis/sample3/pacbio-hifi/hicanu/canu/bandage/.done",
-        "seq/fastqc/sample3/pacbio-hifi/combined-reads_fastqc.html",
-        "analysis/sample4/nano-hq/flye_ONT/flye/bandage/.done",
-        "seq/nanoplot/sample4/nano-hq/raw_LengthvsQualityScatterPlot_dot.pdf",
-        "seq/nanoplot/sample4/nano-hq/filtered_LengthvsQualityScatterPlot_dot.pdf",
-    ]
-    assert observed == expected
-
-
 @pytest.mark.parametrize(
-    "run_bandage,file",
-    [(True, "bandage/.done"), (False, "quast/report.html")],
+    "long_readtype,expected",
+    [
+        ("nano-corr", "seq/nanofilt/sample1/nano-corr/highQuality-reads.fq.gz"),
+        ("pacbio-hifi", "seq/input/sample1/pacbio-hifi/combined-reads.fq.gz"),
+    ],
 )
-def test_get_file(run_bandage, file):
-    sample = "sample1"
-    readtype = "single"
-    assembly = "spades-default"
-    algorithm = "spades"
-    observed = aux.get_file(run_bandage, sample, readtype, assembly, algorithm)
-    expected = f"analysis/{sample}/{readtype}/{assembly}/{algorithm}/{file}"
+def test_get_longread_file(long_readtype, expected):
+    observed = aux.get_longread_file("sample1", long_readtype)
     assert observed == expected

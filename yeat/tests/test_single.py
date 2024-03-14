@@ -8,7 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 import pytest
-from yeat.tests import *
+from yeat.tests import data_file, write_config, run_yeat, expected_files_exist
 
 
 @pytest.mark.short
@@ -26,5 +26,4 @@ def test_single_end_assemblers(algorithm, capsys, tmp_path):
     config = write_config(algorithm, wd, "single.cfg")
     arglist = ["-o", wd, config]
     run_yeat(arglist)
-    expected = get_expected(algorithm, wd, config)
-    files_exist(expected)
+    expected_files_exist(wd, config)

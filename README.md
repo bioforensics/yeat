@@ -119,6 +119,39 @@ $ yeat --outdir {path} {config}
 
 \* \- Available on Linux OS only
 
+### Support for Hybrid Assembly
+
+To enable hybrid assembly, add the following to the configuration file.
+
+1. Add two read types to a sample:
+    - Paired-end reads
+    - Any type of long read
+2. Set the Unicycler assembly `"mode"` to `"hybrid"`.
+
+```
+{
+    "samples": {
+        "Shigella_sonnei_53G": {
+            "paired": [
+                ["yeat/tests/data/short_reads_1.fastq.gz", "yeat/tests/data/short_reads_2.fastq.gz"]
+            ],
+            "pacbio-corr": [
+                "yeat/tests/data/long_reads_high_depth.fastq.gz"
+            ]
+        }
+    },
+    "assemblies": {
+        "unicycler-hybrid": {
+            "algorithm": "unicycler",
+            "extra_args": "",
+            "samples": [
+                "Shigella_sonnei_53G"
+            ],
+            "mode": "hybrid"
+        }
+    }
+}
+```
 
 ### Example config file
 

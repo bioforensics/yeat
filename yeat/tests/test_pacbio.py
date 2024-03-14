@@ -8,7 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 import pytest
-from yeat.tests import *
+from yeat.tests import data_file, get_core_count, write_config, run_yeat, expected_files_exist
 
 
 @pytest.mark.short
@@ -23,12 +23,11 @@ def test_pacbio_hifi_assemblers_dry_run(tmp_path):
 @pytest.mark.parametrize("algorithm", ["flye", "canu", "hifiasm", "unicycler"])
 def test_pacbio_hifi_read_assemblers(algorithm, capsys, tmp_path):
     wd = str(tmp_path)
-    cores = str(get_core_count())
+    cores = get_core_count()
     config = write_config(algorithm, wd, "hifi.cfg")
-    arglist = ["-o", wd, "-t", cores, config]
+    arglist = ["-o", wd, "-t", str(cores), config]
     run_yeat(arglist)
-    expected = get_expected(algorithm, wd, config)
-    files_exist(expected)
+    expected_files_exist(wd, config, cores)
 
 
 @pytest.mark.long
@@ -36,21 +35,19 @@ def test_pacbio_hifi_read_assemblers(algorithm, capsys, tmp_path):
 @pytest.mark.parametrize("algorithm", ["flye", "hifiasm_meta"])
 def test_pacbio_hifi_read_metagenomic_assemblers(algorithm, capsys, tmp_path):
     wd = str(tmp_path)
-    cores = str(get_core_count())
+    cores = get_core_count()
     config = write_config(algorithm, wd, "meta.cfg")
-    arglist = ["-o", wd, "-t", cores, config]
+    arglist = ["-o", wd, "-t", str(cores), config]
     run_yeat(arglist)
-    expected = get_expected(algorithm, wd, config)
-    files_exist(expected)
+    expected_files_exist(wd, config, cores)
 
 
 @pytest.mark.linux
 def test_metaMDBG_assembler(tmp_path):
     algorithm = "metamdbg"
     wd = str(tmp_path)
-    cores = str(get_core_count())
+    cores = get_core_count()
     config = write_config(algorithm, wd, "meta.cfg")
-    arglist = ["-o", wd, "-t", cores, config]
+    arglist = ["-o", wd, "-t", str(cores), config]
     run_yeat(arglist)
-    expected = get_expected(algorithm, wd, config)
-    files_exist(expected)
+    expected_files_exist(wd, config, cores)

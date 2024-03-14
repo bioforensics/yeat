@@ -7,9 +7,10 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import PACBIO_READS, OXFORD_READS, READ_TYPES, AssemblyConfigError
+from . import READ_TYPES, AssemblyConfigError
 from .assembly import Assembly
 from .sample import Sample
+from itertools import chain
 
 
 CONFIG_KEYS = ("samples", "assemblies")
@@ -17,20 +18,20 @@ ASSEMBLY_KEYS = ("algorithm", "extra_args", "samples", "mode")
 
 
 class AssemblyConfig:
-    def __init__(self, config, threads):
+    def __init__(self, config, threads=1, bandage=False):
         self.config = config
-        self.validate()
+        self.validate_config_keys()
         self.threads = threads
-        self.samples = {}
-        self.assemblies = {}
-        self.create_sample_and_assembly_objects()
-        self.validate_samples_to_assembly_modes()
+        self.bandage = bandage
+        self.samples = self.create_sample_objects()
+        self.assemblies = self.create_assembly_objects()
+        self.target_files = self.get_target_files()
 
-    def validate(self):
+    def validate_config_keys(self):
         self.check_required_keys(self.config.keys(), CONFIG_KEYS)
-        for label, sample in self.config["samples"].items():
+        for sample in self.config["samples"].values():
             self.check_valid_keys(sample.keys(), READ_TYPES)
-        for label, assembly in self.config["assemblies"].items():
+        for assembly in self.config["assemblies"].values():
             self.check_required_keys(assembly.keys(), ASSEMBLY_KEYS)
 
     def check_required_keys(self, observed_keys, expected_keys):
@@ -48,23 +49,24 @@ class AssemblyConfig:
             message = f"Found unsupported configuration key(s) '{key_str}'"
             raise AssemblyConfigError(message)
 
-    def create_sample_and_assembly_objects(self):
+    def create_sample_objects(self):
+        samples = {}
         for label, sample in self.config["samples"].items():
-            self.samples[label] = Sample(label, sample)
-        for label, assembly in self.config["assemblies"].items():
-            self.assemblies[label] = Assembly(label, assembly, self.threads)
+            samples[label] = Sample(label, sample)
+        return samples
 
-    def validate_samples_to_assembly_modes(self):
-        for assembly_label, assembly in self.assemblies.items():
-            check = False
-            for sample_label in assembly.samples:
-                sample = self.samples[sample_label]
-                if assembly.mode in ["paired", "single"]:
-                    check = True if assembly.mode in sample.sample else False
-                elif assembly.mode == "pacbio":
-                    check = True if set(PACBIO_READS).intersection(sample.sample) else False
-                elif assembly.mode == "oxford":  # pragma: no cover
-                    check = True if set(OXFORD_READS).intersection(sample.sample) else False
-            if check == False:
-                message = f"No samples can interact with assembly mode '{assembly.mode}' for '{assembly_label}'"
-                raise AssemblyConfigError(message)
+    def create_assembly_objects(self):
+        assemblies = {}
+        for label, assembly in self.config["assemblies"].items():
+            assembly["samples"] = self.get_sample_objects(assembly["samples"])
+            assemblies[label] = Assembly(label, assembly, self.threads, self.bandage)
+        return assemblies
+
+    def get_sample_objects(self, samples):
+        return dict(((sample, self.samples[sample]) for sample in samples))
+
+    def get_target_files(self):
+        target_files = []
+        for element in chain(self.samples.values(), self.assemblies.values()):
+            target_files += element.target_files
+        return target_files

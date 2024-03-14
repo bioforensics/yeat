@@ -75,24 +75,24 @@ class Sample:
             self.all_reads.append(read)
 
     def get_short_readtype(self):
-        illumina = set.intersection(set(self.sample.keys()), set(ILLUMINA_READS))
-        if len(illumina) > 1:
+        short_readtypes = set.intersection(set(self.sample.keys()), set(ILLUMINA_READS))
+        if len(short_readtypes) > 1:
             message = f"Max of 1 Illumina readtype per sample for '{self.label}'"
             raise AssemblyConfigError(message)
-        elif len(illumina) == 0:
+        elif len(short_readtypes) == 0:
             return None
         else:
-            return next(iter(illumina))
+            return next(iter(short_readtypes))
 
     def get_long_readtype(self):
-        long = set.intersection(set(self.sample.keys()), set(LONG_READS))
-        if len(long) > 1:
+        long_readtypes = set.intersection(set(self.sample.keys()), set(LONG_READS))
+        if len(long_readtypes) > 1:
             message = f"Max of 1 long readtype per sample for '{self.label}'"
             raise AssemblyConfigError(message)
-        elif len(long) == 0:
+        elif len(long_readtypes) == 0:
             return None
         else:
-            return next(iter(long))
+            return next(iter(long_readtypes))
 
     def get_target_files(self):
         target_files = []

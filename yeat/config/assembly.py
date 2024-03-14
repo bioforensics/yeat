@@ -81,7 +81,8 @@ class Assembly:
         elif self.mode == "hybrid":
             return sample.short_readtype == "paired" and sample.long_readtype in LONG_READS
         else:
-            raise AssemblyConfigError(f"invalid assembly mode '{self.mode}'")
+            message = f"Invalid assembly mode '{self.mode}'"
+            raise AssemblyConfigError(message)
 
     def get_target_files(self):
         target_files = []
@@ -99,6 +100,8 @@ class Assembly:
     def get_readtype(self, sample):
         if self.mode in ["paired", "single", "hybrid"]:
             return self.mode
-        elif self.mode in ["pacbio", "oxford"]:  # pragma: no cover
+        elif self.mode in ["pacbio", "oxford"]:
             return sample.long_readtype
-        # add else here
+        else:
+            message = f"Invalid assembly mode '{self.mode}'"
+            raise AssemblyConfigError(message)

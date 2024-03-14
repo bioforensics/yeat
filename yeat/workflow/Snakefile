@@ -17,7 +17,7 @@ config["assemblies"] = cfg.assemblies
 
 rule all:
     input:
-        cfg.expected_files
+        cfg.target_files
 
 
 module shared_workflow:

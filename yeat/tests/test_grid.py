@@ -7,10 +7,11 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+from pathlib import Path
 import pytest
 from yeat import workflow
 from yeat.cli import cli
-from yeat.tests import *
+from yeat.tests import data_file, run_yeat
 
 
 @pytest.mark.short

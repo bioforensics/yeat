@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 import re
 import subprocess
-from yeat.tests import *
+from yeat.tests import data_file, write_config, run_yeat, expected_files_exist
 
 
 @pytest.mark.short

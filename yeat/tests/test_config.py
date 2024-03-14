@@ -248,10 +248,10 @@ def test_check_reads(test):
         Sample(label, data)
 
 
-def test_get_expected_files():
+def test_get_target_files():
     data = json.load(open(data_file("configs/example.cfg")))
     cfg = AssemblyConfig(data, 4)
-    observed = cfg.expected_files
+    observed = cfg.target_files
     expected = [
         "seq/fastqc/sample1/paired/r1_combined-reads_fastqc.html",
         "seq/fastqc/sample1/paired/r2_combined-reads_fastqc.html",

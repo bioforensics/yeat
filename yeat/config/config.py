@@ -10,6 +10,7 @@
 from . import READ_TYPES, AssemblyConfigError
 from .assembly import Assembly
 from .sample import Sample
+from itertools import chain
 
 
 CONFIG_KEYS = ("samples", "assemblies")
@@ -24,7 +25,7 @@ class AssemblyConfig:
         self.bandage = bandage
         self.samples = self.create_sample_objects()
         self.assemblies = self.create_assembly_objects()
-        self.expected_files = self.get_expected_files()
+        self.target_files = self.get_target_files()
 
     def validate_config_keys(self):
         self.check_required_keys(self.config.keys(), CONFIG_KEYS)
@@ -64,10 +65,8 @@ class AssemblyConfig:
     def get_sample_objects(self, samples):
         return dict(((sample, self.samples[sample]) for sample in samples))
 
-    def get_expected_files(self):
-        expected_files = []
-        for sample in self.samples.values():
-            expected_files += sample.expected_files
-        for assembly in self.assemblies.values():
-            expected_files += assembly.expected_files
-        return expected_files
+    def get_target_files(self):
+        target_files = []
+        for element in chain(self.samples.values(), self.assemblies.values()):
+            target_files += element.target_files
+        return target_files

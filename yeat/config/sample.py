@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import *
+from . import ILLUMINA_READS, PACBIO_READS, OXFORD_READS, LONG_READS, AssemblyConfigError
 from pathlib import Path
 
 
@@ -19,7 +19,7 @@ class Sample:
         self.validate_sample_configuration()
         self.short_readtype = self.get_short_readtype()
         self.long_readtype = self.get_long_readtype()
-        self.expected_files = self.get_expected_files()
+        self.target_files = self.get_target_files()
 
     def validate_sample_configuration(self):
         self.check_enough_readtypes()
@@ -79,20 +79,26 @@ class Sample:
         if len(illumina) > 1:
             message = f"Max of 1 Illumina readtype per sample for '{self.label}'"
             raise AssemblyConfigError(message)
-        return next(iter(illumina), None)
+        elif len(illumina) == 0:
+            return None
+        else:
+            return next(iter(illumina))
 
     def get_long_readtype(self):
         long = set.intersection(set(self.sample.keys()), set(LONG_READS))
         if len(long) > 1:
             message = f"Max of 1 long readtype per sample for '{self.label}'"
             raise AssemblyConfigError(message)
-        return next(iter(long), None)
+        elif len(long) == 0:
+            return None
+        else:
+            return next(iter(long))
 
-    def get_expected_files(self):
-        expected_files = []
+    def get_target_files(self):
+        target_files = []
         for readtype in self.sample.keys():
-            expected_files += self.get_qc_files(readtype)
-        return expected_files
+            target_files += self.get_qc_files(readtype)
+        return target_files
 
     def get_qc_files(self, readtype):
         if readtype == "paired":

@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import *
+from . import PACBIO_READS, OXFORD_READS, LONG_READS, AssemblyConfigError
 from sys import platform
 
 
@@ -30,7 +30,7 @@ class Assembly:
         self.threads = threads
         self.bandage = bandage
         self.validate_assembly_configuration()
-        self.expected_files = self.get_expected_files()
+        self.target_files = self.get_target_files()
 
     def validate_assembly_configuration(self):
         self.check_valid_mode()
@@ -65,34 +65,29 @@ class Assembly:
 
     def check_sample_readtypes_match_assembly_mode(self):
         for sample in self.samples.values():
-            check = self.is_mode_and_sample_readtypes(sample)
-            self.check_sample_readtypes_match(check, sample)
+            if not self.mode_and_readtypes_are_compatible(sample):
+                message = f"No readtypes in '{sample.label}' match '{self.label}' assembly mode '{self.mode}'"
+                raise AssemblyConfigError(message)
 
-    def is_mode_and_sample_readtypes(self, sample):
-        if self.mode == "paired" and sample.short_readtype != "paired":
-            return False
-        elif self.mode == "single" and sample.short_readtype != "single":
-            return False
-        elif self.mode == "pacbio" and sample.long_readtype not in PACBIO_READS:
-            return False
-        elif self.mode == "oxford" and sample.long_readtype not in OXFORD_READS:
-            return False
-        elif self.mode == "hybrid" and (
-            sample.short_readtype != "paired" or sample.long_readtype not in LONG_READS
-        ):  # pragma: no cover
-            return False
-        return True
+    def mode_and_readtypes_are_compatible(self, sample):
+        if self.mode == "paired":
+            return sample.short_readtype == "paired"
+        elif self.mode == "single":
+            return sample.short_readtype == "single"
+        elif self.mode == "pacbio":
+            return sample.long_readtype in PACBIO_READS
+        elif self.mode == "oxford":
+            return sample.long_readtype in OXFORD_READS
+        elif self.mode == "hybrid":
+            return sample.short_readtype == "paired" and sample.long_readtype in LONG_READS
+        else:
+            raise AssemblyConfigError(f"invalid assembly mode '{self.mode}'")
 
-    def check_sample_readtypes_match(self, check, sample):
-        if check == False:
-            message = f"No readtypes in '{sample.label}' match '{self.label}' assembly mode '{self.mode}'"
-            raise AssemblyConfigError(message)
-
-    def get_expected_files(self):
-        expected_files = []
+    def get_target_files(self):
+        target_files = []
         for sample in self.samples.values():
-            expected_files.append(self.get_qa_file(sample))
-        return expected_files
+            target_files.append(self.get_qa_file(sample))
+        return target_files
 
     def get_qa_file(self, sample):
         readtype = self.get_readtype(sample)
@@ -106,3 +101,4 @@ class Assembly:
             return self.mode
         elif self.mode in ["pacbio", "oxford"]:  # pragma: no cover
             return sample.long_readtype
+        # add else here

@@ -119,9 +119,9 @@ $ yeat --outdir {path} {config}
 
 \* \- Available on Linux OS only
 
-### Supported for Hybrid Assembly
+### Support for Hybrid Assembly
 
-To enable Hybrid assembly, add the following to the configuration file.
+To enable hybrid assembly, add the following to the configuration file.
 
 1. Add two read types to a sample:
     - Paired-end reads

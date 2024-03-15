@@ -80,7 +80,7 @@ class Assembly:
             return sample.long_readtype in OXFORD_READS
         elif self.mode == "hybrid":
             return sample.short_readtype == "paired" and sample.long_readtype in LONG_READS
-        else:
+        else:  # pragma: no cover
             message = f"Invalid assembly mode '{self.mode}'"
             raise AssemblyConfigError(message)
 
@@ -102,6 +102,6 @@ class Assembly:
             return self.mode
         elif self.mode in ["pacbio", "oxford"]:
             return sample.long_readtype
-        else:
+        else:  # pragma: no cover
             message = f"Invalid assembly mode '{self.mode}'"
             raise AssemblyConfigError(message)

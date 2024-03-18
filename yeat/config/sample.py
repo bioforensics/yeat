@@ -113,6 +113,6 @@ class Sample:
                 f"seq/nanoplot/{self.label}/{readtype}/{quality}_LengthvsQualityScatterPlot_dot.pdf"
                 for quality in ["raw", "filtered"]
             ]
-        else:
+        else:  # pragma: no cover
             message = f"Invalid readtype '{readtype}'"
             raise AssemblyConfigError(message)

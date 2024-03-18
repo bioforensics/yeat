@@ -20,29 +20,33 @@ pytestmark = pytest.mark.short
 
 
 def test_invalid_assembly_algorithm():
-    label = "label1"
-    data = {
+    config_data = json.load(open(data_file("configs/example.cfg")))
+    samples = {"sample1": Sample("sample1", config_data["samples"]["sample1"])}
+    assembly_label = "label1"
+    assembly_data = {
         "algorithm": "INVALID",
         "extra_args": "",
-        "samples": ["sample1"],
+        "samples": samples,
         "mode": "paired",
     }
-    pattern = rf"Invalid assembly algorithm '{data['algorithm']}' for '{label}'"
+    pattern = rf"Invalid assembly algorithm '{assembly_data['algorithm']}' for '{assembly_label}'"
     with pytest.raises(ValueError, match=pattern):
-        Assembly(label, data)
+        Assembly(assembly_label, assembly_data)
 
 
 @patch("yeat.config.assembly.platform", "darwin")
 def test_linux_only_algorithm():
-    data = {
+    config_data = json.load(open(data_file("configs/example.cfg")))
+    samples = {"sample3", Sample("sample3", config_data["samples"]["sample3"])}
+    assembly_data = {
         "algorithm": "metamdbg",
         "extra_args": "",
-        "samples": ["sample1"],
+        "samples": samples,
         "mode": "pacbio",
     }
     pattern = r"Assembly algorithm 'metaMDBG' can only run on 'Linux OS'"
     with pytest.raises(ValueError, match=pattern):
-        Assembly("label1", data)
+        Assembly("label1", assembly_data)
 
 
 def test_valid_config():
@@ -97,27 +101,31 @@ def test_sample_with_duplicate_reads():
     ],
 )
 def test_check_canu_required_params_errors(extra_args, cores, expected):
-    data = {
+    config_data = json.load(open(data_file("configs/example.cfg")))
+    samples = {"sample3": Sample("sample3", config_data["samples"]["sample3"])}
+    assembly_data = {
         "algorithm": "canu",
         "extra_args": extra_args,
-        "samples": ["sample1"],
+        "samples": samples,
         "mode": "pacbio",
     }
     with pytest.raises(ValueError, match=expected):
-        Assembly("label1", data, cores)
+        Assembly("label1", assembly_data, cores)
 
 
 def test_check_valid_mode():
-    label = "label1"
-    data = {
+    config_data = json.load(open(data_file("configs/example.cfg")))
+    samples = {"sample1": Sample("sample1", config_data["samples"]["sample1"])}
+    assembly_label = "label1"
+    assembly_data = {
         "algorithm": "spades",
         "extra_args": "",
-        "samples": ["sample1"],
+        "samples": samples,
         "mode": "INVALID",
     }
-    pattern = rf"Invalid assembly mode '{data['mode']}' for '{label}'"
+    pattern = rf"Invalid assembly mode '{assembly_data['mode']}' for '{assembly_label}'"
     with pytest.raises(AssemblyConfigError, match=pattern):
-        Assembly(label, data)
+        Assembly(assembly_label, assembly_data)
 
 
 @pytest.mark.parametrize("layer", ["base", "sample", "assembly"])

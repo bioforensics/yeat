@@ -30,7 +30,7 @@ def get_canu_readtype_flag(readtype):
         return "-pacbio"
     elif readtype == "pacbio-hifi":
         return "-pacbio-hifi"
-    else:
+    else:  # pragma: no cover
         message = f"Invalid readtype '{readtype}'"
         raise ValueError()
 
@@ -89,6 +89,6 @@ def get_longread_file(sample, long_readtype):
         return f"seq/input/{sample}/{long_readtype}/combined-reads.fq.gz"
     elif long_readtype in OXFORD_READS:
         return f"seq/nanofilt/{sample}/{long_readtype}/highQuality-reads.fq.gz"
-    else:
+    else:  # pragma: no cover
         message = f"Invalid long readtype '{long_readtype}'"
         raise ValueError(message)

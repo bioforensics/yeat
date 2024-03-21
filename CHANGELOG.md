@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Hybrid assembly support (#68, #73)
+- `just-yeat-it` CLI command for simple paired-end runs (#74)
 
 
 ## [0.5] 2024-01-08

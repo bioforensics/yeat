@@ -80,7 +80,15 @@ def positional_args(parser):
 
 
 def create_config(args):
-    data = {
+    data = get_config_data(args)
+    outdir = Path(args.outdir)
+    outdir.mkdir(parents=True, exist_ok=True)
+    outfile = open(outdir / "config.cfg", "w")
+    json.dump(data, outfile, indent=4)
+
+
+def get_config_data(args):
+    return {
         "samples": {args.sample_label: {"paired": [args.reads]}},
         "assemblies": {
             args.assembly_label: {
@@ -91,10 +99,6 @@ def create_config(args):
             }
         },
     }
-    outdir = Path(args.outdir)
-    outdir.mkdir(parents=True, exist_ok=True)
-    outfile = open(outdir / "config.cfg", "w")
-    json.dump(data, outfile, indent=4)
 
 
 def get_algorithm(args):

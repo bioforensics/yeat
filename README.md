@@ -104,6 +104,11 @@ grid configuration:
 $ yeat --outdir {path} {config}
 ```
 
+To run a simple paired-end assembly, use the `just-yeat-it` command. Otherwise, use the normal `yeat` command for more complicated assembly instructions.
+```
+$ just-yeat-it --outdir {path} {read1} {read2}
+```
+
 ### Supported Input Reads with Assembly Algorithms
 
 | Readtype  | Algorithms |

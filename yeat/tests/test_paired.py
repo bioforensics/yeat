@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 import re
 import subprocess
-from yeat.tests import data_file, write_config, run_yeat, expected_files_exist
+from yeat.tests import data_file, write_config, run_yeat, target_files_exist
 
 
 @pytest.mark.short
@@ -31,7 +31,7 @@ def test_paired_end_assemblers(algorithm, capsys, tmp_path):
     config = write_config(algorithm, wd, "paired.cfg")
     arglist = ["-o", wd, config]
     run_yeat(arglist)
-    expected_files_exist(wd, config)
+    target_files_exist(wd, config)
 
 
 @pytest.mark.long
@@ -41,7 +41,7 @@ def test_mutiple_samples_in_assembly(capsys, tmp_path):
     config = data_file("configs/two_samples.cfg")
     arglist = ["-o", wd, config]
     run_yeat(arglist)
-    expected_files_exist(wd, config)
+    target_files_exist(wd, config)
 
 
 @pytest.mark.long
@@ -51,7 +51,7 @@ def test_multiple_spades_in_config(capsys, tmp_path):
     config = data_file("configs/two_spades.cfg")
     arglist = ["-o", wd, config]
     run_yeat(arglist)
-    expected_files_exist(wd, config)
+    target_files_exist(wd, config)
 
 
 @pytest.mark.long

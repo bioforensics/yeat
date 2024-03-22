@@ -10,7 +10,7 @@
 from pathlib import Path
 import pytest
 from yeat.cli.just_yeat_it import get_parser, main, get_algorithm
-from yeat.tests import data_file, expected_files_exist
+from yeat.tests import data_file, target_files_exist
 
 
 def run_yeat(arglist):
@@ -41,7 +41,7 @@ def test_paired_end_assemblers(algorithm, capsys, tmp_path):
         arglist.append(f"--{algorithm}")
     run_yeat(arglist)
     config = str((Path(wd) / "config.cfg").resolve())
-    expected_files_exist(wd, config)
+    target_files_exist(wd, config)
 
 
 @pytest.mark.short

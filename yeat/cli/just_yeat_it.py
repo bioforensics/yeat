@@ -53,18 +53,11 @@ def algorithm_configuration(parser):
         help='set the assembly label; by default, "assembly1"',
         metavar="STR",
     )
-    group = algorithm.add_mutually_exclusive_group()
-    group.add_argument(
-        "--megahit",
-        action="store_const",
-        const=True,
-        help="use MEGAHIT assembly algorithm; by default, SPAdes",
-    )
-    group.add_argument(
-        "--unicycler",
-        action="store_const",
-        const=True,
-        help="use Unicycler assembly algorithm; by default, SPAdes",
+    algorithm.add_argument(
+        "--algorithm",
+        default="spades",
+        help='substitute the default assembly algorithm with another algorithm; for example, "megahit" or "unicycler"; by default, "spades"',
+        metavar="STR",
     )
     algorithm.add_argument(
         "--extra-args",
@@ -92,22 +85,13 @@ def get_config_data(args):
         "samples": {args.sample_label: {"paired": [args.reads]}},
         "assemblies": {
             args.assembly_label: {
-                "algorithm": get_algorithm(args),
+                "algorithm": args.algorithm,
                 "extra_args": args.extra_args,
                 "samples": [args.sample_label],
                 "mode": "paired",
             }
         },
     }
-
-
-def get_algorithm(args):
-    if args.megahit:
-        return "megahit"
-    elif args.unicycler:
-        return "unicycler"
-    else:
-        return "spades"
 
 
 def add_config(args):

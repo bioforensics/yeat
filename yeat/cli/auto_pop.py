@@ -24,6 +24,7 @@ class AutoPop:
         self.samples = self.get_samples(args.samples)
         self.check_samples()
         self.files = self.get_files(args.files, args.seq_path)
+        self.check_files()
         self.files_to_samples = self.organize_files_to_samples()
         self.check_files_to_samples()
         self.write_config_file(args.outfile)
@@ -45,13 +46,20 @@ class AutoPop:
 
     def get_files(self, files, seq_path):
         if files:
-            return files
+            return [Path(f) for f in files]
         files = []
         for file in self.traverse(seq_path):
             if not file.name.endswith(EXTENSIONS):
                 continue
             files.append(file)
         return files
+
+    def check_files(self):
+        print(self.files)
+        for file in self.files:
+            if not file.exists():
+                message = f"file does not exist: {file}"
+                raise AutoPopError(message)
 
     def traverse(self, dirpath):
         dirpath = Path(dirpath)
@@ -66,9 +74,7 @@ class AutoPop:
     def organize_files_to_samples(self):
         files_to_samples = defaultdict(list)
         for sample in self.samples:
-            files_to_samples[sample] = [
-                str(file.absolute()) for file in self.files if sample in str(file)
-            ]
+            files_to_samples[sample] = [file for file in self.files if sample in str(file)]
         return files_to_samples
 
     def check_files_to_samples(self):
@@ -87,7 +93,7 @@ class AutoPop:
     def get_config_data(self):
         samples = {}
         for label, reads in self.files_to_samples.items():
-            samples[label] = {"paired": [reads]}
+            samples[label] = {"paired": [[str(read.absolute()) for read in reads]]}
         assemblies = {
             "spades-default": {
                 "algorithm": "spades",

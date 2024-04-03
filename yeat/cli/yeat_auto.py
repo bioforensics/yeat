@@ -40,7 +40,7 @@ def config_configuration(parser):
 
 def input_configuration(parser):
     ingrp = parser.add_argument_group("input configuration")
-    meg = ingrp.add_mutually_exclusive_group()
+    meg = ingrp.add_mutually_exclusive_group(required=True)
     meg.add_argument(
         "--seq-path",
         default=None,

@@ -43,16 +43,16 @@ def input_configuration(parser):
     meg = ingrp.add_mutually_exclusive_group()
     meg.add_argument(
         "--seq-path",
-        metavar="PATH",
         default=None,
         help="path to a directory containing FASTQ files to use as input; incompatible with --files",
+        metavar="PATH",
     )
     meg.add_argument(
         "--files",
-        metavar="FQ",
-        nargs="+",
         default=None,
         help="a list of FASTQ files to use as input; incompatible with --seq-path",
+        metavar="FQ",
+        nargs="+",
     )
 
 
@@ -60,6 +60,6 @@ def positional_args(parser):
     parser._positionals.title = "required arguments"
     parser.add_argument(
         "samples",
-        nargs="+",
         help="list of sample names or path to .txt file containing sample names",
+        nargs="+",
     )

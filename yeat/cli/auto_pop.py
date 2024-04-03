@@ -78,11 +78,22 @@ class AutoPop:
                 raise AutoPopError(message)
 
     def write_config_file(self, outfile):
-        samples = {}
-        for label, reads in self.files_to_samples.items():
-            samples[label] = {"paired": [reads]}
-        data = {"samples": samples, "assemblies": {}}
+        data = self.get_config_data()
         outdir = Path(outfile).parent
         outdir.mkdir(parents=True, exist_ok=True)
         outfile = open(outfile, "w")
         json.dump(data, outfile, indent=4)
+
+    def get_config_data(self):
+        samples = {}
+        for label, reads in self.files_to_samples.items():
+            samples[label] = {"paired": [reads]}
+        assemblies = {
+            "spades-default": {
+                "algorithm": "spades",
+                "extra_args": "",
+                "samples": self.samples,
+                "mode": "paired",
+            }
+        }
+        return {"samples": samples, "assemblies": assemblies}

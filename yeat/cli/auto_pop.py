@@ -41,7 +41,7 @@ class AutoPop:
                     continue
                 if s1 in s2:
                     message = f"cannot correctly process a sample name that is a substring of another sample name: {s1} vs. {s2}"
-                    raise ValueError(message)
+                    raise AutoPopError(message)
 
     def get_files(self, files, seq_path):
         if files:
@@ -82,7 +82,7 @@ class AutoPop:
         for label, reads in self.files_to_samples.items():
             samples[label] = {"paired": [reads]}
         data = {"samples": samples, "assemblies": {}}
-        outdir = Path(outfile).parent.absolute()
+        outdir = Path(outfile).parent
         outdir.mkdir(parents=True, exist_ok=True)
         outfile = open(outfile, "w")
         json.dump(data, outfile, indent=4)

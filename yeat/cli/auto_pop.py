@@ -23,6 +23,7 @@ class AutoPop:
     def __init__(self, args):
         self.samples = self.get_samples(args.samples)
         self.check_samples()
+        self.check_seq_path(args.seq_path)
         self.files = self.get_files(args.files, args.seq_path)
         self.check_files()
         self.files_to_samples = self.organize_files_to_samples()
@@ -44,6 +45,13 @@ class AutoPop:
                     message = f"cannot correctly process a sample name that is a substring of another sample name: {s1} vs. {s2}"
                     raise AutoPopError(message)
 
+    def check_seq_path(self, seq_path):
+        if not seq_path:
+            return
+        if not Path(seq_path).exists():
+            message = f"path does not exist: '{seq_path}'"
+            raise AutoPopError(message)
+
     def get_files(self, files, seq_path):
         if files:
             return [Path(f) for f in files]
@@ -55,7 +63,6 @@ class AutoPop:
         return files
 
     def check_files(self):
-        print(self.files)
         for file in self.files:
             if not file.exists():
                 message = f"file does not exist: {file}"
@@ -64,7 +71,7 @@ class AutoPop:
     def traverse(self, dirpath):
         dirpath = Path(dirpath)
         if not dirpath.is_dir():
-            return
+            return  # pragma: no cover
         for subpath in dirpath.iterdir():
             if subpath.is_dir():
                 yield from self.traverse(subpath)

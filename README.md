@@ -109,6 +109,16 @@ To run a simple paired-end assembly, use the `just-yeat-it` command. Otherwise, 
 $ just-yeat-it --outdir {path} {read1} {read2}
 ```
 
+Auto-populate config file with a directory of paired-end reads.
+```
+$ yeat-auto short_reads --seq-path data/ -o config.cfg
+```
+
+Auto-populate config file with a list of paired-end read files.
+```
+$ yeat-auto short_reads --files short_reads_1.fastq.gz short_reads_2.fastq.gz -o config.cfg
+```
+
 ### Supported Input Reads with Assembly Algorithms
 
 | Readtype  | Algorithms |

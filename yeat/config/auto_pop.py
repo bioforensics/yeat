@@ -20,15 +20,14 @@ class AutoPopError(ValueError):
 
 
 class AutoPop:
-    def __init__(self, args):
-        self.samples = self.get_samples(args.samples)
+    def __init__(self, samples, seq_path, files):
+        self.samples = self.get_samples(samples)
         self.check_samples()
-        self.check_seq_path(args.seq_path)
-        self.files = self.get_files(args.files, args.seq_path)
+        self.check_seq_path(seq_path)
+        self.files = [Path(f) for f in files] if files is not None else self.get_files(seq_path)
         self.check_files()
         self.files_to_samples = self.organize_files_to_samples()
         self.check_files_to_samples()
-        self.write_config_file(args.outfile)
 
     def get_samples(self, samples):
         if len(samples) == 1 and Path(samples[0]).is_file():
@@ -52,21 +51,13 @@ class AutoPop:
             message = f"path does not exist: '{seq_path}'"
             raise AutoPopError(message)
 
-    def get_files(self, files, seq_path):
-        if files:
-            return [Path(f) for f in files]
+    def get_files(self, seq_path):
         files = []
         for file in self.traverse(seq_path):
             if not file.name.endswith(EXTENSIONS):
                 continue
             files.append(file)
         return files
-
-    def check_files(self):
-        for file in self.files:
-            if not file.exists():
-                message = f"file does not exist: {file}"
-                raise AutoPopError(message)
 
     def traverse(self, dirpath):
         dirpath = Path(dirpath)
@@ -77,6 +68,12 @@ class AutoPop:
                 yield from self.traverse(subpath)
             else:
                 yield subpath
+
+    def check_files(self):
+        for file in self.files:
+            if not file.exists():
+                message = f"file does not exist: {file}"
+                raise AutoPopError(message)
 
     def organize_files_to_samples(self):
         files_to_samples = defaultdict(list)

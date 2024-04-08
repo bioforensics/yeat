@@ -9,8 +9,8 @@
 
 import pytest
 import re
-from yeat.cli.auto_pop import AutoPopError
 from yeat.cli.yeat_auto import get_parser, main
+from yeat.config.auto_pop import AutoPopError
 from yeat.tests import data_file
 
 pytestmark = pytest.mark.short
@@ -63,8 +63,9 @@ def test_bad_input_seq_path(tmp_path):
 def test_sequence_with_no_files(tmp_path):
     wd = str(tmp_path)
     config = f"{wd}/config.cfg"
-    arglist = ["SAMPLE", "-o", config, "--seq-path", data_file("")]
-    message = "sample SAMPLE: expected 2 FASTQ files for paired-end data, found 0"
+    sample_name = "SAMPLE_NAME_WITHOUT_READS"
+    arglist = [sample_name, "-o", config, "--seq-path", data_file("")]
+    message = f"sample {sample_name}: expected 2 FASTQ files for paired-end data, found 0"
     with pytest.raises(AutoPopError, match=message):
         run_yeat_auto(arglist)
 

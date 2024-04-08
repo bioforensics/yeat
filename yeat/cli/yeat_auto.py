@@ -7,40 +7,27 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from .auto_pop import AutoPop
 from argparse import ArgumentParser
+from yeat.config.auto_pop import AutoPop
 
 
 def main(args=None):
     if args is None:
         args = get_parser().parse_args()  # pragma: no cover
-    AutoPop(args)
+    autopop = AutoPop(args.samples, args.seq_path, args.files)
+    autopop.write_config_file(args.outfile)
 
 
 def get_parser(exit_on_error=True):
     parser = ArgumentParser(exit_on_error=exit_on_error)
-    parser._optionals.title = "options"
-    config_configuration(parser)
-    input_configuration(parser)
+    options(parser)
     positional_args(parser)
     return parser
 
 
-def config_configuration(parser):
-    config = parser.add_argument_group("config configuration")
-    config.add_argument(
-        "-o",
-        "--outfile",
-        default="config.cfg",
-        help='output config file; by default, "config.cfg"',
-        metavar="FILE",
-        type=str,
-    )
-
-
-def input_configuration(parser):
-    ingrp = parser.add_argument_group("input configuration")
-    meg = ingrp.add_mutually_exclusive_group(required=True)
+def options(parser):
+    parser._optionals.title = "options"
+    meg = parser.add_mutually_exclusive_group(required=True)
     meg.add_argument(
         "--seq-path",
         default=None,
@@ -53,6 +40,14 @@ def input_configuration(parser):
         help="a list of FASTQ files to use as input; incompatible with --seq-path",
         metavar="FQ",
         nargs="+",
+    )
+    parser.add_argument(
+        "-o",
+        "--outfile",
+        default="config.cfg",
+        help='output config file; by default, "config.cfg"',
+        metavar="FILE",
+        type=str,
     )
 
 

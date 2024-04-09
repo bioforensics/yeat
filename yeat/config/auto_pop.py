@@ -7,7 +7,6 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from collections import defaultdict
 import json
 from pathlib import Path
 
@@ -48,8 +47,7 @@ class AutoPop:
         if not seq_path:
             return
         if not Path(seq_path).exists():
-            message = f"path does not exist: '{seq_path}'"
-            raise AutoPopError(message)
+            raise FileNotFoundError(seq_path)
 
     def get_files(self, seq_path):
         files = []
@@ -72,11 +70,10 @@ class AutoPop:
     def check_files(self):
         for file in self.files:
             if not file.exists():
-                message = f"file does not exist: {file}"
-                raise AutoPopError(message)
+                raise FileNotFoundError(file)
 
     def organize_files_to_samples(self):
-        files_to_samples = defaultdict(list)
+        files_to_samples = dict()
         for sample in self.samples:
             files_to_samples[sample] = [file for file in self.files if sample in str(file)]
         return files_to_samples
@@ -87,12 +84,9 @@ class AutoPop:
                 message = f"sample {sample}: expected 2 FASTQ files for paired-end data, found {len(files)}"
                 raise AutoPopError(message)
 
-    def write_config_file(self, outfile):
+    def write_config_file(self):
         data = self.get_config_data()
-        outdir = Path(outfile).parent
-        outdir.mkdir(parents=True, exist_ok=True)
-        outfile = open(outfile, "w")
-        json.dump(data, outfile, indent=4)
+        print(json.dumps(data, indent=4))
 
     def get_config_data(self):
         samples = {}

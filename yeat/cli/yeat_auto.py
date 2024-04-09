@@ -15,7 +15,7 @@ def main(args=None):
     if args is None:
         args = get_parser().parse_args()  # pragma: no cover
     autopop = AutoPop(args.samples, args.seq_path, args.files)
-    autopop.write_config_file(args.outfile)
+    autopop.write_config_file()
 
 
 def get_parser(exit_on_error=True):
@@ -40,14 +40,6 @@ def options(parser):
         help="a list of FASTQ files to use as input; incompatible with --seq-path",
         metavar="FQ",
         nargs="+",
-    )
-    parser.add_argument(
-        "-o",
-        "--outfile",
-        default="config.cfg",
-        help='output config file; by default, "config.cfg"',
-        metavar="FILE",
-        type=str,
     )
 
 

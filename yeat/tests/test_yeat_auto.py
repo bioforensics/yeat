@@ -27,8 +27,7 @@ def run_yeat_auto(arglist):
 
 
 def compare_config_data(observed, expected):
-    with open(observed, "r") as f:
-        observed_data = f.read().strip()
+    observed_data = observed.strip()
     with open(expected, "r") as f:
         expected_data = f.read().strip()
     expected_data = re.sub(r"yeat\/tests\/data", f'{data_file("")}', expected_data)
@@ -44,27 +43,22 @@ def compare_config_data(observed, expected):
         ([data_file("two_samples.txt")], data_file("configs/auto_two_samples.cfg")),
     ],
 )
-def test_yeat_auto_with_seq_path(sequences, expected, tmp_path):
-    wd = str(tmp_path)
-    config = f"{wd}/config.cfg"
-    arglist = sequences + ["-o", config, "--seq-path", data_file("")]
+def test_yeat_auto_with_seq_path(sequences, expected, capsys):
+    arglist = sequences + ["--seq-path", data_file("")]
     run_yeat_auto(arglist)
-    compare_config_data(config, expected)
+    out, err = capsys.readouterr()
+    compare_config_data(out, expected)
 
 
-def test_bad_input_seq_path(tmp_path):
-    wd = str(tmp_path)
-    config = f"{wd}/config.cfg"
-    arglist = ["short_reads", "-o", config, "--seq-path", "DNE"]
-    with pytest.raises(AutoPopError, match="path does not exist: 'DNE'"):
+def test_bad_input_seq_path():
+    arglist = ["short_reads", "--seq-path", "DNE"]
+    with pytest.raises(FileNotFoundError):
         run_yeat_auto(arglist)
 
 
-def test_sequence_with_no_files(tmp_path):
-    wd = str(tmp_path)
-    config = f"{wd}/config.cfg"
+def test_sequence_with_no_files():
     sample_name = "SAMPLE_NAME_WITHOUT_READS"
-    arglist = [sample_name, "-o", config, "--seq-path", data_file("")]
+    arglist = [sample_name, "--seq-path", data_file("")]
     message = f"sample {sample_name}: expected 2 FASTQ files for paired-end data, found 0"
     with pytest.raises(AutoPopError, match=message):
         run_yeat_auto(arglist)
@@ -79,47 +73,43 @@ def test_sequence_with_no_files(tmp_path):
         ([data_file("two_samples.txt")], ALL_READS, data_file("configs/auto_two_samples.cfg")),
     ],
 )
-def test_yeat_auto_with_files(sequences, files, expected, tmp_path):
-    wd = str(tmp_path)
-    config = f"{wd}/config.cfg"
-    arglist = sequences + ["-o", config, "--files"] + files
+def test_yeat_auto_with_files(sequences, files, expected, capsys):
+    arglist = sequences + ["--files"] + files
     run_yeat_auto(arglist)
-    compare_config_data(config, expected)
+    out, err = capsys.readouterr()
+    compare_config_data(out, expected)
 
 
-@pytest.mark.parametrize(
-    "files,message",
-    [
-        (
-            [data_file("short_reads_1.fastq.gz")],
-            "sample short_reads: expected 2 FASTQ files for paired-end data, found 1",
-        ),
-        (["DNE", data_file("short_reads_1.fastq.gz")], "file does not exist: DNE"),
-        ([data_file("short_reads_1.fastq.gz"), "DNE"], "file does not exist: DNE"),
-    ],
-)
-def test_bad_input_files(files, message, tmp_path):
-    wd = str(tmp_path)
-    config = f"{wd}/config.cfg"
-    arglist = ["short_reads", "-o", config, "--files"] + files
+def test_not_enough_input_files():
+    arglist = ["short_reads", "--files", data_file("short_reads_1.fastq.gz")]
+    message = "sample short_reads: expected 2 FASTQ files for paired-end data, found 1"
     with pytest.raises(AutoPopError, match=message):
         run_yeat_auto(arglist)
 
 
-def test_only_files_or_seq_path_in_command(capsys, tmp_path):
-    wd = str(tmp_path)
-    config = f"{wd}/config.cfg"
-    arglist = ["short_reads", "-o", config, "--seq-path", data_file(""), "--files"] + SHORT_READS
+@pytest.mark.parametrize(
+    "files",
+    [
+        (["DNE", data_file("short_reads_1.fastq.gz")]),
+        ([data_file("short_reads_1.fastq.gz"), "DNE"]),
+    ],
+)
+def test_bad_input_files2(files):
+    arglist = ["short_reads", "--files"] + files
+    with pytest.raises(FileNotFoundError):
+        run_yeat_auto(arglist)
+
+
+def test_only_files_or_seq_path_in_command(capsys):
+    arglist = ["short_reads", "--seq-path", data_file(""), "--files"] + SHORT_READS
     with pytest.raises(SystemExit):
         run_yeat_auto(arglist)
     out, err = capsys.readouterr()
     assert "error: argument --files: not allowed with argument --seq-path" in err
 
 
-def test_sample_name_within_sample(tmp_path):
-    wd = str(tmp_path)
-    config = f"{wd}/config.cfg"
-    arglist = ["short", "short_reads", "-o", config, "--seq-path", data_file("")]
+def test_sample_name_within_sample():
+    arglist = ["short", "short_reads", "--seq-path", data_file("")]
     message = "cannot correctly process a sample name that is a substring of another sample name: short vs. short_reads"
     with pytest.raises(AutoPopError, match=message):
         run_yeat_auto(arglist)

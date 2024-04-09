@@ -34,7 +34,8 @@ setup(
     entry_points={
         'console_scripts': [
             'yeat=yeat.cli:main',
-            'just-yeat-it=yeat.cli.just_yeat_it:main'
+            'just-yeat-it=yeat.cli.just_yeat_it:main',
+            'yeat-auto=yeat.cli.yeat_auto:main'
         ],
     },
     classifiers=[

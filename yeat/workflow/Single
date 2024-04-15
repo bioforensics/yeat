@@ -50,7 +50,7 @@ rule downsample:
         reads="seq/fastp/{sample}/single/combined-reads.fq.gz",
         mash_report="seq/mash/{sample}/single/combined-reads.report.tsv"
     params:
-        coverage=lambda wildcards: config["samples"][wildcards.sample].coverage_depth,
+        coverage_depth=lambda wildcards: config["samples"][wildcards.sample].coverage_depth,
         downsample=lambda wildcards: config["samples"][wildcards.sample].downsample,
         fastp_report="seq/fastp/{sample}/single/fastp.json",
         genome_size=lambda wildcards: config["samples"][wildcards.sample].genome_size,
@@ -62,9 +62,9 @@ rule downsample:
             return
         genome_size = get_genome_size(params.genome_size, input.mash_report)
         avg_read_length = get_avg_read_length(params.fastp_report)
-        down = get_down(params.downsample, genome_size, params.coverage, avg_read_length)
+        down = get_down(params.downsample, genome_size, params.coverage_depth, avg_read_length)
         seed = get_seed(params.seed)
-        print_downsample_values(genome_size, avg_read_length, params.coverage, down, seed)
+        print_downsample_values(genome_size, avg_read_length, params.coverage_depth, down, seed)
         shell("seqtk sample -s {seed} {input.reads} {down} > {params.outdir}/combined-reads.fq")
         shell("gzip -f {params.outdir}/combined-reads.fq")
 

@@ -51,7 +51,7 @@ def downsample_configuration(parser, just_yeat_it=False):
         )
         illumina.add_argument(
             "-c",
-            "--coverage-depth",
+            "--coverage",
             default=150,
             help="target an average depth of coverage Cx when auto-downsampling; by default, C=150",
             metavar="C",

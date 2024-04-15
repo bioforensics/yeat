@@ -87,7 +87,7 @@ def get_config_data(args):
                 "paired": [args.reads],
                 "downsample": args.downsample,
                 "genome_size": args.genome_size,
-                "coverage_depth": args.coverage_depth,
+                "coverage": args.coverage,
             },
         },
         "assemblies": {

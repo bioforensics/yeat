@@ -14,7 +14,7 @@ from itertools import chain
 
 
 CONFIG_KEYS = ("samples", "assemblies")
-DOWNSAMPLE_KEYS = ("downsample", "coverage_depth", "genome_size")
+DOWNSAMPLE_KEYS = ("downsample", "coverage", "genome_size")
 SAMPLE_KEYS = READ_TYPES + DOWNSAMPLE_KEYS
 ASSEMBLY_KEYS = ("algorithm", "extra_args", "samples", "mode")
 

@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Hybrid assembly support (#68, #73)
 - `just-yeat-it` CLI command for simple paired-end runs (#74)
 - `yeat-auto` CLI command for auto-populating the sample section of the config file (#76)
-- Customize downsample, depth of coverage, and genome size per sample ()
+- Customize downsample, depth of coverage, and genome size per sample (#77)
 
 
 ## [0.5] 2024-01-08

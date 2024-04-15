@@ -77,10 +77,10 @@ def test_custom_downsample_input(
 
 @pytest.mark.long
 @pytest.mark.illumina
-@pytest.mark.parametrize("coverage", [("150"), ("75"), ("10")])
-def test_custom_coverage_input(coverage, capsys, tmp_path):
+@pytest.mark.parametrize("coverage_depth", [("150"), ("75"), ("10")])
+def test_custom_coverage_depth_input(coverage_depth, capsys, tmp_path):
     wd = str(tmp_path)
-    arglist = ["-o", wd, "-c", coverage, data_file("configs/megahit.cfg")]
+    arglist = ["-o", wd, "-c", coverage_depth, data_file("configs/megahit.cfg")]
     run_yeat(arglist)
     sample_dir = Path(wd).resolve() / "analysis" / "Shigella_sonnei_53G"
     megahit_dir = sample_dir / "paired" / "megahit-default" / "megahit"

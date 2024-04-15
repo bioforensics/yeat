@@ -37,7 +37,7 @@ def downsample_configuration(parser, just_yeat_it=False):
             "-d",
             "--downsample",
             default=0,
-            help="randomly sample D reads from the input rather than assembling the full set; set D=0 to perform auto-downsampling to a desired level of coverage (see --coverage); set D=-1 to disable downsampling; by default, D=0",
+            help="randomly sample D reads from the input rather than assembling the full set; set D=0 to perform auto-downsampling to a desired level of coverage (see --coverage-depth); set D=-1 to disable downsampling; by default, D=0",
             metavar="D",
             type=int,
         )
@@ -51,7 +51,7 @@ def downsample_configuration(parser, just_yeat_it=False):
         )
         illumina.add_argument(
             "-c",
-            "--coverage",
+            "--coverage-depth",
             default=150,
             help="target an average depth of coverage Cx when auto-downsampling; by default, C=150",
             metavar="C",

@@ -84,7 +84,7 @@ rule downsample:
         read2="seq/fastp/{sample}/paired/{sample}.R2.fq.gz",
         mash_report="seq/mash/{sample}/paired/{sample}.report.tsv"
     params:
-        coverage=lambda wildcards: config["samples"][wildcards.sample].coverage,
+        coverage_depth=lambda wildcards: config["samples"][wildcards.sample].coverage_depth,
         downsample=lambda wildcards: config["samples"][wildcards.sample].downsample,
         fastp_report="seq/fastp/{sample}/paired/fastp.json",
         genome_size=lambda wildcards: config["samples"][wildcards.sample].genome_size,
@@ -97,9 +97,9 @@ rule downsample:
             return
         genome_size = get_genome_size(params.genome_size, input.mash_report)
         avg_read_length = get_avg_read_length(params.fastp_report)
-        down = get_down(params.downsample, genome_size, params.coverage, avg_read_length)
+        down = get_down(params.downsample, genome_size, params.coverage_depth, avg_read_length)
         seed = get_seed(params.seed)
-        print_downsample_values(genome_size, avg_read_length, params.coverage, down, seed)
+        print_downsample_values(genome_size, avg_read_length, params.coverage_depth, down, seed)
         shell("seqtk sample -s {seed} {input.read1} {down} > {params.outdir}/{wildcards.sample}.R1.fq")
         shell("seqtk sample -s {seed} {input.read2} {down} > {params.outdir}/{wildcards.sample}.R2.fq")
         shell("gzip -f {params.outdir}/*")

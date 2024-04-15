@@ -29,9 +29,8 @@ class Sample:
         self.target_files = self.get_target_files()
         self.downsample = int(sample["downsample"])
         self.genome_size = int(sample["genome_size"])
-        self.coverage = int(sample["coverage"])
+        self.coverage_depth = int(sample["coverage_depth"])
         # check that input data (downsample, genome_size, and coverage) are int and not string, etc.
-        # validate downsample, genome_size, coverage
         # warn if someone sets downsample for long reads only -- not support or will work
         # print(self.downsample)
         # assert 0

@@ -274,3 +274,7 @@ def test_get_target_files():
         "analysis/sample4/nano-hq/flye_ONT/flye/quast/report.html",
     ]
     assert observed == expected
+
+
+# test for missing downsample entry
+# test for downsample entry not int

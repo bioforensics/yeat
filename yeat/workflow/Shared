@@ -16,8 +16,8 @@ rule copyinput_paired:
         read1="seq/input/{sample}/paired/r1_combined-reads.fq.gz",
         read2="seq/input/{sample}/paired/r2_combined-reads.fq.gz"
     input:
-        r1s = lambda wildcards: [read[0] for read in config["samples"][wildcards.sample].sample["paired"]],
-        r2s = lambda wildcards: [read[1] for read in config["samples"][wildcards.sample].sample["paired"]]
+        r1s=lambda wildcards: [read[0] for read in config["samples"][wildcards.sample].sample["paired"]],
+        r2s=lambda wildcards: [read[1] for read in config["samples"][wildcards.sample].sample["paired"]]
     params:
         outdir="seq/input/{sample}/paired"
     run:
@@ -84,10 +84,10 @@ rule downsample:
         read2="seq/fastp/{sample}/paired/{sample}.R2.fq.gz",
         mash_report="seq/mash/{sample}/paired/{sample}.report.tsv"
     params:
-        coverage=config["coverage"],
-        downsample=config["downsample"],
+        coverage=lambda wildcards: config["samples"][wildcards.sample].coverage_depth,
+        downsample=lambda wildcards: config["samples"][wildcards.sample].downsample,
         fastp_report="seq/fastp/{sample}/paired/fastp.json",
-        genome_size=config["genome_size"],
+        genome_size=lambda wildcards: config["samples"][wildcards.sample].genome_size,
         seed=config["seed"],
         outdir="seq/downsample/{sample}/paired"
     run:

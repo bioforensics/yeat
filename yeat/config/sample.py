@@ -7,7 +7,14 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import ILLUMINA_READS, PACBIO_READS, OXFORD_READS, LONG_READS, AssemblyConfigError
+from . import (
+    ILLUMINA_READS,
+    PACBIO_READS,
+    OXFORD_READS,
+    LONG_READS,
+    READ_TYPES,
+    AssemblyConfigError,
+)
 from pathlib import Path
 
 
@@ -20,21 +27,33 @@ class Sample:
         self.short_readtype = self.get_short_readtype()
         self.long_readtype = self.get_long_readtype()
         self.target_files = self.get_target_files()
+        self.downsample = int(sample["downsample"])
+        self.genome_size = int(sample["genome_size"])
+        self.coverage_depth = int(sample["coverage_depth"])
+        # check that input data (downsample, genome_size, and coverage_depth) are int and not string, etc.
+        # validate downsample, genome_size, coverage_depth
+        # warn if someone sets downsample for long reads only -- not support or will work
+        # print(self.downsample)
+        # assert 0
 
     def validate_sample_configuration(self):
         self.check_enough_readtypes()
         self.check_input_reads()
 
     def check_enough_readtypes(self):
-        if len(self.sample.keys()) == 0:
+        sample_keys = self.sample.keys()
+        sample_read_types = set(sample_keys).intersection(set(READ_TYPES))
+        if len(sample_read_types) == 0:
             message = f"Missing sample reads for '{self.label}'"
             raise AssemblyConfigError(message)
-        if len(self.sample.keys()) > 2:
+        if len(sample_read_types) > 2:
             message = f"Max of 2 readtypes per sample for '{self.label}'"
             raise AssemblyConfigError(message)
 
     def check_input_reads(self):
         for readtype, reads in self.sample.items():
+            if readtype not in READ_TYPES:
+                continue
             if len(reads) == 0:
                 message = f"Missing input reads for '{self.label}'"
                 raise AssemblyConfigError(message)
@@ -97,6 +116,8 @@ class Sample:
     def get_target_files(self):
         target_files = []
         for readtype in self.sample.keys():
+            if readtype not in READ_TYPES:
+                continue
             target_files += self.get_qc_files(readtype)
         return target_files
 

@@ -28,7 +28,7 @@ def get_parser(exit_on_error=True):
     parser._optionals.title = "options"
     cli.workflow_configuration(parser)
     illumina.fastp_configuration(parser)
-    illumina.downsample_configuration(parser)
+    illumina.downsample_configuration(parser, just_yeat_it=True)
     sample_configuration(parser)
     algorithm_configuration(parser)
     positional_args(parser)
@@ -82,7 +82,14 @@ def create_config(args):
 
 def get_config_data(args):
     return {
-        "samples": {args.sample_label: {"paired": [args.reads]}},
+        "samples": {
+            args.sample_label: {
+                "paired": [args.reads],
+                "downsample": args.downsample,
+                "genome_size": args.genome_size,
+                "coverage_depth": args.coverage_depth,
+            },
+        },
         "assemblies": {
             args.assembly_label: {
                 "algorithm": args.algorithm,

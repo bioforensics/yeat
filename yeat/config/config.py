@@ -7,13 +7,14 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import READ_TYPES, AssemblyConfigError
+from . import READ_TYPES, DOWNSAMPLE_KEYS, AssemblyConfigError
 from .assembly import Assembly
 from .sample import Sample
 from itertools import chain
 
 
 CONFIG_KEYS = ("samples", "assemblies")
+SAMPLE_KEYS = READ_TYPES + DOWNSAMPLE_KEYS
 ASSEMBLY_KEYS = ("algorithm", "extra_args", "samples", "mode")
 
 
@@ -30,7 +31,7 @@ class AssemblyConfig:
     def validate_config_keys(self):
         self.check_required_keys(self.config.keys(), CONFIG_KEYS)
         for sample in self.config["samples"].values():
-            self.check_valid_keys(sample.keys(), READ_TYPES)
+            self.check_valid_keys(sample.keys(), SAMPLE_KEYS)
         for assembly in self.config["assemblies"].values():
             self.check_required_keys(assembly.keys(), ASSEMBLY_KEYS)
 

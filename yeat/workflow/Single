@@ -50,10 +50,10 @@ rule downsample:
         reads="seq/fastp/{sample}/single/combined-reads.fq.gz",
         mash_report="seq/mash/{sample}/single/combined-reads.report.tsv"
     params:
-        coverage=config["coverage"],
-        downsample=config["downsample"],
+        coverage=lambda wildcards: config["samples"][wildcards.sample].coverage_depth,
+        downsample=lambda wildcards: config["samples"][wildcards.sample].downsample,
         fastp_report="seq/fastp/{sample}/single/fastp.json",
-        genome_size=config["genome_size"],
+        genome_size=lambda wildcards: config["samples"][wildcards.sample].genome_size,
         seed=config["seed"],
         outdir="seq/downsample/{sample}/single"
     run:

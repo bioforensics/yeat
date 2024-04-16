@@ -29,14 +29,13 @@ def test_check_positive_valid_values(value):
 
 
 @pytest.mark.parametrize("value", [-1, 0])
-def test_check_positive_bad_values(value):
+def test_check_positive_not_positive_integer(value):
     message = f"{value} is not a positive integer"
     with pytest.raises(ArgumentTypeError, match=message):
         illumina.check_positive(value)
 
 
-# rename function here
-def test_check_positive_bad_values2():
+def test_check_positive_not_integer():
     message = f"BAD is not an integer"
     with pytest.raises(ArgumentTypeError, match=message):
         illumina.check_positive("BAD")

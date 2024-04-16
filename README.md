@@ -152,7 +152,10 @@ To enable hybrid assembly, add the following to the configuration file.
             ],
             "pacbio-corr": [
                 "yeat/tests/data/long_reads_high_depth.fastq.gz"
-            ]
+            ],
+            "downsample": 0,
+            "genome_size": 0,
+            "coverage_depth": 150
         }
     },
     "assemblies": {
@@ -179,7 +182,10 @@ To enable hybrid assembly, add the following to the configuration file.
                     "yeat/tests/data/short_reads_1.fastq.gz",
                     "yeat/tests/data/short_reads_2.fastq.gz"
                 ]
-            ]
+            ],
+            "downsample": 0,
+            "genome_size": 0,
+            "coverage_depth": 150
         },
         "sample2": {
             "paired": [
@@ -187,17 +193,26 @@ To enable hybrid assembly, add the following to the configuration file.
                     "yeat/tests/data/Animal_289_R1.fq.gz",
                     "yeat/tests/data/Animal_289_R2.fq.gz"
                 ]
-            ]
+            ],
+            "downsample": 0,
+            "genome_size": 0,
+            "coverage_depth": 150
         },
         "sample3": {
             "pacbio-hifi": [
                 "yeat/tests/data/ecoli.fastq.gz"
-            ]
+            ],
+            "downsample": 0,
+            "genome_size": 0,
+            "coverage_depth": 150
         },
         "sample4": {
             "nano-hq": [
                 "yeat/tests/data/ecolk12mg1655_R10_3_guppy_345_HAC.fastq.gz"
-            ]
+            ],
+            "downsample": 0,
+            "genome_size": 0,
+            "coverage_depth": 150
         }
     },
     "assemblies": {

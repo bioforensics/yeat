@@ -159,12 +159,12 @@ class Sample:
             raise AssemblyConfigError(message)
 
     def warn_downsample_configuration_on_long_reads(self):
-        if self.sample["downsample"] > 0:
+        if self.downsample > 0:
             message = f"Configuration value 'downsample' cannot be applied to '{self.long_readtype}' reads"
             warn(message)
-        if self.sample["genome_size"] > 0:
+        if self.genome_size > 0:
             message = f"Configuration value 'genome_size' cannot be applied to '{self.long_readtype}' reads"
             warn(message)
-        if self.sample["coverage_depth"] != 150:
+        if self.coverage_depth != 150:
             message = f"Configuration value 'coverage_depth' cannot be applied to '{self.long_readtype}' reads"
             warn(message)

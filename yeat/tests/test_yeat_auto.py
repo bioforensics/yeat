@@ -94,6 +94,7 @@ def test_not_enough_input_files():
         ([data_file("short_reads_1.fastq.gz"), "DNE"]),
     ],
 )
+# rename funciton here...
 def test_bad_input_files2(files):
     arglist = ["short_reads", "--files"] + files
     with pytest.raises(FileNotFoundError):

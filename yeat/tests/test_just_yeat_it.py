@@ -7,6 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+from argparse import ArgumentError
 from pathlib import Path
 import pytest
 from yeat.cli.just_yeat_it import get_parser, main
@@ -74,3 +75,17 @@ def test_invalid_input_algorithm(capsys, tmp_path):
         run_yeat(arglist)
     out, err = capsys.readouterr()
     assert "Invalid assembly algorithm 'INVALID' for 'assembly1'" in err
+
+
+@pytest.mark.parametrize("coverage_depth", [("-1"), ("0")])
+def test_invalid_custom_coverage_negative(coverage_depth):
+    arglist = ["-c", coverage_depth, data_file("paired.cfg")]
+    with pytest.raises(ArgumentError, match=rf"{coverage_depth} is not a positive integer"):
+        args = get_parser(exit_on_error=False).parse_args(arglist)
+
+
+@pytest.mark.parametrize("coverage_depth", [("string"), ("3.14")])
+def test_invalid_custom_coverage_noninteger(coverage_depth):
+    arglist = ["-c", coverage_depth, data_file("paired.cfg")]
+    with pytest.raises(ArgumentError, match=rf"{coverage_depth} is not an integer"):
+        args = get_parser(exit_on_error=False).parse_args(arglist)

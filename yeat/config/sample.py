@@ -33,7 +33,8 @@ class Sample:
         self.downsample = self.sample["downsample"]
         self.genome_size = self.sample["genome_size"]
         self.coverage_depth = self.sample["coverage_depth"]
-        self.warn_only_for_paired_end_reads()
+        if not self.short_readtype and self.long_readtype:
+            self.warn_downsample_configuration_on_long_reads()
 
     def cast_downsample_values_to_int(self):
         for key in DOWNSAMPLE_KEYS:
@@ -157,7 +158,13 @@ class Sample:
             message = f"Invalid readtype '{readtype}'"
             raise AssemblyConfigError(message)
 
-    def warn_only_for_paired_end_reads(self):
-        if not self.short_readtype:  # and if downsample values are not default...
-            message = f"Downsample configuration values cannot be applied to '{self.long_readtype}' reads"
+    def warn_downsample_configuration_on_long_reads(self):
+        if self.sample["downsample"] > 0:
+            message = f"Configuration value 'downsample' cannot be applied to '{self.long_readtype}' reads"
+            warn(message)
+        if self.sample["genome_size"] > 0:
+            message = f"Configuration value 'genome_size' cannot be applied to '{self.long_readtype}' reads"
+            warn(message)
+        if self.sample["coverage_depth"] != 150:
+            message = f"Configuration value 'coverage_depth' cannot be applied to '{self.long_readtype}' reads"
             warn(message)

@@ -24,20 +24,6 @@ def test_display_config_template(capsys):
     assert json.loads(out) == cli.CONFIG_TEMPLATE
 
 
-@pytest.mark.parametrize("coverage_depth", [("-1"), ("0")])
-def test_invalid_custom_coverage_negative(coverage_depth):
-    arglist = ["-c", coverage_depth, data_file("paired.cfg")]
-    with pytest.raises(ArgumentError, match=rf"{coverage_depth} is not a positive integer"):
-        args = cli.get_parser(exit_on_error=False).parse_args(arglist)
-
-
-@pytest.mark.parametrize("coverage_depth", [("string"), ("3.14")])
-def test_invalid_custom_coverage_noninteger(coverage_depth):
-    arglist = ["-c", coverage_depth, data_file("paired.cfg")]
-    with pytest.raises(ArgumentError, match=rf"{coverage_depth} is not an integer"):
-        args = cli.get_parser(exit_on_error=False).parse_args(arglist)
-
-
 @pytest.mark.parametrize("value", [1, 10, 100])
 def test_check_positive(value):
     illumina.check_positive(value) == value

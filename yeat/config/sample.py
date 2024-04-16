@@ -13,31 +13,40 @@ from . import (
     OXFORD_READS,
     LONG_READS,
     READ_TYPES,
+    DOWNSAMPLE_KEYS,
     AssemblyConfigError,
 )
 from pathlib import Path
+from warnings import warn
 
 
 class Sample:
     def __init__(self, label, sample):
         self.label = label
         self.sample = sample
+        self.cast_downsample_values_to_int()
         self.all_reads = []
         self.validate_sample_configuration()
         self.short_readtype = self.get_short_readtype()
         self.long_readtype = self.get_long_readtype()
         self.target_files = self.get_target_files()
-        self.downsample = int(sample["downsample"])
-        self.genome_size = int(sample["genome_size"])
-        self.coverage_depth = int(sample["coverage_depth"])
-        # check that input data (downsample, genome_size, and coverage) are int and not string, etc.
-        # warn if someone sets downsample for long reads only -- not support or will work
-        # print(self.downsample)
-        # assert 0
+        self.downsample = self.sample["downsample"]
+        self.genome_size = self.sample["genome_size"]
+        self.coverage_depth = self.sample["coverage_depth"]
+        self.warn_only_for_paired_end_reads()
+
+    def cast_downsample_values_to_int(self):
+        for key in DOWNSAMPLE_KEYS:
+            try:
+                self.sample[key] = int(self.sample[key])
+            except ValueError:
+                message = f"Input {key} is not an int '{self.sample[key]}' for '{self.label}'"
+                raise ValueError(message)
 
     def validate_sample_configuration(self):
         self.check_enough_readtypes()
         self.check_input_reads()
+        self.check_input_downsample_values()
 
     def check_enough_readtypes(self):
         sample_keys = self.sample.keys()
@@ -92,6 +101,17 @@ class Sample:
                 raise AssemblyConfigError(message)
             self.all_reads.append(read)
 
+    def check_input_downsample_values(self):
+        if self.sample["downsample"] < -1:
+            message = f"Invalid input '{self.sample['downsample']}' for '{self.label}'"
+            raise AssemblyConfigError(message)
+        if self.sample["genome_size"] < 0:
+            message = f"Invalid input '{self.sample['genome_size']}' for '{self.label}'"
+            raise AssemblyConfigError(message)
+        if self.sample["coverage_depth"] < 1:
+            message = f"Invalid input '{self.sample['coverage_depth']}' for '{self.label}'"
+            raise AssemblyConfigError(message)
+
     def get_short_readtype(self):
         short_readtypes = set.intersection(set(self.sample.keys()), set(ILLUMINA_READS))
         if len(short_readtypes) > 1:
@@ -136,3 +156,8 @@ class Sample:
         else:  # pragma: no cover
             message = f"Invalid readtype '{readtype}'"
             raise AssemblyConfigError(message)
+
+    def warn_only_for_paired_end_reads(self):
+        if not self.short_readtype:  # and if downsample values are not default...
+            message = f"Downsample configuration values cannot be applied to '{self.long_readtype}' reads"
+            warn(message)

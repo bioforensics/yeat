@@ -7,14 +7,13 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import READ_TYPES, AssemblyConfigError
+from . import READ_TYPES, DOWNSAMPLE_KEYS, AssemblyConfigError
 from .assembly import Assembly
 from .sample import Sample
 from itertools import chain
 
 
 CONFIG_KEYS = ("samples", "assemblies")
-DOWNSAMPLE_KEYS = ("downsample", "coverage_depth", "genome_size")
 SAMPLE_KEYS = READ_TYPES + DOWNSAMPLE_KEYS
 ASSEMBLY_KEYS = ("algorithm", "extra_args", "samples", "mode")
 

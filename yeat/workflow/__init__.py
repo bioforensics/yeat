@@ -13,7 +13,7 @@ from pathlib import Path
 from snakemake import snakemake
 import subprocess
 import warnings
-from yeat.config.config import DOWNSAMPLE_KEYS
+from yeat.config import DOWNSAMPLE_KEYS
 
 
 def run_workflow(args):

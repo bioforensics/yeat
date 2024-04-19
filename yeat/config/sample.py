@@ -7,34 +7,62 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import ILLUMINA_READS, PACBIO_READS, OXFORD_READS, LONG_READS, AssemblyConfigError
+from . import (
+    ILLUMINA_READS,
+    PACBIO_READS,
+    OXFORD_READS,
+    LONG_READS,
+    READ_TYPES,
+    DOWNSAMPLE_KEYS,
+    AssemblyConfigError,
+)
 from pathlib import Path
+from warnings import warn
 
 
 class Sample:
     def __init__(self, label, sample):
         self.label = label
         self.sample = sample
+        self.cast_downsample_values_to_int()
         self.all_reads = []
         self.validate_sample_configuration()
         self.short_readtype = self.get_short_readtype()
         self.long_readtype = self.get_long_readtype()
         self.target_files = self.get_target_files()
+        self.downsample = self.sample["downsample"]
+        self.genome_size = self.sample["genome_size"]
+        self.coverage_depth = self.sample["coverage_depth"]
+        if not self.short_readtype and self.long_readtype:
+            self.warn_downsample_configuration_on_long_reads()
+
+    def cast_downsample_values_to_int(self):
+        for key in DOWNSAMPLE_KEYS:
+            try:
+                self.sample[key] = int(self.sample[key])
+            except ValueError:
+                message = f"Input {key} is not an int '{self.sample[key]}' for '{self.label}'"
+                raise ValueError(message)
 
     def validate_sample_configuration(self):
         self.check_enough_readtypes()
         self.check_input_reads()
+        self.check_input_downsample_values()
 
     def check_enough_readtypes(self):
-        if len(self.sample.keys()) == 0:
+        sample_keys = self.sample.keys()
+        sample_read_types = set(sample_keys).intersection(set(READ_TYPES))
+        if len(sample_read_types) == 0:
             message = f"Missing sample reads for '{self.label}'"
             raise AssemblyConfigError(message)
-        if len(self.sample.keys()) > 2:
+        if len(sample_read_types) > 2:
             message = f"Max of 2 readtypes per sample for '{self.label}'"
             raise AssemblyConfigError(message)
 
     def check_input_reads(self):
         for readtype, reads in self.sample.items():
+            if readtype not in READ_TYPES:
+                continue
             if len(reads) == 0:
                 message = f"Missing input reads for '{self.label}'"
                 raise AssemblyConfigError(message)
@@ -74,6 +102,17 @@ class Sample:
                 raise AssemblyConfigError(message)
             self.all_reads.append(read)
 
+    def check_input_downsample_values(self):
+        if self.sample["downsample"] < -1:
+            message = f"Invalid input '{self.sample['downsample']}' for '{self.label}'"
+            raise AssemblyConfigError(message)
+        if self.sample["genome_size"] < 0:
+            message = f"Invalid input '{self.sample['genome_size']}' for '{self.label}'"
+            raise AssemblyConfigError(message)
+        if self.sample["coverage_depth"] < 1:
+            message = f"Invalid input '{self.sample['coverage_depth']}' for '{self.label}'"
+            raise AssemblyConfigError(message)
+
     def get_short_readtype(self):
         short_readtypes = set.intersection(set(self.sample.keys()), set(ILLUMINA_READS))
         if len(short_readtypes) > 1:
@@ -97,6 +136,8 @@ class Sample:
     def get_target_files(self):
         target_files = []
         for readtype in self.sample.keys():
+            if readtype not in READ_TYPES:
+                continue
             target_files += self.get_qc_files(readtype)
         return target_files
 
@@ -116,3 +157,14 @@ class Sample:
         else:  # pragma: no cover
             message = f"Invalid readtype '{readtype}'"
             raise AssemblyConfigError(message)
+
+    def warn_downsample_configuration_on_long_reads(self):
+        if self.downsample > 0:
+            message = f"Configuration value 'downsample' cannot be applied to '{self.long_readtype}' reads"
+            warn(message)
+        if self.genome_size > 0:
+            message = f"Configuration value 'genome_size' cannot be applied to '{self.long_readtype}' reads"
+            warn(message)
+        if self.coverage_depth != 150:
+            message = f"Configuration value 'coverage_depth' cannot be applied to '{self.long_readtype}' reads"
+            warn(message)

@@ -22,32 +22,8 @@ def fastp_configuration(parser):
     )
 
 
-def downsample_configuration(parser):
+def downsample_configuration(parser, just_yeat_it=False):
     illumina = parser.add_argument_group("downsampling configuration")
-    illumina.add_argument(
-        "-c",
-        "--coverage",
-        default=150,
-        help="target an average depth of coverage Cx when auto-downsampling; by default, C=150",
-        metavar="C",
-        type=check_positive,
-    )
-    illumina.add_argument(
-        "-d",
-        "--downsample",
-        default=0,
-        help="randomly sample D reads from the input rather than assembling the full set; set D=0 to perform auto-downsampling to a desired level of coverage (see --coverage); set D=-1 to disable downsampling; by default, D=0",
-        metavar="D",
-        type=int,
-    )
-    illumina.add_argument(
-        "-g",
-        "--genome-size",
-        default=0,
-        help="provide known genome size in base pairs (bp); by default, G=0",
-        metavar="G",
-        type=int,
-    )
     illumina.add_argument(
         "-s",
         "--seed",
@@ -56,3 +32,28 @@ def downsample_configuration(parser):
         metavar="S",
         type=int,
     )
+    if just_yeat_it:
+        illumina.add_argument(
+            "-d",
+            "--downsample",
+            default=0,
+            help="randomly sample D reads from the input rather than assembling the full set; set D=0 to perform auto-downsampling to a desired level of coverage (see --coverage-depth); set D=-1 to disable downsampling; by default, D=0",
+            metavar="D",
+            type=int,
+        )
+        illumina.add_argument(
+            "-g",
+            "--genome-size",
+            default=0,
+            help="provide known genome size in base pairs (bp); by default, G=0",
+            metavar="G",
+            type=int,
+        )
+        illumina.add_argument(
+            "-c",
+            "--coverage-depth",
+            default=150,
+            help="target an average depth of coverage Cx when auto-downsampling; by default, C=150",
+            metavar="C",
+            type=check_positive,
+        )

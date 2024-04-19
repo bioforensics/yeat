@@ -91,7 +91,12 @@ class AutoPop:
     def get_config_data(self):
         samples = {}
         for label, reads in self.files_to_samples.items():
-            samples[label] = {"paired": [[str(read.absolute()) for read in reads]]}
+            samples[label] = {
+                "paired": [[str(read.absolute()) for read in reads]],
+                "downsample": 0,
+                "genome_size": 0,
+                "coverage_depth": 150,
+            }
         assemblies = {
             "spades-default": {
                 "algorithm": "spades",

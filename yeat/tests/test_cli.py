@@ -7,12 +7,11 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from argparse import ArgumentError
+from argparse import ArgumentTypeError
 import json
 import pytest
 from yeat.cli import cli
 from yeat.cli.cli import InitAction, illumina
-from yeat.tests import data_file
 
 pytestmark = pytest.mark.short
 
@@ -24,20 +23,19 @@ def test_display_config_template(capsys):
     assert json.loads(out) == cli.CONFIG_TEMPLATE
 
 
-@pytest.mark.parametrize("coverage", [("-1"), ("0")])
-def test_invalid_custom_coverage_negative(coverage):
-    arglist = ["-c", coverage, data_file("paired.cfg")]
-    with pytest.raises(ArgumentError, match=rf"{coverage} is not a positive integer"):
-        args = cli.get_parser(exit_on_error=False).parse_args(arglist)
-
-
-@pytest.mark.parametrize("coverage", [("string"), ("3.14")])
-def test_invalid_custom_coverage_noninteger(coverage):
-    arglist = ["-c", coverage, data_file("paired.cfg")]
-    with pytest.raises(ArgumentError, match=rf"{coverage} is not an integer"):
-        args = cli.get_parser(exit_on_error=False).parse_args(arglist)
-
-
 @pytest.mark.parametrize("value", [1, 10, 100])
-def test_check_positive(value):
+def test_check_positive_valid_values(value):
     illumina.check_positive(value) == value
+
+
+@pytest.mark.parametrize("value", [-1, 0])
+def test_check_positive_not_positive_integer(value):
+    message = f"{value} is not a positive integer"
+    with pytest.raises(ArgumentTypeError, match=message):
+        illumina.check_positive(value)
+
+
+def test_check_positive_not_integer():
+    message = f"BAD is not an integer"
+    with pytest.raises(ArgumentTypeError, match=message):
+        illumina.check_positive("BAD")

@@ -12,6 +12,7 @@ PACBIO_READS = ("pacbio-raw", "pacbio-corr", "pacbio-hifi")
 OXFORD_READS = ("nano-raw", "nano-corr", "nano-hq")
 LONG_READS = PACBIO_READS + OXFORD_READS
 READ_TYPES = ILLUMINA_READS + LONG_READS
+DOWNSAMPLE_KEYS = ("downsample", "coverage_depth", "genome_size")
 
 
 class AssemblyConfigError(ValueError):

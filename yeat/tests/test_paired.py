@@ -58,13 +58,14 @@ def test_multiple_spades_in_config(capsys, tmp_path):
 @pytest.mark.illumina
 @pytest.mark.parametrize(
     "downsample,num_contigs,largest_contig,total_len",
-    [("2000", 79, 5294, 70818), ("-1", 56, 35168, 199940)],
+    [(2000, 79, 5294, 70818), (-1, 56, 35168, 199940)],
 )
 def test_custom_downsample_input(
     downsample, num_contigs, largest_contig, total_len, capsys, tmp_path
 ):
     wd = str(tmp_path)
-    arglist = ["-o", wd, "-d", downsample, "--seed", "0", data_file("configs/megahit.cfg")]
+    config = write_config_with_downsample_configurations(wd, downsample=downsample)
+    arglist = ["-o", wd, "--seed", "0", config]
     run_yeat(arglist)
     sample_dir = Path(wd).resolve() / "analysis" / "Shigella_sonnei_53G"
     megahit_dir = sample_dir / "paired" / "megahit-default" / "megahit"
@@ -75,12 +76,26 @@ def test_custom_downsample_input(
     assert df.iloc[14]["contigs"] == total_len
 
 
+def write_config_with_downsample_configurations(
+    wd, downsample=0, genome_size=0, coverage_depth=150
+):
+    f = open(data_file("configs/megahit.cfg"))
+    data = json.load(f)
+    data["samples"]["Shigella_sonnei_53G"]["downsample"] = downsample
+    data["samples"]["Shigella_sonnei_53G"]["genome_size"] = genome_size
+    data["samples"]["Shigella_sonnei_53G"]["coverage_depth"] = coverage_depth
+    config = f"{wd}/config.cfg"
+    json.dump(data, open(config, "w"), indent=4)
+    return config
+
+
 @pytest.mark.long
 @pytest.mark.illumina
-@pytest.mark.parametrize("coverage", [("150"), ("75"), ("10")])
-def test_custom_coverage_input(coverage, capsys, tmp_path):
+@pytest.mark.parametrize("coverage_depth", [(150), (75), (10)])
+def test_custom_coverage_depth_input(coverage_depth, capsys, tmp_path):
     wd = str(tmp_path)
-    arglist = ["-o", wd, "-c", coverage, data_file("configs/megahit.cfg")]
+    config = write_config_with_downsample_configurations(wd, coverage_depth=coverage_depth)
+    arglist = ["-o", wd, config]
     run_yeat(arglist)
     sample_dir = Path(wd).resolve() / "analysis" / "Shigella_sonnei_53G"
     megahit_dir = sample_dir / "paired" / "megahit-default" / "megahit"
@@ -99,7 +114,8 @@ def test_custom_coverage_input(coverage, capsys, tmp_path):
 @pytest.mark.parametrize("execution_number", range(3))
 def test_random_downsample_seed(execution_number, capsys, tmp_path):
     wd = str(tmp_path)
-    arglist = ["-o", wd, "-d", "2000", data_file("configs/megahit.cfg")]
+    config = write_config_with_downsample_configurations(wd, downsample=2000)
+    arglist = ["-o", wd, config]
     run_yeat(arglist)
     sample_dir = Path(wd).resolve() / "analysis" / "Shigella_sonnei_53G"
     megahit_dir = sample_dir / "paired" / "megahit-default" / "megahit"
@@ -127,7 +143,12 @@ def test_uncompressed_input_reads(inread1, inread2, capfd, tmp_path):
     inread1 = prep_uncompressed_reads(inread1, tmp_path)
     inread2 = prep_uncompressed_reads(inread2, tmp_path)
     cfg_data = json.load(open(data_file("configs/megahit.cfg")))
-    cfg_data["samples"]["sample1"] = {"paired": [[inread1, inread2]]}
+    cfg_data["samples"]["sample1"] = {
+        "paired": [[inread1, inread2]],
+        "downsample": 0,
+        "genome_size": 0,
+        "coverage_depth": 150,
+    }
     cfg = str(Path(wd).resolve() / "megahit.cfg")
     json.dump(cfg_data, open(cfg, "w"))
     arglist = ["-o", wd, cfg]

@@ -64,9 +64,9 @@ def get_avg_read_length(fastp_report):
     return base_count / read_count
 
 
-def get_down(downsample, genome_size, coverage, avg_read_length):
+def get_down(downsample, genome_size, coverage_depth, avg_read_length):
     if downsample == 0:
-        return int((genome_size * coverage) / (2 * avg_read_length))
+        return int((genome_size * coverage_depth) / (2 * avg_read_length))
     return downsample
 
 
@@ -76,10 +76,10 @@ def get_seed(seed):
     return seed
 
 
-def print_downsample_values(genome_size, avg_read_length, coverage, down, seed):
+def print_downsample_values(genome_size, avg_read_length, coverage_depth, down, seed):
     print(f"[yeat] genome size: {genome_size}")
     print(f"[yeat] average read length: {avg_read_length}")
-    print(f"[yeat] target depth of coverage: {coverage}x")
+    print(f"[yeat] target depth of coverage: {coverage_depth}x")
     print(f"[yeat] number of reads to sample: {down}")
     print(f"[yeat] random seed for sampling: {seed}")
 

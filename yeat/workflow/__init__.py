@@ -13,13 +13,13 @@ from pathlib import Path
 from snakemake import snakemake
 import subprocess
 import warnings
-from yeat.config import DOWNSAMPLE_KEYS
+from yeat.config import READ_TYPES
 
 
 def run_workflow(args):
     snakefile = files("yeat") / "workflow" / "Snakefile"
     config = vars(args)
-    config["data"] = resolve_paths(config["config"])
+    config["data"] = get_config_data(config["config"])
     config["bandage"] = check_bandage()
     if args.grid:
         success = snakemake(
@@ -49,12 +49,17 @@ def run_workflow(args):
         raise RuntimeError("Snakemake Failed")  # pragma: no cover
 
 
-def resolve_paths(infile):
+def get_config_data(infile):
     data = json.load(open(infile))
     for sample in data["samples"].values():
-        for key, value in sample.items():
-            sample[key] = value if key in DOWNSAMPLE_KEYS else get_resolved_paths(value)
+        resolve_sample_paths(sample)
     return data
+
+
+def resolve_sample_paths(sample):
+    readtypes = set(sample.keys()).intersection(set(READ_TYPES))
+    for readtype in readtypes:
+        sample[readtype] = get_resolved_paths(sample[readtype])
 
 
 def get_resolved_paths(reads):

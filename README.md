@@ -116,7 +116,7 @@ $ yeat-auto short_reads --seq-path data/
 
 Auto-populate config file with a list of paired-end read files.
 ```
-$ yeat-auto short_reads --files short_reads_1.fastq.gz short_reads_2.fastq.gz -o config.cfg
+$ yeat-auto short_reads --files short_reads_1.fastq.gz short_reads_2.fastq.gz
 ```
 
 ### Supported Input Reads with Assembly Algorithms

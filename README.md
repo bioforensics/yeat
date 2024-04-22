@@ -111,7 +111,7 @@ $ just-yeat-it --outdir {path} {read1} {read2}
 
 Auto-populate config file with a directory of paired-end reads.
 ```
-$ yeat-auto short_reads --seq-path data/ -o config.cfg
+$ yeat-auto short_reads --seq-path data/
 ```
 
 Auto-populate config file with a list of paired-end read files.

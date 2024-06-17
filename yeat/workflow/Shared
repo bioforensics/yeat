@@ -33,6 +33,8 @@ rule fastqc_paired:
         read1="seq/input/{sample}/paired/r1_combined-reads.fq.gz",
         read2="seq/input/{sample}/paired/r2_combined-reads.fq.gz"
     threads: 128
+    resources:
+        cpus_per_task=128
     params:
         outdir="seq/fastqc/{sample}/paired"
     shell:
@@ -129,6 +131,8 @@ rule fastqc_single:
     input:
         reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
     threads: 128
+    resources:
+        cpus_per_task=128
     params:
         outdir="seq/fastqc/{sample}/{readtype}"
     shell:

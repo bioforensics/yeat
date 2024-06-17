@@ -144,8 +144,12 @@ def grid_configuration(parser):
     grid = parser.add_argument_group("grid configuration")
     grid.add_argument(
         "--grid",
-        action="store_true",
-        help="run snakemake using grid support",
+        const=True,
+        type=str.lower,
+        nargs="?",
+        help="process input in batches using parallel processing on a grid. By default, if `--grid` is "
+        "invoked with no following arguments, DRMAA will be used to configure jobs on the grid. However, "
+        "if the scheduler being used is SLURM, users must provide `slurm` as a following argument to `--grid`",
     )
     grid.add_argument(
         "--grid-limit",
@@ -161,6 +165,6 @@ def grid_configuration(parser):
         'is passed by default, or " -V -pe threads <T> " if --threads is set; this can be used '
         'for example to configure grid queue or priority, e.g., " -q largemem -p -1000 "; note '
         'that when overriding the defaults, the user must explicitly add the " -V " and threads '
-        "configuration if those are still desired",
+        "configuration if those are still desired; not required if using SLURM",
         metavar="A",
     )

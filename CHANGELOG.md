@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `yeat-auto` CLI command for auto-populating the sample section of the config file (#76)
 - Customize downsample, depth of coverage, and genome size per sample (#77)
 
+### Changed
+- Updated --grid argument and Snakemake to be compatible with SLURM ()
+
 
 ## [0.5] 2024-01-08
 

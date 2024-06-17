@@ -134,7 +134,7 @@ def workflow_configuration(parser):
         "-t",
         "--threads",
         default=1,
-        help="number of available threads for parallel processing; by default only a single thread is used",
+        help="number of available T threads for sequential and parallel processing jobs; by default, T=1",
         metavar="T",
         type=int,
     )

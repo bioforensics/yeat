@@ -23,7 +23,7 @@ from yeat.tests import data_file, run_yeat
             ["--grid-args", " -q largemem -p -1000 ", data_file("configs/single.cfg")],
             " -q largemem -p -1000 ",
         ),
-        ([data_file("configs/single.cfg")], " -V "),
+        ([data_file("configs/single.cfg")], " -V -pe threads 1 "),
     ],
 )
 def test_setup_grid_args(arglist, expected):

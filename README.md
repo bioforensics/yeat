@@ -77,12 +77,12 @@ make metadata
 
 ### Running YEAT with DRMAA
 
-To run YEAT with DRMAA, install DRMAA python bindings, set up environment variables, and append the following flags to the YEAT command. (Note: This have only been tested with SGE.)
+To run YEAT with DRMAA, install DRMAA python bindings, set up environment variables, and append the following flags to the YEAT command. (Note: This have only been tested with SGE and SLURM.)
 
 ```
 # Install DRMAA python bindings
 conda install drmaa
-# Set environment variables
+# Set environment variables for SGE
 export DRMAA_LIBRARY_PATH=/usr/lib/libdrmaa.so.1.0
 export SGE_ROOT=/path/to/qsub/bin
 export SGE_CELL=default
@@ -90,12 +90,12 @@ export SGE_CELL=default
 
 ```
 grid configuration:
-  --grid                run snakemake using grid support
+  --grid [GRID]         process input in batches using parallel processing on a grid. By default, if `--grid` is invoked with no following arguments, DRMAA will be used to configure jobs on the grid. However, if the
+                        scheduler being used is SLURM, users must provide `slurm` as a following argument to `--grid`
   --grid-limit N        limit on the number of concurrent jobs to submit to the grid scheduler; by default, N=1024
-  --grid-args A         additional arguments passed to the scheduler to configure grid execution; " -V " is passed by default, or " -V -pe
-                        threads <T> " if --threads is set; this can be used for example to configure grid queue or priority, e.g., " -q
-                        largemem -p -1000 "; note that when overriding the defaults, the user must explicitly add the " -V " and threads
-                        configuration if those are still desired
+  --grid-args A         additional arguments passed to the scheduler to configure grid execution; " -V " is passed by default, or " -V -pe threads <T> " ("sbatch -c <T> " if using SLURM) if --threads is set; this can be
+                        used for example to configure grid queue or priority , e.g., " -q largemem -p -1000 " ("sbatch -p largemem --priority -1000 "); note that when overriding the defaults, the user must explicitly add
+                        the " -V " ("sbatch") and threads configuration if those are still desired
 ```
 
 ## Usage:

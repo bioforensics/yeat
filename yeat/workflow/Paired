@@ -14,8 +14,6 @@ rule spades:
         read1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
         read2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz"
     threads: 128
-    resources:
-        cpus_per_task=128
     params:
         outdir="analysis/{sample}/paired/{label}/spades",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
@@ -32,8 +30,6 @@ rule megahit:
         read1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
         read2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz"
     threads: 128
-    resources:
-        cpus_per_task=128
     params:
         temp_dir="analysis/{sample}/paired/{label}/megahit-temp",
         actual_dir="analysis/{sample}/paired/{label}/megahit",
@@ -54,8 +50,6 @@ rule unicycler:
         read1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
         read2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz"
     threads: 128
-    resources:
-        cpus_per_task=128
     params:
         outdir="analysis/{sample}/paired/{label}/unicycler",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args

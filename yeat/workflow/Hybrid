@@ -18,8 +18,6 @@ rule unicycler:
         read2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz",
         longread=lambda wildcards: get_longread_file(wildcards.sample, config["samples"][wildcards.sample].long_readtype)
     threads: 128
-    resources:
-        cpus_per_task=128
     params:
         outdir="analysis/{sample}/hybrid/{label}/unicycler",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args

@@ -75,8 +75,6 @@ rule spades:
     input:
         reads="seq/downsample/{sample}/single/combined-reads.fq.gz"
     threads: 128
-    resources:
-        cpus_per_task=128
     params:
         outdir="analysis/{sample}/single/{label}/spades",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
@@ -92,8 +90,6 @@ rule megahit:
     input:
         reads="seq/downsample/{sample}/single/combined-reads.fq.gz"
     threads: 128
-    resources:
-        cpus_per_task=128
     params:
         temp_dir="analysis/{sample}/single/{label}/megahit-temp",
         actual_dir="analysis/{sample}/single/{label}/megahit",
@@ -113,8 +109,6 @@ rule unicycler:
     input:
         reads="seq/downsample/{sample}/single/combined-reads.fq.gz"
     threads: 128
-    resources:
-        cpus_per_task=128
     params:
         outdir="analysis/{sample}/single/{label}/unicycler",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args

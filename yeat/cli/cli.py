@@ -134,7 +134,7 @@ def workflow_configuration(parser):
         "-t",
         "--threads",
         default=1,
-        help="number of available T threads for sequential and parallel processing jobs; by default, T=1",
+        help="number of available threads for parallel processing; by default only a single thread is used",
         metavar="T",
         type=int,
     )
@@ -162,9 +162,10 @@ def grid_configuration(parser):
         "--grid-args",
         default=None,
         help='additional arguments passed to the scheduler to configure grid execution; " -V " '
-        'is passed by default, or " -V -pe threads <T> " if --threads is set; this can be used '
-        'for example to configure grid queue or priority, e.g., " -q largemem -p -1000 "; note '
-        'that when overriding the defaults, the user must explicitly add the " -V " and threads '
-        "configuration if those are still desired; not required if using SLURM",
+        'is passed by default, or " -V -pe threads <T> " ("sbatch -c <T> " if using SLURM) '
+        "if --threads is set; this can be used for example to configure grid queue or priority "
+        ', e.g., " -q largemem -p -1000 " ("sbatch -p largemem --priority -1000 "); '
+        'note that when overriding the defaults, the user must explicitly add the " -V " ("sbatch") and threads '
+        "configuration if those are still desired",
         metavar="A",
     )

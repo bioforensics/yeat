@@ -16,8 +16,6 @@ rule nanofilt:
     input:
         raw_reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
     threads: 128
-    resources:
-        cpus_per_task=128
     params:
         filter="-q 10"
     shell:
@@ -34,8 +32,6 @@ rule nanoplot:
         raw_reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz",
         filtered_reads="seq/nanofilt/{sample}/{readtype}/highQuality-reads.fq.gz"
     threads: 128
-    resources:
-        cpus_per_task=128
     params:
         outdir="seq/nanoplot/{sample}/{readtype}"
     shell:
@@ -51,8 +47,6 @@ rule flye:
     input:
         reads="seq/nanofilt/{sample}/{readtype}/highQuality-reads.fq.gz"
     threads: 128
-    resources:
-        cpus_per_task=128
     params:
         outdir="analysis/{sample}/{readtype}/{label}/flye",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
@@ -69,8 +63,6 @@ rule canu:
     input:
         reads="seq/nanofilt/{sample}/{readtype}/highQuality-reads.fq.gz"
     threads: 128
-    resources:
-        cpus_per_task=128
     params:
         outdir="analysis/{sample}/{readtype}/{label}/canu",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
@@ -87,8 +79,6 @@ rule unicycler:
     input:
         reads="seq/nanofilt/{sample}/{readtype}/highQuality-reads.fq.gz"
     threads: 128
-    resources:
-        cpus_per_task=128
     params:
         outdir="analysis/{sample}/{readtype}/{label}/unicycler",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args

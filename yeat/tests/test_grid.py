@@ -33,7 +33,7 @@ def test_setup_grid_args(arglist, expected):
 
 
 @pytest.mark.grid
-def test_grid_arg_slurm(tmp_path):
+def test_grid(tmp_path):
     wd = str(tmp_path)
     arglist = ["-o", wd, "-t", "200", "--grid", "slurm", data_file("configs/single.cfg")]
     run_yeat(arglist)

@@ -75,9 +75,9 @@ make nanodata
 make metadata
 ```
 
-### Running YEAT with DRMAA
+### Running YEAT on the grid
 
-To run YEAT with DRMAA, install DRMAA python bindings, set up environment variables, and append the following flags to the YEAT command. (Note: This have only been tested with SLURM.)
+To run YEAT with DRMAA, install DRMAA python bindings, set up environment variables, and append grid flags to the YEAT command. (Note: This has only been tested with SGE.)
 
 ```
 # Install DRMAA python bindings
@@ -86,6 +86,14 @@ conda install drmaa
 export DRMAA_LIBRARY_PATH=/usr/lib/libdrmaa.so.1.0
 export SGE_ROOT=/path/to/qsub/bin
 export SGE_CELL=default
+```
+
+To run YEAT with SLURM, set up environment variables and append the associated grid flags to the YEAT command. (Note: This has only been tested with SLURM.)
+
+```
+# Set environment variables
+export NFSTMP=$HOME/gridtest
+export LD_LIBRARY_PATH=/lib
 ```
 
 ```

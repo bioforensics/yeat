@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+- Updated `--grid` and `--grid-args` arguments and Snakemake to be compatible with SLURM (#79)
+
+
 ## [0.6] 2024-04-19
 
 ### Added
@@ -12,9 +18,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `just-yeat-it` CLI command for simple paired-end runs (#74)
 - `yeat-auto` CLI command for auto-populating the sample section of the config file (#76)
 - Customize downsample, depth of coverage, and genome size per sample (#77)
-
-### Changed
-- Updated `--grid` and `--grid-args` arguments and Snakemake to be compatible with SLURM (#79)
 
 
 ## [0.5] 2024-01-08

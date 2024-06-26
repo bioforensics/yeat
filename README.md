@@ -88,7 +88,7 @@ export SGE_ROOT=/path/to/qsub/bin
 export SGE_CELL=default
 ```
 
-To run YEAT with SLURM, set up environment variables and append the associated grid flags to the YEAT command. (Note: This has only been tested with SLURM.)
+To run YEAT with SLURM, set up environment variables and append grid flags to the YEAT command. (Note: This has only been tested with SLURM.)
 
 ```
 # Set environment variables

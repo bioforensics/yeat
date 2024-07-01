@@ -21,30 +21,12 @@ def run_workflow(args):
     config = vars(args)
     config["data"] = get_config_data(config["config"])
     config["bandage"] = check_bandage()
-    if args.grid:
-        success = snakemake(
-            snakefile,
-            config=config,
-            cores=args.threads,
-            dryrun=args.dry_run,
-            printshellcmds=True,
-            workdir=args.outdir,
-            use_conda=True,
-            local_cores=args.threads,
-            nodes=args.grid_limit,
-            drmaa=setup_grid_args(args),
-            drmaa_log_dir=str((Path(args.outdir) / "gridlogs").resolve()),
-        )
+    if args.grid == "slurm":
+        success = snakemake_grid_slurm(args, snakefile, config)
+    elif args.grid == True:
+        success = snakemake_grid_default(args, snakefile, config)
     else:
-        success = snakemake(
-            snakefile,
-            config=config,
-            cores=args.threads,
-            dryrun=args.dry_run,
-            printshellcmds=True,
-            workdir=args.outdir,
-            use_conda=True,
-        )
+        success = snakemake_local(args, snakefile, config)
     if not success:
         raise RuntimeError("Snakemake Failed")  # pragma: no cover
 
@@ -89,7 +71,51 @@ def check_bandage():
 def setup_grid_args(args):
     if args.grid_args is not None:
         return args.grid_args
-    grid_args = " -V "
-    if args.threads > 1:
-        grid_args = f" -V -pe threads {args.threads} "
-    return grid_args
+    grid_args = "sbatch " if args.grid == "slurm" else " -V "
+    thread_arg = f"-c {args.threads} " if args.grid == "slurm" else f"-pe threads {args.threads} "
+    return grid_args + thread_arg
+
+
+def snakemake_grid_slurm(args, snakefile, config):
+    success = snakemake(
+        snakefile,
+        config=config,
+        dryrun=args.dry_run,
+        printshellcmds=True,
+        workdir=args.outdir,
+        use_conda=True,
+        local_cores=args.threads,
+        nodes=args.grid_limit,
+        cluster=setup_grid_args(args),
+        drmaa_log_dir=str((Path(args.outdir) / "gridlogs").resolve()),
+    )
+    return success
+
+
+def snakemake_grid_default(args, snakefile, config):
+    success = snakemake(
+        snakefile,
+        config=config,
+        dryrun=args.dry_run,
+        printshellcmds=True,
+        workdir=args.outdir,
+        use_conda=True,
+        local_cores=args.threads,
+        nodes=args.grid_limit,
+        drmaa=setup_grid_args(args),
+        drmaa_log_dir=str((Path(args.outdir) / "gridlogs").resolve()),
+    )
+    return success
+
+
+def snakemake_local(args, snakefile, config):
+    success = snakemake(
+        snakefile,
+        config=config,
+        cores=args.threads,
+        dryrun=args.dry_run,
+        printshellcmds=True,
+        workdir=args.outdir,
+        use_conda=True,
+    )
+    return success

@@ -78,8 +78,7 @@ rule mash:
 rule downsample:
     output:
         sub1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
-        sub2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz",
-        genome_size="seq/downsample/{sample}/paired/genome_size.txt"
+        sub2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz"
     input:
         read1="seq/fastp/{sample}/paired/{sample}.R1.fq.gz",
         read2="seq/fastp/{sample}/paired/{sample}.R2.fq.gz",
@@ -104,8 +103,6 @@ rule downsample:
         shell("seqtk sample -s {seed} {input.read1} {down} > {params.outdir}/{wildcards.sample}.R1.fq")
         shell("seqtk sample -s {seed} {input.read2} {down} > {params.outdir}/{wildcards.sample}.R2.fq")
         shell("gzip -f {params.outdir}/*")
-        with open(output.genome_size, "w") as fh:
-            fh.write(str(genome_size))
 
 
 rule copyinput_single:

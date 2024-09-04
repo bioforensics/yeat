@@ -92,8 +92,3 @@ def get_longread_file(sample, long_readtype):
     else:  # pragma: no cover
         message = f"Invalid long readtype '{long_readtype}'"
         raise ValueError(message)
-
-
-def get_genome_size1(genome_size_file):
-    with open(genome_size_file, "r") as fh:
-        return fh.read()

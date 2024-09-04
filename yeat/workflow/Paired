@@ -7,6 +7,9 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+from yeat.workflow.aux import get_genome_size1
+
+
 rule spades:
     output:
         contigs="analysis/{sample}/paired/{label}/spades/contigs.fasta"
@@ -58,3 +61,28 @@ rule unicycler:
         unicycler -1 {input.read1} -2 {input.read2} -t {threads} -o {params.outdir} {params.extra_args}
         ln -s assembly.fasta {output.contigs}
         """
+
+
+rule velvet:
+    output:
+        contigs="analysis/{sample}/paired/{label}/velvet/contigs.fasta"
+    input:
+        read1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
+        read2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz",
+        genome_size="seq/downsample/{sample}/paired/genome_size.txt"
+    threads: 128
+    params:
+        temp_dir="analysis/{sample}/paired/{label}/velvet-temp",
+        actual_dir="analysis/{sample}/paired/{label}/velvet",
+        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args,
+        low=lambda wildcards: config["assemblies"][wildcards.label].low,
+        high=lambda wildcards: config["assemblies"][wildcards.label].high,
+        step=lambda wildcards: config["assemblies"][wildcards.label].step,
+        reads=lambda wildcards, input: f"'-shortPaired -fastq.gz -separate {input.read1} {input.read2}'",
+        
+    run:
+        genome_size = get_genome_size1(input.genome_size)
+        shell("VelvetOptimiser.pl -s {params.low} -e {params.high} -x {params.step} -g {genome_size} -f {params.reads} -t {threads} -d {params.temp_dir} {params.extra_args}")
+        shell("mv {params.temp_dir}/* {params.actual_dir}")
+        shell("rm -r {params.temp_dir}")
+        shell("ln -s contigs.fa {output.contigs}")

@@ -15,7 +15,8 @@ from itertools import chain
 
 CONFIG_KEYS = ("samples", "assemblies")
 SAMPLE_KEYS = READ_TYPES + DOWNSAMPLE_KEYS
-ASSEMBLY_KEYS = ("algorithm", "extra_args", "samples", "mode")
+ASSEMBLY_KEYS = ("algorithm", "extra_args", "samples", "mode") + ("low", "high", "step")
+# OPTIONAL_ASSEMBLY_KEYS = ("low", "high", "step")
 
 
 class AssemblyConfig:

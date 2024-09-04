@@ -12,7 +12,7 @@ from sys import platform
 
 
 ALGORITHMS = {
-    "paired": ("spades", "megahit", "unicycler"),
+    "paired": ("spades", "megahit", "unicycler", "velvet"),
     "single": ("spades", "megahit", "unicycler"),
     "pacbio": ("canu", "flye", "hifiasm", "hifiasm_meta", "unicycler", "metamdbg"),
     "oxford": ("canu", "flye", "unicycler"),
@@ -27,6 +27,9 @@ class Assembly:
         self.extra_args = assembly["extra_args"]
         self.samples = assembly["samples"]
         self.mode = assembly["mode"]
+        self.low = assembly["low"]
+        self.high = assembly["high"]
+        self.step = assembly["step"]
         self.threads = threads
         self.bandage = bandage
         self.validate_assembly_configuration()

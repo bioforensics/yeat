@@ -74,7 +74,7 @@ rule velvet:
         low=lambda wildcards: config["assemblies"][wildcards.label].low,
         high=lambda wildcards: config["assemblies"][wildcards.label].high,
         step=lambda wildcards: config["assemblies"][wildcards.label].step,
-        reads=lambda wildcards, input: f"'-shortPaired -fastq.gz -separate {input.read1} {input.read2}'",
+        reads=lambda wildcards, input: f"'-fastq.gz -shortPaired {input.read1} -fastq.gz -shortPaired2 {input.read2}'",
     shell:
         """
         VelvetOptimiser.pl -s {params.low} -e {params.high} -x {params.step} -f {params.reads} -t {threads} -d {params.temp_dir} {params.extra_args}

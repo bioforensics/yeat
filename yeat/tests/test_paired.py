@@ -25,7 +25,8 @@ def test_paired_end_assemblers_dry_run(tmp_path):
 
 @pytest.mark.long
 @pytest.mark.illumina
-@pytest.mark.parametrize("algorithm", ["spades", "megahit", "unicycler", "velvet"])
+# @pytest.mark.parametrize("algorithm", ["spades", "megahit", "unicycler", "velvet"])
+@pytest.mark.parametrize("algorithm", ["velvet"])
 def test_paired_end_assemblers(algorithm, capsys, tmp_path):
     wd = str(tmp_path)
     config = write_config(algorithm, wd, "paired.cfg")

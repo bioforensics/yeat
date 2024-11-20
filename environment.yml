@@ -29,6 +29,5 @@ dependencies:
     - gfatools>=0.5
     - plass>=4.687d7
     - samtools>=1.21
-    - bcftools>=1.21
     - bowtie2>=2.5
     - pilon>=1.24

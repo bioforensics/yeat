@@ -31,3 +31,4 @@ dependencies:
     - samtools>=1.21
     - bcftools>=1.21
     - bowtie2>=2.5
+    - pilon>=1.24

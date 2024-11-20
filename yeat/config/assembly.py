@@ -93,7 +93,7 @@ class Assembly:
     def get_qa_file(self, sample):
         readtype = self.get_readtype(sample)
         algorithm_dir = f"analysis/{sample.label}/{readtype}/{self.label}/{self.algorithm}"
-        if self.bandage:
+        if self.bandage and self.algorithm != "penguin":
             return f"{algorithm_dir}/bandage/.done"
         return f"{algorithm_dir}/quast/report.html"
 

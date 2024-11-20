@@ -74,7 +74,7 @@ rule penguin:
         """
         penguin guided_nuclassemble {input.read1} {input.read2} {params.outdir}/unpolished_contigs.fasta {params.outdir} --threads {threads} {params.extra_args}
         bowtie2-build {params.outdir}/unpolished_contigs.fasta {params.outdir}/unpolished_contigs.fasta
-        bowtie2 -p {threads} -x {params.outdir}/unpolished_contigs.fasta -1 {input.read1} -2 {input.read2} 2> {params.outdir}/sample.bowtie.log | samtools view -b -@ {threads} | samtools sort -@ {threads} -o {params.outdir}/sample.sorted.bam
-        samtools index {params.outdir}/sample.sorted.bam
-        pilon --genome {params.outdir}/unpolished_contigs.fasta --bam {params.outdir}/sample.sorted.bam --output {params.outdir}/contigs
+        bowtie2 -p {threads} -x {params.outdir}/unpolished_contigs.fasta -1 {input.read1} -2 {input.read2} 2> {params.outdir}/unpolished_contigs.bowtie.log | samtools view -b -@ {threads} | samtools sort -@ {threads} -o {params.outdir}/unpolished_contigs.sorted.bam
+        samtools index {params.outdir}/unpolished_contigs.sorted.bam
+        pilon --genome {params.outdir}/unpolished_contigs.fasta --bam {params.outdir}/unpolished_contigs.sorted.bam --output {params.outdir}/contigs
         """

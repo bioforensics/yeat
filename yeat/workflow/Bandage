@@ -140,3 +140,20 @@ rule metamdbg:
         Bandage image {params.gfa} {params.outdir}/assembly_graph.jpg
         touch {output.status}
         """
+
+
+rule penguin:
+    output:
+        status="analysis/{sample}/{readtype}/{label}/penguin/bandage/.done"
+    input:
+        report="analysis/{sample}/{readtype}/{label}/penguin/quast/report.html"
+    params:
+        contigs="analysis/{sample}/{readtype}/{label}/penguin/contigs.fasta",
+        gfa="analysis/{sample}/{readtype}/{label}/penguin/contigs.gfa",
+        outdir="analysis/{sample}/{readtype}/{label}/penguin/bandage"
+    shell:
+        """
+        gfastats {params.contigs} -o gfa > {params.gfa}
+        Bandage image {params.gfa} {params.outdir}/assembly_graph.jpg
+        touch {output.status}
+        """

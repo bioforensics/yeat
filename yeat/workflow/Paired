@@ -58,3 +58,23 @@ rule unicycler:
         unicycler -1 {input.read1} -2 {input.read2} -t {threads} -o {params.outdir} {params.extra_args}
         ln -s assembly.fasta {output.contigs}
         """
+
+
+rule penguin:
+    output:
+        contigs="analysis/{sample}/paired/{label}/penguin/contigs.fasta"
+    input:
+        read1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
+        read2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz"
+    threads: 128
+    params:
+        outdir="analysis/{sample}/paired/{label}/penguin",
+        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
+    shell:
+        """
+        penguin guided_nuclassemble {input.read1} {input.read2} {params.outdir}/unpolished_contigs.fasta {params.outdir} --threads {threads} {params.extra_args}
+        bowtie2-build {params.outdir}/unpolished_contigs.fasta {params.outdir}/unpolished_contigs.fasta
+        bowtie2 -p {threads} -x {params.outdir}/unpolished_contigs.fasta -1 {input.read1} -2 {input.read2} 2> {params.outdir}/unpolished_contigs.bowtie.log | samtools view -b -@ {threads} | samtools sort -@ {threads} -o {params.outdir}/unpolished_contigs.sorted.bam
+        samtools index {params.outdir}/unpolished_contigs.sorted.bam
+        pilon --genome {params.outdir}/unpolished_contigs.fasta --bam {params.outdir}/unpolished_contigs.sorted.bam --output {params.outdir}/contigs
+        """

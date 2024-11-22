@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
+- VelvetOptimizer for short-reads (#81)
 - Penguin assembly support (#82)
 
 

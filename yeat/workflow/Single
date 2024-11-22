@@ -119,21 +119,20 @@ rule unicycler:
         """
 
 
-rule velvet:
+rule penguin:
     output:
-        contigs="analysis/{sample}/single/{label}/velvet/contigs.fasta"
+        contigs="analysis/{sample}/single/{label}/penguin/contigs.fasta"
     input:
         reads="seq/downsample/{sample}/single/combined-reads.fq.gz"
     threads: 128
     params:
-        temp_dir="analysis/{sample}/single/{label}/velvet-temp",
-        actual_dir="analysis/{sample}/single/{label}/velvet",
-        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args,
-        reads=lambda wildcards, input: f"'-fastq.gz -short {input.reads}'",
+        outdir="analysis/{sample}/single/{label}/penguin",
+        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
-        VelvetOptimiser.pl -f {params.reads} -t {threads} -d {params.temp_dir} {params.extra_args}
-        mv {params.temp_dir}/* {params.actual_dir}
-        rm -r {params.temp_dir}
-        ln -s contigs.fa {output.contigs}
+        penguin guided_nuclassemble {input.reads} {params.outdir}/unpolished_contigs.fasta {params.outdir} --threads {threads} {params.extra_args}
+        bowtie2-build {params.outdir}/unpolished_contigs.fasta {params.outdir}/unpolished_contigs.fasta
+        bowtie2 -p {threads} -x {params.outdir}/unpolished_contigs.fasta -U {input.reads} 2> {params.outdir}/unpolished_contigs.bowtie.log | samtools view -b -@ {threads} | samtools sort -@ {threads} -o {params.outdir}/unpolished_contigs.sorted.bam
+        samtools index {params.outdir}/unpolished_contigs.sorted.bam
+        pilon --genome {params.outdir}/unpolished_contigs.fasta --bam {params.outdir}/unpolished_contigs.sorted.bam --output {params.outdir}/contigs
         """

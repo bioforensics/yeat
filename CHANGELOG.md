@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - VelvetOptimizer for short-reads (#81)
+- Penguin assembly support (#82)
 
 
 ## [0.6.1] 2024-07-02

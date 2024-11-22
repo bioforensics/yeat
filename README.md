@@ -133,8 +133,8 @@ $ yeat-auto short_reads --files short_reads_1.fastq.gz short_reads_2.fastq.gz
 
 | Readtype  | Algorithms |
 | ------------- | ------------- |
-| paired  | spades, megahit, unicycler, velvet |
-| single  | spades, megahit, unicycler, velvet |
+| paired  | spades, megahit, unicycler, penguin, velvet |
+| single  | spades, megahit, unicycler, penguin, velvet |
 | pacbio-raw  | flye, canu, unicycler |
 | pacbio-corr  | flye, canu, unicycler |
 | pacbio-hifi  | flye, canu, hifiasm, hifiasm_meta, unicycler, metamdbg* |

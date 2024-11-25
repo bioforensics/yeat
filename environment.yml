@@ -27,7 +27,6 @@ dependencies:
     - hifiasm>=0.19
     - hifiasm_meta=hamtv0.2
     - gfatools>=0.5
-    - perl-velvetoptimiser>=2.2
     - plass>=4.687d7
     - samtools>=1.21
     - bowtie2>=2.5

@@ -148,7 +148,7 @@ rule velvet:
     input:
         report="analysis/{sample}/{readtype}/{label}/velvet/quast/report.html"
     params:
-        gfa=lambda wildcards: glob(f"analysis/{wildcards.sample}/{wildcards.readtype}/{wildcards.label}/velvet/auto_data_*/Graph*"),
+        gfa=lambda wildcards: glob(f"analysis/{wildcards.sample}/{wildcards.readtype}/{wildcards.label}/velvet/Graph*"),
         outdir="analysis/{sample}/{readtype}/{label}/velvet/bandage"
     run:
         for gfa in params.gfa:

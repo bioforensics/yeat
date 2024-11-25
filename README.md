@@ -7,8 +7,7 @@ YEAT, **Y**our **E**verday **A**ssembly **T**ool, is an update to [`asm_tools`](
 ```
 git clone https://github.com/bioforensics/yeat.git
 cd yeat
-conda env create -f yeat.yml
-conda env create -f velvet.yml 
+conda env create -f environment.yml
 conda activate yeat
 pip install .
 ```

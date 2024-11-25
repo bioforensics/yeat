@@ -143,18 +143,17 @@ rule velvet:
         contigs="analysis/{sample}/single/{label}/velvet/contigs.fasta"
     input:
         reads="seq/downsample/{sample}/single/combined-reads.fq.gz"
+    conda:
+        "velvet"
     threads: 128
     params:
         temp_dir="analysis/{sample}/single/{label}/velvet-temp",
         actual_dir="analysis/{sample}/single/{label}/velvet",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args,
-        low=lambda wildcards: config["assemblies"][wildcards.label].low,
-        high=lambda wildcards: config["assemblies"][wildcards.label].high,
-        step=lambda wildcards: config["assemblies"][wildcards.label].step,
-        reads=lambda wildcards, input: f"'-short -fastq.gz {input.reads}'",
+        reads=lambda wildcards, input: f"'-fastq.gz {input.reads}'",
     shell:
         """
-        VelvetOptimiser.pl -s {params.low} -e {params.high} -x {params.step} -f {params.reads} -t {threads} -d {params.temp_dir} {params.extra_args}
+        VelvetOptimiser.pl -f {params.reads} -t {threads} -p {params.actual_dir}/auto -d {params.temp_dir} {params.extra_args}
         mv {params.temp_dir}/* {params.actual_dir}
         rm -r {params.temp_dir}
         ln -s contigs.fa {output.contigs}

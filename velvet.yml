@@ -1,0 +1,7 @@
+name: velvet
+channels:
+    - conda-forge
+    - bioconda
+    - defaults
+dependencies:
+    - perl-velvetoptimiser>=2.2

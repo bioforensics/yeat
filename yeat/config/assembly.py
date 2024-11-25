@@ -12,8 +12,8 @@ from sys import platform
 
 
 ALGORITHMS = {
-    "paired": ("spades", "megahit", "unicycler", "penguin"),
-    "single": ("spades", "megahit", "unicycler", "penguin"),
+    "paired": ("spades", "megahit", "unicycler", "penguin", "velvet"),
+    "single": ("spades", "megahit", "unicycler", "penguin", "velvet"),
     "pacbio": ("canu", "flye", "hifiasm", "hifiasm_meta", "unicycler", "metamdbg"),
     "oxford": ("canu", "flye", "unicycler"),
     "hybrid": ("unicycler"),

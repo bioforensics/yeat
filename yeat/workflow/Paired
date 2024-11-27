@@ -87,7 +87,7 @@ rule velvet:
         read1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
         read2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz"
     conda:
-        "velvet"
+        "yeat-velvet"
     threads: 128
     params:
         temp_dir="analysis/{sample}/paired/{label}/velvet-temp",

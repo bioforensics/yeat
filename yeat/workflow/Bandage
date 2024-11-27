@@ -140,3 +140,18 @@ rule metamdbg:
         Bandage image {params.gfa} {params.outdir}/assembly_graph.jpg
         touch {output.status}
         """
+
+
+rule velvet:
+    output:
+        status="analysis/{sample}/{readtype}/{label}/velvet/bandage/.done"
+    input:
+        report="analysis/{sample}/{readtype}/{label}/velvet/quast/report.html"
+    params:
+        gfa=lambda wildcards: glob(f"analysis/{wildcards.sample}/{wildcards.readtype}/{wildcards.label}/velvet/Graph*"),
+        outdir="analysis/{sample}/{readtype}/{label}/velvet/bandage"
+    run:
+        for gfa in params.gfa:
+            filename = Path(gfa).stem
+            shell("Bandage image {gfa} {params.outdir}/{filename}.jpg")
+        shell("touch {output.status}")

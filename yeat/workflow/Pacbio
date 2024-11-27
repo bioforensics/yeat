@@ -99,7 +99,7 @@ rule metamdbg:
     input:
         reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
     conda:
-        "metaMDBG"
+        "yeat-metaMDBG"
     threads: 128
     params:
         outdir="analysis/{sample}/{readtype}/{label}/metamdbg",

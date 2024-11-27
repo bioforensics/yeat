@@ -78,3 +78,26 @@ rule penguin:
         samtools index {params.outdir}/unpolished_contigs.sorted.bam
         pilon --genome {params.outdir}/unpolished_contigs.fasta --bam {params.outdir}/unpolished_contigs.sorted.bam --output {params.outdir}/contigs
         """
+
+
+rule velvet:
+    output:
+        contigs="analysis/{sample}/paired/{label}/velvet/contigs.fasta"
+    input:
+        read1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
+        read2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz"
+    conda:
+        "yeat-velvet"
+    threads: 128
+    params:
+        temp_dir="analysis/{sample}/paired/{label}/velvet-temp",
+        actual_dir="analysis/{sample}/paired/{label}/velvet",
+        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args,
+        reads=lambda wildcards, input: f"'-fastq.gz -shortPaired {input.read1} -shortPaired2 {input.read2}'",
+    shell:
+        """
+        VelvetOptimiser.pl -f {params.reads} -t {threads} -p {params.actual_dir}/auto -d {params.temp_dir} {params.extra_args}
+        mv {params.temp_dir}/* {params.actual_dir}
+        rm -r {params.temp_dir}
+        ln -s contigs.fa {output.contigs}
+        """

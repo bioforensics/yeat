@@ -7,7 +7,8 @@ YEAT, **Y**our **E**verday **A**ssembly **T**ool, is an update to [`asm_tools`](
 ```
 git clone https://github.com/bioforensics/yeat.git
 cd yeat
-conda env create --name yeat --file environment.yml
+conda env create -f environment.yml
+conda create -n yeat-velvet -c bioconda "perl-velvetoptimiser>=2.2" -y
 conda activate yeat
 pip install .
 ```
@@ -133,8 +134,8 @@ $ yeat-auto short_reads --files short_reads_1.fastq.gz short_reads_2.fastq.gz
 
 | Readtype  | Algorithms |
 | ------------- | ------------- |
-| paired  | spades, megahit, unicycler, penguin |
-| single  | spades, megahit, unicycler, penguin |
+| paired  | spades, megahit, unicycler, penguin, velvet |
+| single  | spades, megahit, unicycler, penguin, velvet |
 | pacbio-raw  | flye, canu, unicycler |
 | pacbio-corr  | flye, canu, unicycler |
 | pacbio-hifi  | flye, canu, hifiasm, hifiasm_meta, unicycler, metamdbg* |

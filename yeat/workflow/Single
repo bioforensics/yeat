@@ -144,7 +144,7 @@ rule velvet:
     input:
         reads="seq/downsample/{sample}/single/combined-reads.fq.gz"
     conda:
-        "velvet"
+        "yeat-velvet"
     threads: 128
     params:
         temp_dir="analysis/{sample}/single/{label}/velvet-temp",

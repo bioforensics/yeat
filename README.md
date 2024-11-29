@@ -1,6 +1,19 @@
 # YEAT
 
-YEAT, **Y**our **E**verday **A**ssembly **T**ool, is an update to [`asm_tools`](https://github.com/bioforensics/asm_tools). It uses a Snakemake workflow to preprocess paired-end, pacbio, and nanopore fastq reads and assemble them with various assembly algorithms.
+YEAT (**Y**our **E**verday **A**ssembly **T**ool) is an all-in-one platform designed to assemble multiple samples of varying read types (both short and long) using a combination of reliable, widely used, and cutting-edge algorithms such as SPAdes and Flye. It utilizes a Snakemake workflow to preprocess sample reads, perform assembly, and postprocess the resulting contigs in parallel.
+
+#### Supported Input Reads with Assembly Algorithms
+
+| Read Types  | Algorithms |
+| ------------- | ------------- |
+| paired  | SPAdes<sup>[1](#item-1)</sup>, MEGAHIT<sup>[2](#item-2)</sup>, Unicycler<sup>[3](#item-3)</sup>, PenguiN<sup>[4](#item-4)</sup>, VelvetOptimiser<sup>[5](#item-5)</sup> |
+| single  | SPAdes<sup>[1](#item-1)</sup>, MEGAHIT<sup>[2](#item-2)</sup>, Unicycler<sup>[3](#item-3)</sup>, PenguiN<sup>[4](#item-4)</sup>, VelvetOptimiser<sup>[5](#item-5)</sup> |
+| pacbio-raw  | Flye<sup>[6](#item-6)</sup>, Canu<sup>[7](#item-7)</sup>, Unicycler<sup>[3](#item-3)</sup> |
+| pacbio-corr  | Flye<sup>[6](#item-6)</sup>, Canu<sup>[7](#item-7)</sup>, Unicycler<sup>[3](#item-3)</sup> |
+| pacbio-hifi  | Flye<sup>[6](#item-6)</sup>, Canu<sup>[7](#item-7)</sup>, Hifiasm<sup>[8](#item-8)</sup>, hifiasm_meta<sup>[9](#item-9)</sup>, Unicycler<sup>[3](#item-3)</sup>, metaMDBG<sup>[10](#item-10)</sup> |
+| nano-raw  | Flye<sup>[6](#item-6)</sup>, Canu<sup>[7](#item-7)</sup>, Unicycler<sup>[3](#item-3)</sup> |
+| nano-corr  | Flye<sup>[6](#item-6)</sup>, Canu<sup>[7](#item-7)</sup>, Unicycler<sup>[3](#item-3)</sup> |
+| nano-hq  | Flye<sup>[6](#item-6)</sup>, Canu<sup>[7](#item-7)</sup>, Unicycler<sup>[3](#item-3)</sup> |
 
 ## Installation
 
@@ -8,250 +21,31 @@ YEAT, **Y**our **E**verday **A**ssembly **T**ool, is an update to [`asm_tools`](
 git clone https://github.com/bioforensics/yeat.git
 cd yeat
 conda env create -f environment.yml
+conda create -n yeat-metaMDBG -c bioconda "metamdbg>=1.0" -y
 conda create -n yeat-velvet -c bioconda "perl-velvetoptimiser>=2.2" -y
 conda activate yeat
 pip install .
 ```
 
-### Bandage
-
-In order to run [`Bandage`](https://github.com/rrwick/Bandage) in YEAT's workflow, users will need to manually download the pre-built binaries files [here](https://rrwick.github.io/Bandage/) or build it from the source code [here](https://github.com/rrwick/Bandage). Instructions for building Bandage from the source code can be found [here](https://github.com/rrwick/Bandage#building-from-source).
-
-Once the binary file has been obtained, users will need to update their environment's `$PATH` to include the path to the directory containing the binary file.
-
-Example for Ubuntu:
-```
-export PATH=~/projects/Bandage:$PATH
-```
-
-Example for MacOS:
-```
-export PATH=~/projects/Bandage/Bandage.app/Contents/MacOS:$PATH
-```
-
-In order to run the pre-built binary files successfully, ensure that the binary file is kept in the same directory with all of the other files that came with it.
-
-
-### Installing metaMDBG (for Linux OS only)
-
-To enable `metaMDBG` into YEAT's workflow, users will need to create a conda environment, install, and build from the source. Once created, YEAT will activate the environment whenever `metaMDBG` is called.
-
-#### Download metaMDBG repository  
-```
-git clone https://github.com/GaetanBenoitDev/metaMDBG.git
-```
-
-#### Create metaMDBG conda environment
-```
-cd metaMDBG
-conda env create -f conda_env.yml
-conda activate metaMDBG
-conda env config vars set CPATH=${CONDA_PREFIX}/include:${CPATH}
-conda deactivate
-
-# Activate metaMDBG environment
-conda activate metaMDBG
-
-# Compile the software
-mkdir build
-cd build
-cmake ..
-make -j 3
-```
-
-After successful installation, an executable named metaMDBG will appear in ./build/bin.
-
-#### Link the binary to the environment's bin
-```
-ln -s ~/projects/metaMDBG/build/bin/metaMDBG /home/danejo/anaconda3/envs/metaMDBG/bin/metaMDBG
-```
-
-### Running PacBio Hifi and Nanopore-Reads Tests For Developers
-
-Before running the test suite, download the test data by calling the following make commands.
-
-```
-make hifidata
-make nanodata
-make metadata
-```
-
-### Running YEAT on the grid
-
-To run YEAT with DRMAA, install DRMAA python bindings, set up environment variables, and append grid flags to the YEAT command. (Note: This has only been tested with SGE.)
-
-```
-# Install DRMAA python bindings
-conda install drmaa
-# Set environment variables
-export DRMAA_LIBRARY_PATH=/usr/lib/libdrmaa.so.1.0
-export SGE_ROOT=/path/to/qsub/bin
-export SGE_CELL=default
-```
-
-To run YEAT with SLURM, set up environment variables and append grid flags to the YEAT command.
-
-```
-# Set environment variables
-export NFSTMP=$HOME/gridtest
-export LD_LIBRARY_PATH=/lib
-```
-
-```
-grid configuration:
-  --grid [GRID]         process input in batches using parallel processing on a grid. By default, if `--grid` is invoked with no following arguments, DRMAA
-                        will be used to configure jobs on the grid. However, if the scheduler being used is SLURM, users must provide `slurm` as a following
-                        argument to `--grid`
-  --grid-limit N        limit on the number of concurrent jobs to submit to the grid scheduler; by default, N=1024
-  --grid-args A         additional arguments passed to the scheduler to configure grid execution; " -V " is passed by default, or " -V -pe threads <T> "
-                        ("sbatch -c <T> " if using SLURM) if --threads is set; this can be used for example to configure grid queue or priority, e.g., " -q
-                        largemem -p -1000 " ("sbatch -p largemem --priority -1000 "); note that when overriding the defaults, the user must explicitly add
-                        the " -V " ("sbatch") and threads configuration if those are still desired
-```
-
 ## Usage:
 
 ```
-$ yeat --outdir {path} {config}
+just-yeat-it --outdir {path} {read1} {read2}
 ```
 
-To run a simple paired-end assembly, use the `just-yeat-it` command. Otherwise, use the normal `yeat` command for more complicated assembly instructions.
 ```
-$ just-yeat-it --outdir {path} {read1} {read2}
-```
-
-Auto-populate config file with a directory of paired-end reads.
-```
-$ yeat-auto short_reads --seq-path data/
+yeat-auto short_reads --files {read1} {read2} > config.cfg
+yeat --outdir {path} config.cfg
 ```
 
-Auto-populate config file with a list of paired-end read files.
-```
-$ yeat-auto short_reads --files short_reads_1.fastq.gz short_reads_2.fastq.gz
-```
-
-### Supported Input Reads with Assembly Algorithms
-
-| Readtype  | Algorithms |
-| ------------- | ------------- |
-| paired  | spades, megahit, unicycler, penguin, velvet |
-| single  | spades, megahit, unicycler, penguin, velvet |
-| pacbio-raw  | flye, canu, unicycler |
-| pacbio-corr  | flye, canu, unicycler |
-| pacbio-hifi  | flye, canu, hifiasm, hifiasm_meta, unicycler, metamdbg* |
-| nano-raw  | flye, canu, unicycler |
-| nano-corr  | flye, canu, unicycler |
-| nano-hq  | flye, canu, unicycler |
-
-\* \- Available on Linux OS only
-
-### Support for Hybrid Assembly
-
-To enable hybrid assembly, add the following to the configuration file.
-
-1. Add two read types to a sample:
-    - Paired-end reads
-    - Any type of long read
-2. Set the Unicycler assembly `"mode"` to `"hybrid"`.
-
-```
-{
-    "samples": {
-        "Shigella_sonnei_53G": {
-            "paired": [
-                ["yeat/tests/data/short_reads_1.fastq.gz", "yeat/tests/data/short_reads_2.fastq.gz"]
-            ],
-            "pacbio-corr": [
-                "yeat/tests/data/long_reads_high_depth.fastq.gz"
-            ],
-            "downsample": 0,
-            "genome_size": 0,
-            "coverage_depth": 150
-        }
-    },
-    "assemblies": {
-        "unicycler-hybrid": {
-            "algorithm": "unicycler",
-            "extra_args": "",
-            "samples": [
-                "Shigella_sonnei_53G"
-            ],
-            "mode": "hybrid"
-        }
-    }
-}
-```
-
-### Example config file
-
-```
-{
-    "samples": {
-        "sample1": {
-            "paired": [
-                [
-                    "yeat/tests/data/short_reads_1.fastq.gz",
-                    "yeat/tests/data/short_reads_2.fastq.gz"
-                ]
-            ],
-            "downsample": 0,
-            "genome_size": 0,
-            "coverage_depth": 150
-        },
-        "sample2": {
-            "paired": [
-                [
-                    "yeat/tests/data/Animal_289_R1.fq.gz",
-                    "yeat/tests/data/Animal_289_R2.fq.gz"
-                ]
-            ],
-            "downsample": 0,
-            "genome_size": 0,
-            "coverage_depth": 150
-        },
-        "sample3": {
-            "pacbio-hifi": [
-                "yeat/tests/data/ecoli.fastq.gz"
-            ],
-            "downsample": 0,
-            "genome_size": 0,
-            "coverage_depth": 150
-        },
-        "sample4": {
-            "nano-hq": [
-                "yeat/tests/data/ecolk12mg1655_R10_3_guppy_345_HAC.fastq.gz"
-            ],
-            "downsample": 0,
-            "genome_size": 0,
-            "coverage_depth": 150
-        }
-    },
-    "assemblies": {
-        "spades-default": {
-            "algorithm": "spades",
-            "extra_args": "",
-            "samples": [
-                "sample1",
-                "sample2"
-            ],
-            "mode": "paired"
-        },
-        "hicanu": {
-            "algorithm": "canu",
-            "extra_args": "genomeSize=4.8m",
-            "samples": [
-                "sample3"
-            ],
-            "mode": "pacbio"
-        },
-        "flye_ONT": {
-            "algorithm": "flye",
-            "extra_args": "",
-            "samples": [
-                "sample4"
-            ],
-            "mode": "oxford"
-        }
-    }
-}
-```
+## References
+1. <a id="item-1"></a>Prjibelski, A., Antipov, D., Meleshko, D., Lapidus, A., & Korobeynikov, A. (2020). Using SPAdes de novo assembler. *Current Protocols in Bioinformatics*, 70, e102. doi: [10.1002/cpbi.102](https://doi.org/10.1002/cpbi.102)
+2. <a id="item-2"></a>Li, D., Luo, R., Liu, C.M., Leung, C.M., Ting, H.F., Sadakane, K., Yamashita, H. and Lam, T.W., 2016. MEGAHIT v1.0: A Fast and Scalable Metagenome Assembler driven by Advanced Methodologies and Community Practices. Methods.
+3. <a id="item-3"></a>Wick RR, Judd LM, Gorrie CL, Holt KE (2017) Unicycler: Resolving bacterial genome assemblies from short and long sequencing reads. PLOS Computational Biology 13(6): e1005595. https://doi.org/10.1371/journal.pcbi.1005595
+4. <a id="item-4"></a>PenguiN: Jochheim A, Jochheim FA, Kolodyazhnaya A, Morice E, Steinegger M, Soeding J. Strain-resolved de-novo metagenomic assembly of viral genomes and microbial 16S rRNAs. Microbiome 12, 187, (2024)
+5. <a id="item-5"></a>https://github.com/tseemann/VelvetOptimiser
+6. <a id="item-6"></a>Mikhail Kolmogorov, Jeffrey Yuan, Yu Lin and Pavel Pevzner, "Assembly of Long Error-Prone Reads Using Repeat Graphs", Nature Biotechnology, 2019 [doi:10.1038/s41587-019-0072-8](https://doi.org/10.1038/s41592-020-00971-x)
+7. <a id="item-7"></a>Koren S, Walenz BP, Berlin K, Miller JR, Phillippy AM. [Canu: scalable and accurate long-read assembly via adaptive k-mer weighting and repeat separation](https://doi.org/10.1101/gr.215087.116). Genome Research. (2017). `doi:10.1101/gr.215087.116`
+8. <a id="item-8"></a>Cheng, H., Asri, M., Lucas, J., Koren, S., Li, H. (2024) Scalable telomere-to-telomere assembly for diploid and polyploid genomes with double graph. *Nat Methods*, **21**:967-970. https://doi.org/10.1038/s41592-024-02269-8
+9. <a id="item-9"></a>Feng, X., Cheng, H., Portik, D. et al. Metagenome assembly of high-fidelity long reads with hifiasm-meta. *Nat Methods* **19**, 671–674 (2022). https://doi.org/10.1038/s41592-022-01478-3
+10. <a id="item-10"></a>Gaetan Benoit, Sebastien Raguideau, Robert James, Adam M. Phillippy, Rayan Chikhi and Christopher Quince [High-quality metagenome assembly from long accurate reads with metaMDBG](https://www.nature.com/articles/s41587-023-01983-6), Nature Biotechnology (2023).

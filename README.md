@@ -2,7 +2,7 @@
 
 YEAT (**Y**our **E**verday **A**ssembly **T**ool) is an all-in-one platform designed to assemble multiple samples of varying read types (both short and long) using a combination of reliable, widely used, and cutting-edge algorithms such as SPAdes and Flye. It utilizes a Snakemake workflow to preprocess sample reads, perform assembly, and postprocess the resulting contigs in parallel.
 
-#### Supported Input Reads with Assembly Algorithms
+#### Supported Read Types and Assembly Algorithms
 
 | Read Types  | Algorithms |
 | ------------- | ------------- |

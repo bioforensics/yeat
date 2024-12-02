@@ -30,15 +30,18 @@ pip install .
 ## Usage
 
 ```
-just-yeat-it --outdir {path} {short_read1} {short_read2}
-```
-
-```
 yeat-auto short_reads --files {short_read1} {short_read2} > config.cfg
 yeat --outdir {path} config.cfg
 ```
 
+Run a simple YEAT job without a configuration file for paired-end reads:
+
+```
+just-yeat-it --outdir {path} {short_read1} {short_read2}
+```
+
 ## References
+
 1. <a id="reference-1"></a>Prjibelski, A., Antipov, D., Meleshko, D., Lapidus, A., & Korobeynikov, A. (2020). Using SPAdes de novo assembler. *Current Protocols in Bioinformatics*, 70, e102. doi: [10.1002/cpbi.102](https://doi.org/10.1002/cpbi.102)
 2. <a id="reference-2"></a>Li, D., Luo, R., Liu, C.M., Leung, C.M., Ting, H.F., Sadakane, K., Yamashita, H. and Lam, T.W., 2016. MEGAHIT v1.0: A Fast and Scalable Metagenome Assembler driven by Advanced Methodologies and Community Practices. Methods.
 3. <a id="reference-3"></a>Wick RR, Judd LM, Gorrie CL, Holt KE (2017) Unicycler: Resolving bacterial genome assemblies from short and long sequencing reads. PLOS Computational Biology 13(6): e1005595. https://doi.org/10.1371/journal.pcbi.1005595

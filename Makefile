@@ -1,7 +1,7 @@
 SHELL = bash
 PYFILES = $(shell ls yeat/*.py yeat/*/*.py)
 
-## #===== Development tasks =====#
+## #===== development tasks =====#
 
 ## help:         print this help message and exit
 help: Makefile

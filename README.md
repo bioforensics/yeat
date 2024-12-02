@@ -32,7 +32,7 @@ yeat-auto short_reads --files {short_read1} {short_read2} > config.cfg
 yeat --outdir {path} config.cfg
 ```
 
-Run a simple YEAT job without a configuration file for paired-end reads ***only***:
+Run a simple YEAT job without a configuration file **for paired-end reads only**:
 
 ```
 just-yeat-it --outdir {path} {short_read1} {short_read2}

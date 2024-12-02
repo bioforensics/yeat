@@ -2,7 +2,7 @@
 
 YEAT (**Y**our **E**verday **A**ssembly **T**ool) is an all-in-one platform designed to assemble multiple samples of varying read types (both short and long) using a combination of reliable, widely used, and cutting-edge algorithms such as SPAdes and Flye. It utilizes a Snakemake workflow to preprocess sample reads, perform assembly, and postprocess the resulting contigs in parallel.
 
-#### Supported Read Types and Assembly Algorithms
+**Supported Read Types and Assembly Algorithms**
 
 | Read Types  | Algorithms |
 | ------------- | ------------- |
@@ -10,7 +10,7 @@ YEAT (**Y**our **E**verday **A**ssembly **T**ool) is an all-in-one platform desi
 | Single-end | SPAdes<sup>[1](#reference-1)</sup>, MEGAHIT<sup>[2](#reference-2)</sup>, Unicycler<sup>[3](#reference-3)</sup>, PenguiN<sup>[4](#reference-4)</sup>, VelvetOptimiser<sup>[5](#reference-5)</sup> |
 | PacBio CLR (<20% error) | Flye<sup>[6](#reference-6)</sup>, Canu<sup>[7](#reference-7)</sup>, Unicycler<sup>[3](#reference-3)</sup> |
 | PacBio Corrected (<3% error) | Flye<sup>[6](#reference-6)</sup>, Canu<sup>[7](#reference-7)</sup>, Unicycler<sup>[3](#reference-3)</sup> |
-| PacBio HiFi (<1% error) | Flye<sup>[6](#reference-6)</sup>, Canu<sup>[7](#reference-7)</sup>, Hifiasm<sup>[8](#reference-8)</sup>, hifiasm_meta<sup>[9](#reference-9)</sup>, Unicycler<sup>[3](#reference-3)</sup>, metaMDBG<sup>[10](#reference-10)</sup> |
+| PacBio HiFi (<1% error) | Flye<sup>[6](#reference-6)</sup>, Canu<sup>[7](#reference-7)</sup>, Hifiasm<sup>[8](#reference-8)</sup>, Hifiasm-meta<sup>[9](#reference-9)</sup>, Unicycler<sup>[3](#reference-3)</sup>, metaMDBG<sup>[10](#reference-10)</sup> |
 | ONT Regular (<20% error) | Flye<sup>[6](#reference-6)</sup>, Canu<sup>[7](#reference-7)</sup>, Unicycler<sup>[3](#reference-3)</sup> |
 | ONT Corrected (<3% error) | Flye<sup>[6](#reference-6)</sup>, Canu<sup>[7](#reference-7)</sup>, Unicycler<sup>[3](#reference-3)</sup> |
 | ONT High-quality (<5% error) | Flye<sup>[6](#reference-6)</sup>, Canu<sup>[7](#reference-7)</sup>, Unicycler<sup>[3](#reference-3)</sup> |

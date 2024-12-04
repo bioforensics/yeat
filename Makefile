@@ -1,4 +1,5 @@
 SHELL = bash
+TEST_DATA_PATH ?= yeat/tests/data
 PYFILES = $(shell ls yeat/*.py yeat/*/*.py)
 
 ## #===== development tasks =====#
@@ -47,18 +48,15 @@ testgrid:
 testall:
 	pytest --cov=yeat -m 'not bandage and not linux and not grid'
 
-## hifidata:    download PacBio HiFi-read test data for test suite
-hifidata:
-	curl -L -o yeat/tests/data/ecoli.fastq https://sra-pub-src-1.s3.amazonaws.com/SRR10971019/m54316_180808_005743.fastq.1
-	gzip yeat/tests/data/ecoli.fastq
-
-## nanodata:    download Oxford Nanopore-read test data for test suite
-nanodata:
-	curl -L -o yeat/tests/data/ecolk12mg1655_R10_3_guppy_345_HAC.fastq.gz https://figshare.com/ndownloader/files/21623145
-
-## metadata:    download PacBio HiFi-read metagenomics test data for test suite
-metadata:
-	curl -L -o yeat/tests/data/zymoD6331std-ecoli-ten-percent.fq.gz https://zenodo.org/record/5908204/files/zymoD6331std-ecoli-ten-percent.fq.gz?download=1
+## testdata:    download test data for test suite
+testdata:
+	pushd $(TEST_DATA_PATH) && \
+	curl -L -o osfstorage-archive.zip https://files.osf.io/v1/resources/b8x5q/providers/osfstorage/?zip= && \
+	unzip -o osfstorage-archive.zip && \
+	rm osfstorage-archive.zip && \
+	ls *.tar.gz |xargs -n1 tar -xzvf && \
+	rm *.tar.gz && \
+	popd
 
 ## style:       check code style vs Black
 style:

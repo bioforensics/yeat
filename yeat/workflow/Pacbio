@@ -98,8 +98,6 @@ rule metamdbg:
         contigs="analysis/{sample}/{readtype,pacbio-raw|pacbio-corr|pacbio-hifi}/{label}/metamdbg/contigs.fasta"
     input:
         reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
-    conda:
-        "yeat-metaMDBG"
     threads: 128
     params:
         outdir="analysis/{sample}/{readtype}/{label}/metamdbg",

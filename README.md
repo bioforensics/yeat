@@ -6,4 +6,4 @@ YEAT (**Y**our **E**verday **A**ssembly **T**ool) is a platform designed for end
 
 ## Help
 
-YEAT documentation is available on the [YEAT GitHub wiki](https://github.com/rrwick/Bandage/wiki).
+YEAT documentation is available on the [YEAT GitHub wiki](https://github.com/bioforensics/yeat/wiki).

@@ -54,8 +54,6 @@ testdata:
 	curl -L -o osfstorage-archive.zip https://files.osf.io/v1/resources/b8x5q/providers/osfstorage/?zip= && \
 	unzip -o osfstorage-archive.zip && \
 	rm osfstorage-archive.zip && \
-	ls *.tar.gz |xargs -n1 tar -xzvf && \
-	rm *.tar.gz && \
 	popd
 
 ## style:       check code style vs Black

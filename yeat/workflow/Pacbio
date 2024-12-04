@@ -45,12 +45,12 @@ rule canu:
 
 rule hifiasm:
     output:
-        contigs="analysis/{sample}/{readtype,pacbio-raw|pacbio-corr|pacbio-hifi}/{label}/hifiasm/contigs.fasta"
+        contigs="analysis/{sample}/pacbio-hifi/{label}/hifiasm/contigs.fasta"
     input:
-        reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
+        reads="seq/input/{sample}/pacbio-hifi/combined-reads.fq.gz"
     threads: 128
     params:
-        prefix="analysis/{sample}/{readtype}/{label}/hifiasm/{sample}",
+        prefix="analysis/{sample}/pacbio-hifi/{label}/hifiasm/{sample}",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
@@ -62,12 +62,12 @@ rule hifiasm:
 
 rule hifiasm_meta:
     output:
-        contigs="analysis/{sample}/{readtype,pacbio-raw|pacbio-corr|pacbio-hifi}/{label}/hifiasm_meta/contigs.fasta"
+        contigs="analysis/{sample}/pacbio-hifi/{label}/hifiasm_meta/contigs.fasta"
     input:
-        reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
+        reads="seq/input/{sample}/pacbio-hifi/combined-reads.fq.gz"
     threads: 128
     params:
-        prefix="analysis/{sample}/{readtype}/{label}/hifiasm_meta/{sample}",
+        prefix="analysis/{sample}/pacbio-hifi/{label}/hifiasm_meta/{sample}",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
@@ -95,15 +95,15 @@ rule unicycler:
 
 rule metamdbg:
     output:
-        contigs="analysis/{sample}/{readtype,pacbio-raw|pacbio-corr|pacbio-hifi}/{label}/metamdbg/contigs.fasta"
+        contigs="analysis/{sample}/pacbio-hifi/{label}/metamdbg/contigs.fasta"
     input:
-        reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
+        reads="seq/input/{sample}/pacbio-hifi/combined-reads.fq.gz"
     threads: 128
     params:
-        outdir="analysis/{sample}/{readtype}/{label}/metamdbg",
+        outdir="analysis/{sample}/pacbio-hifi/{label}/metamdbg",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
-        metaMDBG asm {params.outdir} {input.reads} -t {threads} {params.extra_args}
+        metaMDBG asm --out-dir {params.outdir} --in-hifi {input.reads} -t {threads} {params.extra_args}
         gunzip {params.outdir}/contigs.fasta.gz
         """

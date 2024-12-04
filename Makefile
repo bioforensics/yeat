@@ -1,4 +1,5 @@
 SHELL = bash
+TEST_DATA_PATH ?= yeat/tests/data
 PYFILES = $(shell ls yeat/*.py yeat/*/*.py)
 
 ## #===== development tasks =====#
@@ -49,10 +50,11 @@ testall:
 
 ## testdata:     download test data for test suite
 testdata:
-	curl -L -o yeat/tests/data/ecoli.fastq https://sra-pub-src-1.s3.amazonaws.com/SRR10971019/m54316_180808_005743.fastq.1
-	gzip yeat/tests/data/ecoli.fastq
-	curl -L -o yeat/tests/data/ecolk12mg1655_R10_3_guppy_345_HAC.fastq.gz https://figshare.com/ndownloader/files/21623145
-	curl -L -o yeat/tests/data/zymoD6331std-ecoli-ten-percent.fq.gz https://zenodo.org/record/5908204/files/zymoD6331std-ecoli-ten-percent.fq.gz?download=1
+	pushd $(TEST_DATA_PATH) && \
+	curl -L -o osfstorage-archive.zip https://files.osf.io/v1/resources/b8x5q/providers/osfstorage/?zip= && \
+	unzip -o osfstorage-archive.zip && \
+	rm osfstorage-archive.zip && \
+	popd
 
 ## style:        check code style against Black
 style:

@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - VelvetOptimizer (#81)
     - Penguin (#82)
 - Nanopore-read assembly algorithms:
-    - metaMDBG ()
+    - metaMDBG (#)
 
 
 ## [0.6.1] 2024-07-02

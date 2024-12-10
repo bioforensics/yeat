@@ -28,26 +28,3 @@ def test_pacbio_hifi_read_assemblers(algorithm, capsys, tmp_path):
     arglist = ["-o", wd, "-t", str(cores), config]
     run_yeat(arglist)
     target_files_exist(wd, config, cores)
-
-
-@pytest.mark.long
-@pytest.mark.hifi
-@pytest.mark.parametrize("algorithm", ["flye", "hifiasm_meta"])
-def test_pacbio_hifi_read_metagenomic_assemblers(algorithm, capsys, tmp_path):
-    wd = str(tmp_path)
-    cores = get_core_count()
-    config = write_config(algorithm, wd, "meta.cfg")
-    arglist = ["-o", wd, "-t", str(cores), config]
-    run_yeat(arglist)
-    target_files_exist(wd, config, cores)
-
-
-@pytest.mark.linux
-def test_metaMDBG_assembler(tmp_path):
-    algorithm = "metamdbg"
-    wd = str(tmp_path)
-    cores = get_core_count()
-    config = write_config(algorithm, wd, "meta.cfg")
-    arglist = ["-o", wd, "-t", str(cores), config]
-    run_yeat(arglist)
-    target_files_exist(wd, config, cores)

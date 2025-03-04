@@ -14,6 +14,7 @@ from snakemake import snakemake
 import subprocess
 import warnings
 from yeat.config import READ_TYPES
+from yeat.cli.aux import get_slurm_logs_dir
 
 
 def run_workflow(args):
@@ -71,7 +72,14 @@ def check_bandage():
 def setup_grid_args(args):
     if args.grid_args is not None:
         return args.grid_args
-    grid_args = "sbatch " if args.grid == "slurm" else " -V "
+    if args.grid == "slurm":
+        slurm_logs_dir = get_slurm_logs_dir(args.outdir)
+        if not Path(slurm_logs_dir).is_dir():
+            Path(slurm_logs_dir).mkdir(parents=True, exist_ok=True)
+        log_path = f"{slurm_logs_dir}/{{rule}}-{{wildcards.sample}}-%j.log"
+        grid_args = f"sbatch -o {log_path} -e {log_path} "
+    else:
+        grid_args = " -V "
     thread_arg = f"-c {args.threads} " if args.grid == "slurm" else f"-pe threads {args.threads} "
     return grid_args + thread_arg
 

@@ -19,7 +19,8 @@ def main(args=None):
         args = get_parser().parse_args()  # pragma: no cover
     create_config(args)
     add_config(args)
-    setattr(args, "grid", False)
+    if not args.grid:
+        setattr(args, "grid", False)
     workflow.run_workflow(args)
 
 
@@ -27,6 +28,7 @@ def get_parser(exit_on_error=True):
     parser = ArgumentParser(exit_on_error=exit_on_error)
     parser._optionals.title = "options"
     cli.workflow_configuration(parser)
+    cli.grid_configuration(parser)
     illumina.fastp_configuration(parser)
     illumina.downsample_configuration(parser, just_yeat_it=True)
     sample_configuration(parser)

@@ -55,6 +55,7 @@ class AutoPop:
             if not file.name.endswith(EXTENSIONS):
                 continue
             files.append(file)
+        files.sort()
         return files
 
     def traverse(self, dirpath):

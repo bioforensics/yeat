@@ -37,14 +37,14 @@ def get_canu_readtype_flag(readtype):
 
 def combine(reads, direction, outdir):
     for i, inread in enumerate(reads):
-        outread = f"{outdir}/{direction}_reads{i}.fq"
-        if inread.endswith(".gz"):
-            subprocess.run(f"gunzip -c {inread} > {outread}", shell=True)
+        outread = f"{outdir}/{direction}_reads{i}.fq.gz"
+        if not inread.endswith(".gz"):
+            subprocess.run(f"gzip {inread} > {outread}", shell=True)
         else:
             shutil.copyfile(inread, outread)
     commands = (
-        f"cat {outdir}/{direction}_reads*.fq > {outdir}/{direction}_combined-reads.fq;"
-        f"gzip {outdir}/{direction}_combined-reads.fq"
+        f"cat {outdir}/{direction}_reads*.fq.gz > {outdir}/{direction}_combined-reads.fq.gz;"
+        f"rm {outdir}/{direction}_reads*.fq.gz"
     )
     subprocess.run(commands, shell=True)
 

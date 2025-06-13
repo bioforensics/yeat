@@ -17,9 +17,11 @@ rule spades:
     params:
         outdir="analysis/{sample}/paired/{label}/spades",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
+    log:
+        "analysis/{sample}/paired/{label}/spades/spades-stdout-err.log"
     shell:
         """
-        spades.py -1 {input.read1} -2 {input.read2} -t {threads} -o {params.outdir} {params.extra_args}
+        spades.py -1 {input.read1} -2 {input.read2} -t {threads} -o {params.outdir} {params.extra_args} > {log} 2>&1
         """
 
 
@@ -34,9 +36,11 @@ rule megahit:
         temp_dir="analysis/{sample}/paired/{label}/megahit-temp",
         actual_dir="analysis/{sample}/paired/{label}/megahit",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
+    log:
+        "analysis/{sample}/paired/{label}/megahit/megahit.log"
     shell:
         """
-        megahit -1 {input.read1} -2 {input.read2} -t {threads} -o {params.temp_dir} {params.extra_args}
+        megahit -1 {input.read1} -2 {input.read2} -t {threads} -o {params.temp_dir} {params.extra_args} > {log} 2>&1
         mv {params.temp_dir}/* {params.actual_dir}
         rm -r {params.temp_dir}
         ln -s final.contigs.fa {output.contigs}

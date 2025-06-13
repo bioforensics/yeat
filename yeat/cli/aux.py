@@ -8,6 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 from argparse import ArgumentTypeError
+from pathlib import Path
 
 
 def check_positive(value):
@@ -18,3 +19,7 @@ def check_positive(value):
     except ValueError:
         raise ArgumentTypeError(f"{value} is not an integer")
     return value
+
+
+def get_slurm_logs_dir(wd):
+    return Path(wd).resolve() / "slurm-logs/"

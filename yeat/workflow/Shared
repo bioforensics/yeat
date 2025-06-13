@@ -35,9 +35,11 @@ rule fastqc_paired:
     threads: 128
     params:
         outdir="seq/fastqc/{sample}/paired"
+    log:
+        "seq/fastqc/{sample}/paired/fastqc.log"
     shell:
         """
-        fastqc {input.read1} {input.read2} -t {threads} -o {params.outdir}
+        fastqc {input.read1} {input.read2} -t {threads} -o {params.outdir} > {log} 2>&1
         """
 
 
@@ -131,9 +133,11 @@ rule fastqc_single:
     threads: 128
     params:
         outdir="seq/fastqc/{sample}/{readtype}"
+    log:
+        "seq/fastqc/{sample}/{readtype}/fastqc.log"
     shell:
         """
-        fastqc {input.reads} -t {threads} -o {params.outdir}
+        fastqc {input.reads} -t {threads} -o {params.outdir} > {log} 2>&1
         """
 
 
@@ -144,7 +148,9 @@ rule quast:
         contigs="analysis/{sample}/{readtype}/{label}/{assembler}/contigs.fasta"
     params:
         outdir="analysis/{sample}/{readtype}/{label}/{assembler}/quast"
+    log:
+        "analysis/{sample}/{readtype}/{label}/{assembler}/quast/quast.log"
     shell:
         """
-        quast.py {input.contigs} -o {params.outdir}
+        quast.py {input.contigs} -o {params.outdir} > {log} 2>&1
         """

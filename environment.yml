@@ -29,6 +29,7 @@ dependencies:
     - hifiasm_meta=hamtv0.2
     - gfatools>=0.5
     - plass>=4.687d7
-    - samtools>=1.21
+    - samtools=1.20
     - bowtie2>=2.5
     - pilon>=1.24
+    - pulp=2.7.0

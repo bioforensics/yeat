@@ -13,8 +13,8 @@ from pathlib import Path
 from snakemake import snakemake
 import subprocess
 import warnings
-from yeat.config import READ_TYPES
 from yeat.cli.aux import get_slurm_logs_dir
+from yeat.config import READ_TYPES
 
 
 def run_workflow(args):

@@ -100,7 +100,7 @@ rule metamdbg:
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
-        metaMDBG asm --out-dir {params.outdir} --in-ont {input.reads} -t {threads} {params.extra_args}
+        metaMDBG asm --out-dir {params.outdir} --in-ont {input.reads} --threads {threads} {params.extra_args}
         gunzip {params.outdir}/contigs.fasta.gz
         """
     

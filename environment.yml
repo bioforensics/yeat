@@ -16,7 +16,8 @@ dependencies:
     - python=3.9
     - quast>=5.0
     - seqtk>=1.3
-    - snakemake>=7.18
+    - snakemake=7.32
+    - pulp=2.7
     - spades>=3.15
     - unicycler>=0.4
     - versioneer>=0.21

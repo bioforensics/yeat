@@ -7,8 +7,34 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from argparse import ArgumentTypeError
+from argparse import Action, ArgumentTypeError
 from pathlib import Path
+from yeat.config.assembly import ASSEMBLY
+from yeat.config.config import CONFIG
+from yeat.config.sample import SAMPLE
+
+
+CONFIG_TEMPLATE = CONFIG(
+    samples={
+        "sample1": SAMPLE(
+            reads=["path/to/data/sample1-R1.fastq.gz", "path/to/data/sample1-R1.fastq.gz"],
+            platform="illumina",
+        ),
+        "sample2": SAMPLE(reads=["path/to/data/sample2_ont.fastq.gz"], platform="ont"),
+        "sample3": SAMPLE(reads=["path/to/data/sample3_hifi.fastq.gz"], platform="pacbio"),
+    },
+    assemblies={
+        "assembly1": ASSEMBLY(algorithm="spades", mode="paired", extra_args=""),
+        "assembly2": ASSEMBLY(algorithm="flye", mode="ont", extra_args=""),
+        "assembly3": ASSEMBLY(algorithm="flye", mode="pacbio", extra_args=""),
+    },
+)
+
+
+class InitAction(Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        print(CONFIG_TEMPLATE)
+        raise SystemExit()
 
 
 def check_positive(value):

@@ -8,76 +8,10 @@
 # -------------------------------------------------------------------------------------------------
 
 from . import illumina
-from .aux import check_positive
-from argparse import Action, ArgumentParser
-import json
+from .aux import InitAction, check_positive
+from argparse import ArgumentParser
 from pathlib import Path
-import sys
 import yeat
-
-
-CONFIG_TEMPLATE = {
-    "samples": {
-        "sample1": {
-            "paired": [
-                [
-                    "yeat/tests/data/short_reads_1.fastq.gz",
-                    "yeat/tests/data/short_reads_2.fastq.gz",
-                ]
-            ],
-            "downsample": 0,
-            "genome_size": 0,
-            "coverage_depth": 150,
-        },
-        "sample2": {
-            "paired": [
-                ["yeat/tests/data/Animal_289_R1.fq.gz", "yeat/tests/data/Animal_289_R2.fq.gz"]
-            ],
-            "downsample": 0,
-            "genome_size": 0,
-            "coverage_depth": 150,
-        },
-        "sample3": {
-            "pacbio-hifi": ["yeat/tests/data/ecoli.fastq.gz"],
-            "downsample": 0,
-            "genome_size": 0,
-            "coverage_depth": 150,
-        },
-        "sample4": {
-            "nano-hq": ["yeat/tests/data/ecolk12mg1655_R10_3_guppy_345_HAC.fastq.gz"],
-            "downsample": 0,
-            "genome_size": 0,
-            "coverage_depth": 150,
-        },
-    },
-    "assemblies": {
-        "spades-default": {
-            "algorithm": "spades",
-            "extra_args": "",
-            "samples": ["sample1", "sample2"],
-            "mode": "paired",
-        },
-        "hicanu": {
-            "algorithm": "canu",
-            "extra_args": "genomeSize=4.8m",
-            "samples": ["sample3"],
-            "mode": "pacbio",
-        },
-        "flye_ONT": {
-            "algorithm": "flye",
-            "extra_args": "",
-            "samples": ["sample4"],
-            "mode": "oxford",
-        },
-    },
-}
-
-
-class InitAction(Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        json.dump(CONFIG_TEMPLATE, sys.stdout, indent=4)
-        print()
-        raise SystemExit()
 
 
 def get_parser(exit_on_error=True):
@@ -123,10 +57,10 @@ def workflow_configuration(parser):
         help="construct workflow DAG and print a summary but do not execute",
     )
     workflow.add_argument(
-        "-o",
-        "--outdir",
+        "-w",
+        "--workdir",
         default=".",
-        help="output directory; default is current working directory",
+        help="working directory; default is current working directory",
         metavar="DIR",
         type=str,
     )

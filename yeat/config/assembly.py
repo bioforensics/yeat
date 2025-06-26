@@ -108,15 +108,21 @@
 
 
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
-class ASSEMBLY:
+class Assembly:
     algorithm: str
     mode: str
-    extra_args: str
+    extra_args: Optional[str] = None
+
+    def __post_init__(self):
+        # make sure that mode is either paired, single, ont, or pacbio.
+        # make sure algorithm exist and matches the mode
+
+        pass
 
     def __str__(self):
         return f'''algorithm = "{self.algorithm}"
-mode = "{self.mode}"
-extra_args = "{self.extra_args}"'''
+mode = "{self.mode}"'''

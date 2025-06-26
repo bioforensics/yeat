@@ -170,15 +170,56 @@
 #             warn(message)
 
 
-from typing import List
 from dataclasses import dataclass
+from pathlib import Path
+from typing import List, Optional, Union
 
 
 @dataclass
-class SAMPLE:
-    reads: List[str]
-    platform: str
+class Sample:
+    illumina: Optional[Union[List[str], str]] = None
+    ont: Optional[str] = None
+    pacbio: Optional[str] = None
+    hybrid: bool = False
+    # target_files = List[str]
+
+    def __post_init__(self):
+        # path for qc result
+
+        if not self.illumina and not self.ont and not self.pacbio:
+            raise "Sample does not have any reads"
+        if self.ont and self.pacbio:
+            raise "Too many long read types"
+        if self.illumina:
+            if isinstance(self.illumina, list):
+                if len(self.illumina) < 2:
+                    raise "Missing paired reads"
+                elif len(self.illumina) > 2:
+                    raise "Too many paired reads"
+
+        if self.illumina:
+            if isinstance(self.illumina, list):
+                for read in self.illumina:
+                    if not Path(read).exists():
+                        raise "File does not exist"
+            else:
+                if not Path(self.illumina).exists():
+                    raise "File does not exist"
+        if self.ont:
+            if not Path(self.ont).exists():
+                raise "File does not exist"
+
+        if self.pacbio:
+            if not Path(self.pacbio).exists():
+                raise "File does not exist"
+
+        if self.illumina and (self.ont or self.pacbio):
+            self.hybrid = True
 
     def __str__(self):
-        return f'''reads = {self.reads}
-platform = "{self.platform}"'''
+        if self.illumina:
+            return f"illumina: {self.illumina}"
+        elif self.ont:
+            return f"ont: {self.ont}"
+        elif self.pacbio:
+            return f"pacbio: {self.pacbio}"

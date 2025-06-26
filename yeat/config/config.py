@@ -73,17 +73,20 @@
 #         return target_files
 
 
+from .assembly import Assembly
+from .sample import Sample
 from dataclasses import dataclass
-from typing import Dict
 from io import StringIO
-from .assembly import ASSEMBLY
-from .sample import SAMPLE
+from typing import Dict
 
 
 @dataclass
-class CONFIG:
-    samples: Dict[str, SAMPLE]
-    assemblies: Dict[str, ASSEMBLY]
+class Config:
+    samples: Dict[str, Sample]
+    assemblies: Dict[str, Assembly]
+
+    def __post_init__(self):
+        print("in constructor")
 
     def __str__(self):
         output = StringIO()

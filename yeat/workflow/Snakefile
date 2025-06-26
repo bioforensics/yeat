@@ -7,10 +7,21 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from yeat.config.config import AssemblyConfig
+from yeat.config.config import Config
+import toml
+
+print(config)
+
+# cfg = Config(config["data"], config["threads"], config["bandage"])
+print("here")
 
 
-cfg = AssemblyConfig(config["data"], config["threads"], config["bandage"])
+# data = toml.load(config["config"])
+print(data)
+
+assert 0
+
+# cfg = Config(config["data"], config["threads"], config["bandage"])
 config["samples"] = cfg.samples
 config["assemblies"] = cfg.assemblies
 

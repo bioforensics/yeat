@@ -9,31 +9,29 @@
 
 from argparse import Action, ArgumentTypeError
 from pathlib import Path
-from yeat.config.assembly import ASSEMBLY
-from yeat.config.config import CONFIG
-from yeat.config.sample import SAMPLE
-
-
-CONFIG_TEMPLATE = CONFIG(
-    samples={
-        "sample1": SAMPLE(
-            reads=["path/to/data/sample1-R1.fastq.gz", "path/to/data/sample1-R1.fastq.gz"],
-            platform="illumina",
-        ),
-        "sample2": SAMPLE(reads=["path/to/data/sample2_ont.fastq.gz"], platform="ont"),
-        "sample3": SAMPLE(reads=["path/to/data/sample3_hifi.fastq.gz"], platform="pacbio"),
-    },
-    assemblies={
-        "assembly1": ASSEMBLY(algorithm="spades", mode="paired", extra_args=""),
-        "assembly2": ASSEMBLY(algorithm="flye", mode="ont", extra_args=""),
-        "assembly3": ASSEMBLY(algorithm="flye", mode="pacbio", extra_args=""),
-    },
-)
+from yeat.config.assembly import Assembly
+from yeat.config.config import Config
+from yeat.config.sample import Sample
 
 
 class InitAction(Action):
+    # CONFIG_TEMPLATE = CONFIG(
+    #     samples={
+    #         "sample1": SAMPLE(illumina=["path/to/data/sample1_R1.fastq.gz", "path/to/data/sample1_R2.fastq.gz"],),
+    #         "sample2": SAMPLE(illumina="path/to/data/sample2_single.fastq.gz"),
+    #         "sample3": SAMPLE(ont="path/to/data/sample3_ont.fastq.gz"),
+    #         "sample4": SAMPLE(pacbio="path/to/data/sample4_hifi.fastq.gz"),
+    #     },
+    #     assemblies={
+    #         "short_paired": ASSEMBLY(algorithm="spades", mode="paired", extra_args=""),
+    #         "short_single": ASSEMBLY(algorithm="spades", mode="paired", extra_args=""),
+    #         "long_ont": ASSEMBLY(algorithm="flye", mode="ont", extra_args=""),
+    #         "long_hifi": ASSEMBLY(algorithm="flye", mode="pacbio", extra_args=""),
+    #     },
+    # )
+
     def __call__(self, parser, namespace, values, option_string=None):
-        print(CONFIG_TEMPLATE)
+        # print(self.CONFIG_TEMPLATE)
         raise SystemExit()
 
 

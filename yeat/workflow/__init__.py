@@ -17,25 +17,48 @@ from yeat.cli.aux import get_slurm_logs_dir
 from yeat.config import READ_TYPES
 
 
+import toml
+
+
 def run_workflow(args):
     snakefile = files("yeat") / "workflow" / "Snakefile"
     config = vars(args)
-    config["data"] = get_config_data(config["config"])
-    config["bandage"] = check_bandage()
-    if args.grid == "slurm":
-        success = snakemake_grid_slurm(args, snakefile, config)
-    elif args.grid == True:
-        success = snakemake_grid_default(args, snakefile, config)
-    else:
-        success = snakemake_local(args, snakefile, config)
-    if not success:
-        raise RuntimeError("Snakemake Failed")  # pragma: no cover
+
+    config["config"] = get_config_data(config["config"])
+
+    print(config)
+    assert 0
+    # snakemake_local(args, snakefile, config)
+    # config["data"] = get_config_data(config["config"])
+    # config["bandage"] = check_bandage()
+    # if args.grid == "slurm":
+    #     success = snakemake_grid_slurm(args, snakefile, config)
+    # elif args.grid == True:
+    #     success = snakemake_grid_default(args, snakefile, config)
+    # else:
+    #     success = snakemake_local(args, snakefile, config)
+    # if not success:
+    #     raise RuntimeError("Snakemake Failed")  # pragma: no cover
 
 
 def get_config_data(infile):
-    data = json.load(open(infile))
-    for sample in data["samples"].values():
-        resolve_sample_paths(sample)
+    # data = toml.load(open(infile))
+    # print(data)
+    # assert 0
+    # for sample in data["samples"].values():
+    #     resolve_sample_paths(sample)
+    # return data
+
+    data = toml.load(open(infile))
+
+    for sample_label, sample_data in data["samples"].items():
+        for readtype, reads in sample_data.items():
+            if isinstance(reads, list):
+                data["samples"][sample_label][readtype] = [
+                    str(Path(direction).resolve()) for direction in reads
+                ]
+            else:
+                data["samples"][sample_label][readtype] = str(Path(reads).resolve())
     return data
 
 
@@ -90,12 +113,12 @@ def snakemake_grid_slurm(args, snakefile, config):
         config=config,
         dryrun=args.dry_run,
         printshellcmds=True,
-        workdir=args.outdir,
+        workdir=args.workdir,
         use_conda=True,
         local_cores=args.threads,
         nodes=args.grid_limit,
         cluster=setup_grid_args(args),
-        drmaa_log_dir=str((Path(args.outdir) / "gridlogs").resolve()),
+        drmaa_log_dir=str((Path(args.workdir) / "gridlogs").resolve()),
     )
     return success
 
@@ -106,12 +129,12 @@ def snakemake_grid_default(args, snakefile, config):
         config=config,
         dryrun=args.dry_run,
         printshellcmds=True,
-        workdir=args.outdir,
+        workdir=args.workdir,
         use_conda=True,
         local_cores=args.threads,
         nodes=args.grid_limit,
         drmaa=setup_grid_args(args),
-        drmaa_log_dir=str((Path(args.outdir) / "gridlogs").resolve()),
+        drmaa_log_dir=str((Path(args.workdir) / "gridlogs").resolve()),
     )
     return success
 
@@ -123,7 +146,7 @@ def snakemake_local(args, snakefile, config):
         cores=args.threads,
         dryrun=args.dry_run,
         printshellcmds=True,
-        workdir=args.outdir,
+        workdir=args.workdir,
         use_conda=True,
     )
     return success

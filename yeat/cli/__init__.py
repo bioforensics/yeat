@@ -14,4 +14,4 @@ from yeat import workflow
 def main(args=None):
     if args is None:
         args = cli.get_parser().parse_args()  # pragma: no cover
-    # workflow.run_workflow(args)
+    workflow.run_workflow(args)

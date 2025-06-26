@@ -197,21 +197,21 @@ class Sample:
                 elif len(self.illumina) > 2:
                     raise "Too many paired reads"
 
-        if self.illumina:
-            if isinstance(self.illumina, list):
-                for read in self.illumina:
-                    if not Path(read).exists():
-                        raise "File does not exist"
-            else:
-                if not Path(self.illumina).exists():
-                    raise "File does not exist"
-        if self.ont:
-            if not Path(self.ont).exists():
-                raise "File does not exist"
+        # if self.illumina:
+        #     if isinstance(self.illumina, list):
+        #         for read in self.illumina:
+        #             if not Path(read).exists():
+        #                 raise "File does not exist"
+        #     else:
+        #         if not Path(self.illumina).exists():
+        #             raise "File does not exist"
+        # if self.ont:
+        #     if not Path(self.ont).exists():
+        #         raise "File does not exist"
 
-        if self.pacbio:
-            if not Path(self.pacbio).exists():
-                raise "File does not exist"
+        # if self.pacbio:
+        #     if not Path(self.pacbio).exists():
+        #         raise "File does not exist"
 
         if self.illumina and (self.ont or self.pacbio):
             self.hybrid = True

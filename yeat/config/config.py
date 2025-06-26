@@ -86,7 +86,8 @@ class Config:
     assemblies: Dict[str, Assembly]
 
     def __post_init__(self):
-        print("in constructor")
+        # print("in constructor")
+        pass
 
     def __str__(self):
         output = StringIO()

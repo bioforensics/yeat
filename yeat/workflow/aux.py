@@ -92,3 +92,10 @@ def get_longread_file(sample, long_readtype):
     else:  # pragma: no cover
         message = f"Invalid long readtype '{long_readtype}'"
         raise ValueError(message)
+
+
+from pathlib import Path
+
+
+def get_slurm_logs_dir(wd):
+    return Path(wd).resolve() / "slurm-logs/"

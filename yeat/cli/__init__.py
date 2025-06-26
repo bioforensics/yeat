@@ -7,11 +7,11 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import cli
-from yeat import workflow
+from .cli import get_parser
+from yeat.workflow import run_workflow
 
 
 def main(args=None):
     if args is None:
-        args = cli.get_parser().parse_args()  # pragma: no cover
-    workflow.run_workflow(args)
+        args = get_parser().parse_args()  # pragma: no cover
+    run_workflow(args)

@@ -10,9 +10,6 @@
 from argparse import ArgumentParser, Action
 from pathlib import Path
 from yeat import __version__
-from yeat.config.assembly import Assembly
-from yeat.config.config import Config
-from yeat.config.sample import Sample
 
 
 def get_parser(exit_on_error=True):
@@ -156,20 +153,26 @@ def grid_configuration(parser):
 
 
 class InitAction(Action):
-    config_template = Config(
-        samples={
-            "sample1": Sample(
-                illumina=["path/to/data/sample1_R1.fastq.gz", "path/to/data/sample1_R2.fastq.gz"],
-            ),
-            "sample2": Sample(ont="path/to/data/sample3_ont.fastq.gz"),
-            "sample3": Sample(pacbio="path/to/data/sample4_hifi.fastq.gz"),
-        },
-        assemblies={
-            "short_paired": Assembly(algorithm="spades", mode="paired"),
-            "long_ont": Assembly(algorithm="flye", mode="ont"),
-            "long_hifi": Assembly(algorithm="flye", mode="pacbio"),
-        },
-    )
+    config_template = '''[sample.sample1]
+illumina: ['path/to/data/sample1_R1.fastq.gz', 'path/to/data/sample1_R2.fastq.gz']
+
+[sample.sample2]
+ont: path/to/data/sample3_ont.fastq.gz
+
+[sample.sample3]
+pacbio: path/to/data/sample4_hifi.fastq.gz
+
+[assemblies.short_paired]
+algorithm = "spades"
+mode = "paired"
+
+[assemblies.long_ont]
+algorithm = "flye"
+mode = "ont"
+
+[assemblies.long_hifi]
+algorithm = "flye"
+mode = "pacbio"'''
 
     def __call__(self, parser, namespace, values, option_string=None):
         print(self.config_template)

@@ -7,78 +7,65 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from yeat.config.config import Config
-import toml
-
-print(config)
-
-# cfg = Config(config["data"], config["threads"], config["bandage"])
-print("here")
+from yeat.workflow.aux import create_config
 
 
-# data = toml.load(config["config"])
-print(data)
-
-assert 0
-
-# cfg = Config(config["data"], config["threads"], config["bandage"])
-config["samples"] = cfg.samples
-config["assemblies"] = cfg.assemblies
-
-print(cfg)
-print(config)
-assert 0
+cfg = create_config(config["config"])
+print(cfg.get_target_files(config["workdir"]))
+# assert 0
 
 
-rule all:
-    input:
-        cfg.target_files
 
 
-module shared_workflow:
-    snakefile: "Shared"
-    config: config
-
-use rule * from shared_workflow as shared_*
+# rule all:
+#     input:
+#         cfg.target_files
 
 
-module paired_workflow:
-    snakefile: "Paired"
-    config: config
+# module shared_workflow:
+#     snakefile: "Shared"
+#     config: config
 
-use rule * from paired_workflow as paired_*
-
-
-module single_workflow:
-    snakefile: "Single"
-    config: config
-
-use rule * from single_workflow as single_*
+# use rule * from shared_workflow as shared_*
 
 
-module pacbio_workflow:
-    snakefile: "Pacbio"
-    config: config
+# module paired_workflow:
+#     snakefile: "Paired"
+#     config: config
 
-use rule * from pacbio_workflow as pacbio_*
-
-
-module oxford_workflow:
-    snakefile: "Oxford"
-    config: config
-
-use rule * from oxford_workflow as oxford_*
+# use rule * from paired_workflow as paired_*
 
 
-module bandage_workflow:
-    snakefile: "Bandage"
-    config: config
+# module single_workflow:
+#     snakefile: "Single"
+#     config: config
 
-use rule * from bandage_workflow as bandage_*
+# use rule * from single_workflow as single_*
 
 
-module hybrid_workflow:
-    snakefile: "Hybrid"
-    config: config
+# module pacbio_workflow:
+#     snakefile: "Pacbio"
+#     config: config
 
-use rule * from hybrid_workflow as hybrid_*
+# use rule * from pacbio_workflow as pacbio_*
+
+
+# module oxford_workflow:
+#     snakefile: "Oxford"
+#     config: config
+
+# use rule * from oxford_workflow as oxford_*
+
+
+# module bandage_workflow:
+#     snakefile: "Bandage"
+#     config: config
+
+# use rule * from bandage_workflow as bandage_*
+
+
+# module hybrid_workflow:
+#     snakefile: "Hybrid"
+#     config: config
+
+# use rule * from hybrid_workflow as hybrid_*

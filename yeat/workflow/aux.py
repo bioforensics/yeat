@@ -17,6 +17,17 @@ import subprocess
 from yeat.config import PACBIO_READS, OXFORD_READS
 
 
+from yeat.config.assembly import Assembly
+from yeat.config.config import Config
+from yeat.config.sample import Sample
+
+
+def create_config(config):
+    samples = {key: Sample(**value) for key, value in config.get("samples", {}).items()}
+    assemblies = {key: Assembly(**value) for key, value in config.get("assemblies", {}).items()}
+    return Config(samples, assemblies)
+
+
 def get_and_filter_contig_files(sample, readtype, label):
     pattern = rf"analysis/{sample}/{readtype}/{label}/megahit/intermediate_contigs/k\d+.contigs.fa"
     contigs = glob.glob(

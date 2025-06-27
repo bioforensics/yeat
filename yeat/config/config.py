@@ -7,67 +7,50 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import READ_TYPES, DOWNSAMPLE_KEYS, AssemblyConfigError
 from .assembly import Assembly
 from .sample import Sample
-from itertools import chain
+from dataclasses import dataclass
+from io import StringIO
+from typing import Dict
 
 
-CONFIG_KEYS = ("samples", "assemblies")
-SAMPLE_KEYS = READ_TYPES + DOWNSAMPLE_KEYS
-ASSEMBLY_KEYS = ("algorithm", "extra_args", "samples", "mode")
+@dataclass
+class Config:
+    samples: Dict[str, Sample]
+    assemblies: Dict[str, Assembly]
 
+    def __post_init__(self):
+        # print("in constructor")
 
-class AssemblyConfig:
-    def __init__(self, config, threads=1, bandage=False):
-        self.config = config
-        self.validate_config_keys()
-        self.threads = threads
-        self.bandage = bandage
-        self.samples = self.create_sample_objects()
-        self.assemblies = self.create_assembly_objects()
-        self.target_files = self.get_target_files()
+        # self.target_files = []
+        pass
 
-    def validate_config_keys(self):
-        self.check_required_keys(self.config.keys(), CONFIG_KEYS)
-        for sample in self.config["samples"].values():
-            self.check_valid_keys(sample.keys(), SAMPLE_KEYS)
-        for assembly in self.config["assemblies"].values():
-            self.check_required_keys(assembly.keys(), ASSEMBLY_KEYS)
+    def __str__(self):
+        output = StringIO()
+        for sample_label, sample in self.samples.items():
+            print(f"[sample.{sample_label}]\n{sample}\n", file=output)
+        for assembly_label, assembly in self.assemblies.items():
+            print(f"[assemblies.{assembly_label}]\n{assembly}\n", file=output)
+        return output.getvalue().strip()
 
-    def check_required_keys(self, observed_keys, expected_keys):
-        missing_keys = set(expected_keys) - set(observed_keys)
-        if missing_keys:
-            key_str = ",".join(sorted(missing_keys))
-            message = f"Missing assembly configuration setting(s) '{key_str}'"
-            raise AssemblyConfigError(message)
-        self.check_valid_keys(observed_keys, expected_keys)
-
-    def check_valid_keys(self, observed_keys, expected_keys):
-        extra_keys = set(observed_keys) - set(expected_keys)
-        if extra_keys:
-            key_str = ",".join(sorted(extra_keys))
-            message = f"Found unsupported configuration key(s) '{key_str}'"
-            raise AssemblyConfigError(message)
-
-    def create_sample_objects(self):
-        samples = {}
-        for label, sample in self.config["samples"].items():
-            samples[label] = Sample(label, sample)
-        return samples
-
-    def create_assembly_objects(self):
-        assemblies = {}
-        for label, assembly in self.config["assemblies"].items():
-            assembly["samples"] = self.get_sample_objects(assembly["samples"])
-            assemblies[label] = Assembly(label, assembly, self.threads, self.bandage)
-        return assemblies
-
-    def get_sample_objects(self, samples):
-        return dict(((sample, self.samples[sample]) for sample in samples))
-
-    def get_target_files(self):
+    def get_target_files(self, workdir):
         target_files = []
-        for element in chain(self.samples.values(), self.assemblies.values()):
-            target_files += element.target_files
+        for sample_label, sample in self.samples.items():
+            for target_file in sample.get_target_files():
+                target_files.append(f"{workdir}/{sample_label}/{target_file}")
+        # for assembly_label, assembly in self.assemblies.items():
+        #     print(assembly.get_target_files())
         return target_files
+
+
+#     def check_sample_readtypes_match_assembly_mode(self):
+#         for sample in self.samples.values():
+#             if not self.mode_and_readtypes_are_compatible(sample):
+#                 message = f"No readtypes in '{sample.label}' match '{self.label}' assembly mode '{self.mode}'"
+#                 raise AssemblyConfigError(message)
+
+#     def get_target_files(self):
+#         target_files = []
+#         for element in chain(self.samples.values(), self.assemblies.values()):
+#             target_files += element.target_files
+#         return target_files

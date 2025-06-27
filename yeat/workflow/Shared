@@ -141,16 +141,16 @@ rule fastqc_single:
         """
 
 
-rule quast:
-    output:
-        report="analysis/{sample}/{readtype}/{label}/{assembler}/quast/report.html"
-    input:
-        contigs="analysis/{sample}/{readtype}/{label}/{assembler}/contigs.fasta"
-    params:
-        outdir="analysis/{sample}/{readtype}/{label}/{assembler}/quast"
-    log:
-        "analysis/{sample}/{readtype}/{label}/{assembler}/quast/quast.log"
-    shell:
-        """
-        quast.py {input.contigs} -o {params.outdir} > {log} 2>&1
-        """
+# rule quast:
+#     output:
+#         report="analysis/{sample}/{readtype}/{label}/{assembler}/quast/report.html"
+#     input:
+#         contigs="analysis/{sample}/{readtype}/{label}/{assembler}/contigs.fasta"
+#     params:
+#         outdir="analysis/{sample}/{readtype}/{label}/{assembler}/quast"
+#     log:
+#         "analysis/{sample}/{readtype}/{label}/{assembler}/quast/quast.log"
+#     shell:
+#         """
+#         quast.py {input.contigs} -o {params.outdir} > {log} 2>&1
+#         """

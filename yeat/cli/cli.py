@@ -71,10 +71,23 @@ def workflow_configuration(parser):
         metavar="DIR",
         type=str,
     )
+    workflow.add_argument(
+        "--copy_input",
+        action="store_true",
+        help="copy input Fastq files to the working directory to ensure complete data provenance; by default, input Fastq files are symbolically linked to the working directory",
+    )
 
 
 def preprocessing_and_qc_configuration(parser, just_yeat_it=False):
     illumina = parser.add_argument_group("Preprocessing and Quality Control Settings")
+    illumina.add_argument(
+        "-d",
+        "--downsample",
+        metavar="D",
+        type=int,
+        default=-1,
+        help="[illumina|ont|ont_ultra_long|pacbio] randomly downsample D reads from the input; set D=-1 to disable downsampling; by default D=-1",
+    )
     illumina.add_argument(
         "-s",
         "--seed",
@@ -84,51 +97,67 @@ def preprocessing_and_qc_configuration(parser, just_yeat_it=False):
         type=int,
     )
     illumina.add_argument(
-        "-l",
-        "--min-length",
-        default=100,
-        help="minimum required read length; by default L=100",
-        metavar="L",
-        type=int,
+        "--skip-filter",
+        action="store_true",
+        help="[illumina|ont|ont_ultra_long|pacbio] skip read quality filtering and trimming step",
     )
-    if just_yeat_it:
-        illumina.add_argument(
-            "-d",
-            "--downsample",
-            default=0,
-            help="randomly sample D reads from the input rather than assembling the full set; set D=0 to perform auto-downsampling to a desired level of coverage (see --coverage-depth); set D=-1 to disable downsampling; by default, D=0",
-            metavar="D",
-            type=int,
-        )
-        illumina.add_argument(
-            "-g",
-            "--genome-size",
-            default=0,
-            help="provide known genome size in base pairs (bp); by default, G=0",
-            metavar="G",
-            type=int,
-        )
-        illumina.add_argument(
-            "-c",
-            "--coverage-depth",
-            default=150,
-            help="target an average depth of coverage Cx when auto-downsampling; by default, C=150",
-            metavar="C",
-            type=int,
-        )
+    illumina.add_argument(
+        "--window-size",
+        type=int,
+        metavar="W",
+        default=6,
+        help="[illumina] window size in bp for quality trimming reads; by default W=6",
+    )
+    illumina.add_argument(
+        "--avg-qual",
+        type=int,
+        metavar="Q",
+        default=15,
+        help="[illumina] minimum average window score for quality trimming reads; by default Q=15",
+    )
+    illumina.add_argument(
+        "--min-length",
+        type=int,
+        metavar="L",
+        default=100,
+        help="[illumina|ont|ont_ultra_long|pacbio] minimum required read length; by default L=100",
+    )
+    illumina.add_argument(
+        "--quality",
+        type=int,
+        metavar="Q",
+        default=10,
+        help="[ont|ont_ultra_long|pacbio] minimum phred average quality score; by default Q=10",
+    )
+    # if just_yeat_it:
+    #     illumina.add_argument(
+    #         "-d",
+    #         "--downsample",
+    #         default=0,
+    #         help="randomly sample D reads from the input rather than assembling the full set; set D=0 to perform auto-downsampling to a desired level of coverage (see --coverage-depth); set D=-1 to disable downsampling; by default, D=0",
+    #         metavar="D",
+    #         type=int,
+    #     )
+    #     illumina.add_argument(
+    #         "-g",
+    #         "--genome-size",
+    #         default=0,
+    #         help="provide known genome size in base pairs (bp); by default, G=0",
+    #         metavar="G",
+    #         type=int,
+    #     )
+    #     illumina.add_argument(
+    #         "-c",
+    #         "--coverage-depth",
+    #         default=150,
+    #         help="target an average depth of coverage Cx when auto-downsampling; by default, C=150",
+    #         metavar="C",
+    #         type=int,
+    #     )
 
 
 def grid_configuration(parser):
     grid = parser.add_argument_group("Grid Configuration")
-    grid.add_argument(
-        "--grid",
-        const=True,
-        type=str.lower,
-        nargs="?",
-        help="process input in batches using parallel processing on a grid. By default, if `--grid` is "
-        "invoked with no following arguments, DRMAA will be used to configure jobs on the grid. However, "
-        "if the scheduler being used is SLURM, users must provide `slurm` as a following argument to `--grid`",
-    )
     grid.add_argument(
         "-g",
         "--grid-limit",
@@ -149,6 +178,15 @@ def grid_configuration(parser):
         ', e.g., " -q largemem -p -1000 " ("sbatch -p largemem --priority -1000 "); '
         'note that when overriding the defaults, the user must explicitly add the " -V " ("sbatch") and threads '
         "configuration if those are still desired",
+    )
+    grid.add_argument(
+        "--grid",
+        const=True,
+        type=str.lower,
+        nargs="?",
+        help="process input in batches using parallel processing on a grid. By default, if `--grid` is "
+        "invoked with no following arguments, DRMAA will be used to configure jobs on the grid. However, "
+        "if the scheduler being used is SLURM, users must provide `slurm` as a following argument to `--grid`",
     )
 
 

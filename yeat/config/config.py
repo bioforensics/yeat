@@ -37,7 +37,7 @@ class Config:
         target_files = []
         for sample_label, sample in self.samples.items():
             for target_file in sample.get_target_files():
-                target_files.append(f"{workdir}/{sample_label}/{target_file}")
+                target_files.append(f"analysis/{sample_label}/{target_file}")
         # for assembly_label, assembly in self.assemblies.items():
         #     print(assembly.get_target_files())
         return target_files

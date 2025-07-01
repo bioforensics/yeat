@@ -27,7 +27,6 @@ def run_workflow(args):
     snakemake_local(args, snakefile, config)
 
     # print(config)
-    assert 0
     # snakemake_local(args, snakefile, config)
     # config["data"] = get_config_data(config["config"])
     # config["bandage"] = check_bandage()

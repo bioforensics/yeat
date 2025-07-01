@@ -110,3 +110,10 @@ from pathlib import Path
 
 def get_slurm_logs_dir(wd):
     return Path(wd).resolve() / "slurm-logs/"
+
+
+def copy_input(input, output, do_copy):
+    if do_copy:
+        subprocess.run(["cp", input, output])
+    else:
+        subprocess.run(["ln", "-sf", input, output])

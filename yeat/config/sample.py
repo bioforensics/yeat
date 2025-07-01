@@ -16,8 +16,11 @@ from typing import Optional, Union, List
 class Sample:
     illumina: Optional[Union[List[str], str]] = None
     ont: Optional[str] = None
+    ont_ultra_long: Optional[str] = None  # update everything here <-------------------
     pacbio: Optional[str] = None
-    downsample: Optional[int] = -1
+    downsample: Optional[
+        int
+    ] = -1  # update these variables here based on CLI!!! if cli is filled out, override toml
     genome_size: Optional[int] = -1
     coverage_depth: Optional[int] = -1
     hybrid: bool = False
@@ -74,25 +77,32 @@ class Sample:
     def get_target_files(self):
         target_files = []
         if self.hybrid:
-            target_files.append("yeat/qc/downsample/R1.fastq.gz")
-            target_files.append("yeat/qc/downsample/R2.fastq.gz")
+            target_files.append("qc/illumina/downsample/R1.fastq.gz")
+            target_files.append("qc/illumina/downsample/R2.fastq.gz")
+            target_files.append("qc/illumina/fastqc/R1_fastqc.html")
+            target_files.append("qc/illumina/fastqc/R2_fastqc.html")
             if self.ont:
-                target_files.append("yeat/qc/downsample/read.fastq.gz")
+                target_files.append("qc/ont/downsample/read.fastq.gz")
             elif self.pacbio:
-                target_files.append("yeat/qc/downsample/read.fastq.gz")
+                target_files.append("qc/pacbio/downsample/read.fastq.gz")
             return target_files
         if self.illumina:
             if isinstance(self.illumina, list):
-                target_files.append("yeat/qc/downsample/R1.fastq.gz")
-                target_files.append("yeat/qc/downsample/R2.fastq.gz")
+                target_files.append("qc/illumina/downsample/R1.fastq.gz")
+                target_files.append("qc/illumina/downsample/R2.fastq.gz")
+                target_files.append("qc/illumina/fastqc/R1_fastqc.html")
+                target_files.append("qc/illumina/fastqc/R2_fastqc.html")
             else:
-                target_files.append("yeat/qc/downsample/read.fastq.gz")
+                target_files.append("qc/illumina/downsample/read.fastq.gz")
+                target_files.append("qc/illumina/fastqc/read_fastqc.html")
             return target_files
         if self.ont:
-            target_files.append("yeat/qc/downsample/read.fastq.gz")
+            target_files.append("qc/ont/downsample/read.fastq.gz")
+            target_files.append("qc/ont/fastqc/read_fastqc.html")
             return target_files
         if self.pacbio:
-            target_files.append("yeat/qc/downsample/read.fastq.gz")
+            target_files.append("qc/pacbio/downsample/read.fastq.gz")
+            target_files.append("qc/pacbio/fastqc/read_fastqc.html")
             return target_files
 
     # def get_sample_type(self):

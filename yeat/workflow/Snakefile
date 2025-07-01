@@ -11,15 +11,41 @@ from yeat.workflow.aux import create_config
 
 
 cfg = create_config(config["config"])
-print(cfg.get_target_files(config["workdir"]))
-# assert 0
+config["config"] = cfg
+
+
+rule all:
+    input:
+        cfg.get_target_files(config["workdir"])
+
+
+module qc_paired_workflow:
+    snakefile: "qc/Paired.smk"
+    config: config
+
+use rule * from qc_paired_workflow as qc_paired_*
+
+
+module qc_single_workflow:
+    snakefile: "qc/Single.smk"
+    config: config
+
+use rule * from qc_single_workflow as qc_single_*
+
+
+module qc_long_workflow:
+    snakefile: "qc/Long.smk"
+    config: config
+
+use rule * from qc_long_workflow as qc_long_*
 
 
 
 
-# rule all:
-#     input:
-#         cfg.target_files
+
+
+
+
 
 
 # module shared_workflow:

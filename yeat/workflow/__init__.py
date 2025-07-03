@@ -21,7 +21,7 @@ import toml
 
 
 def run_workflow(args):
-    snakefile = files("yeat") / "workflow" / "Snakefile"
+    snakefile = files("yeat") / "workflow" / "Snakefile.smk"
     config = vars(args)
     config["config"] = get_config_data(config["config"])
     snakemake_local(args, snakefile, config)

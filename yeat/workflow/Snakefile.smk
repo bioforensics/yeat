@@ -13,6 +13,11 @@ from yeat.workflow.aux import create_config
 cfg = create_config(config["config"])
 config["config"] = cfg
 
+print(cfg)
+
+print(cfg.get_target_files(config["workdir"]))
+assert 0
+
 
 rule all:
     input:
@@ -42,7 +47,11 @@ use rule * from qc_long_workflow as qc_long_*
 
 
 
+module paired_workflow:
+    snakefile: "Paired.smk"
+    config: config
 
+use rule * from paired_workflow as paired_*
 
 
 

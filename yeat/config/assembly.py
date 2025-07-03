@@ -65,7 +65,7 @@ mode = "{self.mode}"'''
         #     raise "Canu requires at least 4 avaliable cores; increase '-t' or '--threads' to 4 or more"
 
     def get_target_files(self):
-        return "hello"
+        return f"yeat/{self.algorithm}/contigs.fasta"
 
 
 #     def get_target_files(self):

@@ -9,19 +9,20 @@
 
 rule spades:
     output:
-        contigs="analysis/{sample}/paired/{label}/spades/contigs.fasta"
+        contigs="analysis/{sample}/yeat/spades/contigs.fasta"
     input:
-        read1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
-        read2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz"
+        r1="analysis/{sample}/qc/illumina/downsample/R1.fastq.gz",
+        r2="analysis/{sample}/qc/illumina/downsample/R2.fastq.gz"
     threads: 128
     params:
-        outdir="analysis/{sample}/paired/{label}/spades",
-        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
+        outdir="analysis/{sample}/yeat/spades",
+        # extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
+        extra_args=""
     log:
-        "analysis/{sample}/paired/{label}/spades/spades-stdout-err.log"
+        "analysis/{sample}/yeat/spades/spades-stdout-err.log"
     shell:
         """
-        spades.py -1 {input.read1} -2 {input.read2} -t {threads} -o {params.outdir} {params.extra_args} > {log} 2>&1
+        spades.py -1 {input.r1} -2 {input.r2} -t {threads} -o {params.outdir} {params.extra_args} > {log} 2>&1
         """
 
 

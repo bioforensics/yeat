@@ -22,7 +22,7 @@ class Config:
     def __post_init__(self):
         # print("in constructor")
 
-        # self.target_files = []
+        self.target_files = []
         pass
 
     def __str__(self):
@@ -33,13 +33,27 @@ class Config:
             print(f"[assemblies.{assembly_label}]\n{assembly}\n", file=output)
         return output.getvalue().strip()
 
+    combos = {"paired": [""]}
+
     def get_target_files(self, workdir):
         target_files = []
         for sample_label, sample in self.samples.items():
-            for target_file in sample.get_target_files():
-                target_files.append(f"analysis/{sample_label}/{target_file}")
-        # for assembly_label, assembly in self.assemblies.items():
-        #     print(assembly.get_target_files())
+            temp = f"analysis/{sample_label}"
+            for item in sample.get_target_files():
+                target_files.append(f"{temp}/{item}")
+
+            for assembly_label, assembly in self.assemblies.items():
+                print(sample.hybrid)
+                print(assembly_label, assembly.mode)
+
+            # print(sample.get_target_files())
+            # for target_file in sample.get_target_files():
+            #     target_files.append(f"{temp}/{target_file}")
+            # for assembly_label, assembly in self.assemblies.items():
+
+            #     print(assembly.algorithm)
+            # print(assembly.get_target_files())
+
         return target_files
 
 

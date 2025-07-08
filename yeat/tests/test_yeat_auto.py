@@ -10,7 +10,7 @@
 import pytest
 import re
 from yeat.cli.yeat_auto import get_parser, main
-from yeat.config.auto_pop import AutoPopError
+from yeat.cli.auto_pop import AutoPopError
 from yeat.tests import data_file
 
 pytestmark = pytest.mark.short

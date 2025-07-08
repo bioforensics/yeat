@@ -14,8 +14,8 @@ rule unicycler:
     output:
         contigs="analysis/{sample}/hybrid/{label}/unicycler/contigs.fasta"
     input:
-        read1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
-        read2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz",
+        r1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
+        r2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz",
         longread=lambda wildcards: get_longread_file(wildcards.sample, config["samples"][wildcards.sample].long_readtype)
     threads: 128
     params:

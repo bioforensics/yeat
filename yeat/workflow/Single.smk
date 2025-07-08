@@ -7,154 +7,92 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from shutil import copyfile
-from yeat.workflow.aux import *
-
-
-rule fastp:
-    output:
-        filtered_reads="seq/fastp/{sample}/single/combined-reads.fq.gz",
+rule spades:
     input:
-        raw_reads="seq/input/{sample}/single/combined-reads.fq.gz"
+        read="analysis/{sample}/qc/illumina_single/downsample/read.fastq.gz"
+    output:
+        contigs="analysis/{sample}/yeat/spades/{label}/contigs.fasta"
+    threads: 128
     params:
-        length_required=config["length_required"],
-        html_report="seq/fastp/{sample}/single/fastp.html",
-        json_report="seq/fastp/{sample}/single/fastp.json",
-        txt_report="seq/fastp/{sample}/single/report.txt"
+        outdir="analysis/{sample}/yeat/spades/{label}",
+        extra_args=lambda wildcards: config["config"].assemblies[wildcards.label].extra_args
     shell:
         """
-        fastp -i {input.raw_reads} -o {output.filtered_reads} \
-            -l {params.length_required} \
-            --html {params.html_report} --json {params.json_report} \
-            2> {params.txt_report}
+        spades.py -s {input.read} -t {threads} -o {params.outdir} {params.extra_args}
         """
 
 
-rule mash:
-    output:
-        sketch="seq/mash/{sample}/single/combined-reads.fq.gz.msh",
-        mash_report="seq/mash/{sample}/single/combined-reads.report.tsv"
+rule megahit:
     input:
-        reads="seq/fastp/{sample}/single/combined-reads.fq.gz"
+        read="analysis/{sample}/qc/illumina_single/downsample/read.fastq.gz"
+    output:
+        contigs="analysis/{sample}/yeat/megahit/{label}/contigs.fasta"
+    threads: 128
+    params:
+        temp_dir="analysis/{sample}/yeat/megahit-temp/{label}",
+        actual_dir="analysis/{sample}/yeat/megahit/{label}",
+        extra_args=lambda wildcards: config["config"].assemblies[wildcards.label].extra_args
     shell:
         """
-        mash sketch {input.reads} -o {output.sketch}
-        mash info -t {output.sketch} > {output.mash_report}
+        megahit -r {input.read} -t {threads} -o {params.temp_dir} {params.extra_args}
+        mv {params.temp_dir}/* {params.actual_dir}
+        rm -r {params.temp_dir}
+        ln -s final.contigs.fa {output.contigs}
         """
 
 
-rule downsample:
-    output:
-        sub="seq/downsample/{sample}/single/combined-reads.fq.gz"
+rule unicycler:
     input:
-        reads="seq/fastp/{sample}/single/combined-reads.fq.gz",
-        mash_report="seq/mash/{sample}/single/combined-reads.report.tsv"
+        read="analysis/{sample}/qc/illumina_single/downsample/read.fastq.gz"
+    output:
+        contigs="analysis/{sample}/yeat/unicycler/{label}/contigs.fasta"
+    threads: 128
     params:
-        coverage_depth=lambda wildcards: config["samples"][wildcards.sample].coverage_depth,
-        downsample=lambda wildcards: config["samples"][wildcards.sample].downsample,
-        fastp_report="seq/fastp/{sample}/single/fastp.json",
-        genome_size=lambda wildcards: config["samples"][wildcards.sample].genome_size,
-        seed=config["seed"],
-        outdir="seq/downsample/{sample}/single"
-    run:
-        if params.downsample == -1:
-            copyfile(input.reads, output.sub)
-            return
-        genome_size = get_genome_size(params.genome_size, input.mash_report)
-        avg_read_length = get_avg_read_length(params.fastp_report)
-        down = get_down(params.downsample, genome_size, params.coverage_depth, avg_read_length)
-        seed = get_seed(params.seed)
-        print_downsample_values(genome_size, avg_read_length, params.coverage_depth, down, seed)
-        shell("seqtk sample -s {seed} {input.reads} {down} > {params.outdir}/combined-reads.fq")
-        shell("gzip -f {params.outdir}/combined-reads.fq")
+        outdir="analysis/{sample}/single/{label}/unicycler",
+        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
+    shell:
+        """
+        unicycler -s {input.read} -t {threads} -o {params.outdir} {params.extra_args}
+        ln -s assembly.fasta {output.contigs}
+        """
 
 
-# rule spades:
-#     output:
-#         contigs="analysis/{sample}/single/{label}/spades/contigs.fasta"
-#     input:
-#         reads="seq/downsample/{sample}/single/combined-reads.fq.gz"
-#     threads: 128
-#     params:
-#         outdir="analysis/{sample}/single/{label}/spades",
-#         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
-#     shell:
-#         """
-#         spades.py -s {input.reads} -t {threads} -o {params.outdir} {params.extra_args}
-#         """
+rule penguin:
+    input:
+        read="analysis/{sample}/qc/illumina_single/downsample/read.fastq.gz"
+    output:
+        contigs="analysis/{sample}/yeat/penguin/{label}/contigs.fasta"
+    threads: 128
+    params:
+        outdir="analysis/{sample}/yeat/penguin/{label}",
+        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
+    shell:
+        """
+        penguin guided_nuclassemble {input.read} {params.outdir}/unpolished_contigs.fasta {params.outdir} --threads {threads} {params.extra_args}
+        bowtie2-build {params.outdir}/unpolished_contigs.fasta {params.outdir}/unpolished_contigs.fasta
+        bowtie2 -p {threads} -x {params.outdir}/unpolished_contigs.fasta -U {input.read} 2> {params.outdir}/unpolished_contigs.bowtie.log | samtools view -b -@ {threads} | samtools sort -@ {threads} -o {params.outdir}/unpolished_contigs.sorted.bam
+        samtools index {params.outdir}/unpolished_contigs.sorted.bam
+        pilon --genome {params.outdir}/unpolished_contigs.fasta --bam {params.outdir}/unpolished_contigs.sorted.bam --output {params.outdir}/contigs
+        """
 
 
-# rule megahit:
-#     output:
-#         contigs="analysis/{sample}/single/{label}/megahit/contigs.fasta"
-#     input:
-#         reads="seq/downsample/{sample}/single/combined-reads.fq.gz"
-#     threads: 128
-#     params:
-#         temp_dir="analysis/{sample}/single/{label}/megahit-temp",
-#         actual_dir="analysis/{sample}/single/{label}/megahit",
-#         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
-#     shell:
-#         """
-#         megahit -r {input.reads} -t {threads} -o {params.temp_dir} {params.extra_args}
-#         mv {params.temp_dir}/* {params.actual_dir}
-#         rm -r {params.temp_dir}
-#         ln -s final.contigs.fa {output.contigs}
-#         """
-
-
-# rule unicycler:
-#     output:
-#         contigs="analysis/{sample}/single/{label}/unicycler/contigs.fasta"
-#     input:
-#         reads="seq/downsample/{sample}/single/combined-reads.fq.gz"
-#     threads: 128
-#     params:
-#         outdir="analysis/{sample}/single/{label}/unicycler",
-#         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
-#     shell:
-#         """
-#         unicycler -s {input.reads} -t {threads} -o {params.outdir} {params.extra_args}
-#         ln -s assembly.fasta {output.contigs}
-#         """
-
-
-# rule penguin:
-#     output:
-#         contigs="analysis/{sample}/single/{label}/penguin/contigs.fasta"
-#     input:
-#         reads="seq/downsample/{sample}/single/combined-reads.fq.gz"
-#     threads: 128
-#     params:
-#         outdir="analysis/{sample}/single/{label}/penguin",
-#         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
-#     shell:
-#         """
-#         penguin guided_nuclassemble {input.reads} {params.outdir}/unpolished_contigs.fasta {params.outdir} --threads {threads} {params.extra_args}
-#         bowtie2-build {params.outdir}/unpolished_contigs.fasta {params.outdir}/unpolished_contigs.fasta
-#         bowtie2 -p {threads} -x {params.outdir}/unpolished_contigs.fasta -U {input.reads} 2> {params.outdir}/unpolished_contigs.bowtie.log | samtools view -b -@ {threads} | samtools sort -@ {threads} -o {params.outdir}/unpolished_contigs.sorted.bam
-#         samtools index {params.outdir}/unpolished_contigs.sorted.bam
-#         pilon --genome {params.outdir}/unpolished_contigs.fasta --bam {params.outdir}/unpolished_contigs.sorted.bam --output {params.outdir}/contigs
-#         """
-
-
-# rule velvet:
-#     output:
-#         contigs="analysis/{sample}/single/{label}/velvet/contigs.fasta"
-#     input:
-#         reads="seq/downsample/{sample}/single/combined-reads.fq.gz"
-#     conda:
-#         "yeat-velvet"
-#     threads: 128
-#     params:
-#         temp_dir="analysis/{sample}/single/{label}/velvet-temp",
-#         actual_dir="analysis/{sample}/single/{label}/velvet",
-#         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args,
-#         reads=lambda wildcards, input: f"'-fastq.gz {input.reads}'",
-#     shell:
-#         """
-#         VelvetOptimiser.pl -f {params.reads} -t {threads} -p {params.actual_dir}/auto -d {params.temp_dir} {params.extra_args}
-#         mv {params.temp_dir}/* {params.actual_dir}
-#         rm -r {params.temp_dir}
-#         ln -s contigs.fa {output.contigs}
-#         """
+rule velvet:
+    input:
+        read="analysis/{sample}/qc/illumina_single/downsample/read.fastq.gz"
+    output:
+        contigs="analysis/{sample}/yeat/velvet/{label}/contigs.fasta"
+    conda:
+        "yeat-velvet"
+    threads: 128
+    params:
+        temp_dir="analysis/{sample}/yeat/velvet-temp/single/{label}",
+        actual_dir="analysis/{sample}/yeat/velvet/{label}",
+        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args,
+        reads=lambda wildcards, input: f"'-fastq.gz {input.reads}'",
+    shell:
+        """
+        VelvetOptimiser.pl -f {params.reads} -t {threads} -p {params.actual_dir}/auto -d {params.temp_dir} {params.extra_args}
+        mv {params.temp_dir}/* {params.actual_dir}
+        rm -r {params.temp_dir}
+        ln -s contigs.fa {output.contigs}
+        """

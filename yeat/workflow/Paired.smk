@@ -8,18 +8,17 @@
 # -------------------------------------------------------------------------------------------------
 
 rule spades:
-    output:
-        contigs="analysis/{sample}/yeat/spades/contigs.fasta"
     input:
-        r1="analysis/{sample}/qc/illumina/downsample/R1.fastq.gz",
-        r2="analysis/{sample}/qc/illumina/downsample/R2.fastq.gz"
+        r1="analysis/{sample}/qc/illumina_paired/downsample/R1.fastq.gz",
+        r2="analysis/{sample}/qc/illumina_paired/downsample/R2.fastq.gz"
+    output:
+        contigs="analysis/{sample}/yeat/spades/{label}/contigs.fasta"
     threads: 128
     params:
-        outdir="analysis/{sample}/yeat/spades",
-        # extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
-        extra_args=""
+        outdir="analysis/{sample}/yeat/spades/{label}",
+        extra_args=lambda wildcards: config["config"].assemblies[wildcards.label].extra_args
     log:
-        "analysis/{sample}/yeat/spades/spades-stdout-err.log"
+        "analysis/{sample}/yeat/spades/{label}/spades-stdout-err.log"
     shell:
         """
         spades.py -1 {input.r1} -2 {input.r2} -t {threads} -o {params.outdir} {params.extra_args} > {log} 2>&1
@@ -27,21 +26,21 @@ rule spades:
 
 
 rule megahit:
-    output:
-        contigs="analysis/{sample}/paired/{label}/megahit/contigs.fasta"
     input:
-        read1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
-        read2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz"
+        r1="analysis/{sample}/qc/illumina_paired/downsample/R1.fastq.gz",
+        r2="analysis/{sample}/qc/illumina_paired/downsample/R2.fastq.gz"
+    output:
+        contigs="analysis/{sample}/yeat/megahit/{label}/contigs.fasta"
     threads: 128
     params:
-        temp_dir="analysis/{sample}/paired/{label}/megahit-temp",
-        actual_dir="analysis/{sample}/paired/{label}/megahit",
-        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
+        temp_dir="analysis/{sample}/yeat/megahit-temp/{label}",
+        actual_dir="analysis/{sample}/yeat/megahit/{label}",
+        extra_args=lambda wildcards: config["config"].assemblies[wildcards.label].extra_args
     log:
-        "analysis/{sample}/paired/{label}/megahit/megahit.log"
+        "analysis/{sample}/yeat/megahit/{label}/megahit.log"
     shell:
         """
-        megahit -1 {input.read1} -2 {input.read2} -t {threads} -o {params.temp_dir} {params.extra_args} > {log} 2>&1
+        megahit -1 {input.r} -2 {input.r2} -t {threads} -o {params.temp_dir} {params.extra_args} > {log} 2>&1
         mv {params.temp_dir}/* {params.actual_dir}
         rm -r {params.temp_dir}
         ln -s final.contigs.fa {output.contigs}
@@ -49,35 +48,35 @@ rule megahit:
 
 
 rule unicycler:
-    output:
-        contigs="analysis/{sample}/paired/{label}/unicycler/contigs.fasta"
     input:
-        read1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
-        read2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz"
+        r1="analysis/{sample}/qc/illumina_paired/downsample/R1.fastq.gz",
+        r2="analysis/{sample}/qc/illumina_paired/downsample/R2.fastq.gz"
+    output:
+        contigs="analysis/{sample}/yeat/unicyler/{label}/contigs.fasta"
     threads: 128
     params:
-        outdir="analysis/{sample}/paired/{label}/unicycler",
-        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
+        outdir="analysis/{sample}/yeat/unicylcer/{label}",
+        extra_args=lambda wildcards: config["config"].assemblies[wildcards.label].extra_args
     shell:
         """
-        unicycler -1 {input.read1} -2 {input.read2} -t {threads} -o {params.outdir} {params.extra_args}
+        unicycler -1 {input.r1} -2 {input.r2} -t {threads} -o {params.outdir} {params.extra_args}
         ln -s assembly.fasta {output.contigs}
         """
 
 
 rule penguin:
-    output:
-        contigs="analysis/{sample}/paired/{label}/penguin/contigs.fasta"
     input:
-        read1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
-        read2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz"
+        r1="analysis/{sample}/qc/illumina_paired/downsample/R1.fastq.gz",
+        r2="analysis/{sample}/qc/illumina_paired/downsample/R2.fastq.gz"
+    output:
+        contigs="analysis/{sample}/yeat/penguin/{label}/contigs.fasta"
     threads: 128
     params:
-        outdir="analysis/{sample}/paired/{label}/penguin",
-        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
+        outdir="analysis/{sample}/yeat/penguin/{label}",
+        extra_args=lambda wildcards: config["config"].assemblies[wildcards.label].extra_args
     shell:
         """
-        penguin guided_nuclassemble {input.read1} {input.read2} {params.outdir}/unpolished_contigs.fasta {params.outdir} --threads {threads} {params.extra_args}
+        penguin guided_nuclassemble {input.r1} {input.r2} {params.outdir}/unpolished_contigs.fasta {params.outdir} --threads {threads} {params.extra_args}
         bowtie2-build {params.outdir}/unpolished_contigs.fasta {params.outdir}/unpolished_contigs.fasta
         bowtie2 -p {threads} -x {params.outdir}/unpolished_contigs.fasta -1 {input.read1} -2 {input.read2} 2> {params.outdir}/unpolished_contigs.bowtie.log | samtools view -b -@ {threads} | samtools sort -@ {threads} -o {params.outdir}/unpolished_contigs.sorted.bam
         samtools index {params.outdir}/unpolished_contigs.sorted.bam
@@ -86,19 +85,19 @@ rule penguin:
 
 
 rule velvet:
-    output:
-        contigs="analysis/{sample}/paired/{label}/velvet/contigs.fasta"
     input:
-        read1="seq/downsample/{sample}/paired/{sample}.R1.fq.gz",
-        read2="seq/downsample/{sample}/paired/{sample}.R2.fq.gz"
+        r1="analysis/{sample}/qc/illumina_paired/downsample/R1.fastq.gz",
+        r2="analysis/{sample}/qc/illumina_paired/downsample/R2.fastq.gz"
+    output:
+        contigs="analysis/{sample}/yeat/velvet/{label}/contigs.fasta"
     conda:
         "yeat-velvet"
     threads: 128
     params:
-        temp_dir="analysis/{sample}/paired/{label}/velvet-temp",
-        actual_dir="analysis/{sample}/paired/{label}/velvet",
-        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args,
-        reads=lambda wildcards, input: f"'-fastq.gz -shortPaired {input.read1} -shortPaired2 {input.read2}'",
+        temp_dir="analysis/{sample}/yeat/velvet-temp/{label}",
+        actual_dir="analysis/{sample}/yeat/velvet/{label}",
+        extra_args=lambda wildcards: config["config"].assemblies[wildcards.label].extra_args,
+        reads=lambda wildcards, input: f"'-fastq.gz -shortPaired {input.r1} -shortPaired2 {input.r2}'",
     shell:
         """
         VelvetOptimiser.pl -f {params.reads} -t {threads} -p {params.actual_dir}/auto -d {params.temp_dir} {params.extra_args}

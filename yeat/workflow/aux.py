@@ -14,18 +14,19 @@ from random import randint
 import re
 import shutil
 import subprocess
-from yeat.config import PACBIO_READS, OXFORD_READS
+
+# from yeat.config import PACBIO_READS, OXFORD_READS
 
 
-from yeat.config.assembly import Assembly
-from yeat.config.config import Config
-from yeat.config.sample import Sample
+# from yeat.assemblers.assembler import Assembly
+# from yeat.config.config import Config
+# from yeat.config.sample import Sample
 
 
-def create_config(config):
-    samples = {key: Sample(**value) for key, value in config.get("samples", {}).items()}
-    assemblies = {key: Assembly(**value) for key, value in config.get("assemblies", {}).items()}
-    return Config(samples, assemblies)
+# def create_config(config):
+#     samples = {key: Sample(**value) for key, value in config.get("samples", {}).items()}
+#     assemblies = {key: Assembly(**value) for key, value in config.get("assemblies", {}).items()}
+#     return Config(samples, assemblies)
 
 
 def get_and_filter_contig_files(sample, readtype, label):

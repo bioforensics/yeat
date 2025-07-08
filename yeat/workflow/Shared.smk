@@ -7,12 +7,6 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from shutil import copyfile
-from yeat.workflow.aux import combine, get_genome_size, get_avg_read_length, get_down, get_seed, print_downsample_values
-
-
-
-
 rule quast:
     output:
         report="analysis/{sample}/{readtype}/{label}/{assembler}/quast/report.html"

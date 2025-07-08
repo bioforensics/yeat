@@ -14,7 +14,6 @@ from snakemake import snakemake
 import subprocess
 import warnings
 from .aux import get_slurm_logs_dir
-from yeat.config import READ_TYPES
 
 
 import toml

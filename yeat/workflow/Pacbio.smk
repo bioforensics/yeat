@@ -7,50 +7,62 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from yeat.workflow.aux import get_canu_readtype_flag
+rule unicycler:
+    input:
+        read="analysis/{sample}/qc/hifi/downsample/read.fastq.gz"
+    output:
+        contigs="analysis/{sample}/yeat/unicycler/{label}/contigs.fasta"
+    threads: 128
+    params:
+        outdir="analysis/{sample}/yeat/unicycler/{label}",
+        extra_args=lambda wildcards: config["config"].assemblies[wildcards.label].extra_args
+    shell:
+        """
+        unicycler -l {input.reads} -t {threads} -o {params.outdir} {params.extra_args}
+        ln -s assembly.fasta {output.contigs}
+        """
 
 
 rule flye:
-    output:
-        contigs="analysis/{sample}/{readtype,pacbio-raw|pacbio-corr|pacbio-hifi}/{label}/flye/contigs.fasta"
     input:
-        reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
+        read="analysis/{sample}/qc/hifi/downsample/read.fastq.gz"
+    output:
+        contigs="analysis/{sample}/yeat/flye/{label}/contigs.fasta"
     threads: 128
     params:
         outdir="analysis/{sample}/{readtype}/{label}/flye",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
-        flye --{wildcards.readtype} {input.reads} -t {threads} -o {params.outdir} {params.extra_args}
+        flye --pacbio-hifi {input.reads} -t {threads} -o {params.outdir} {params.extra_args}
         ln -s assembly.fasta {output.contigs}
         """
 
 
 rule canu:
-    output:
-        contigs="analysis/{sample}/{readtype,pacbio-raw|pacbio-corr|pacbio-hifi}/{label}/canu/contigs.fasta"
     input:
-        reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
+        read="analysis/{sample}/qc/hifi/downsample/read.fastq.gz"
+    output:
+        contigs="analysis/{sample}/yeat/canu/{label}/contigs.fasta"
     threads: 128
     params:
-        readtype_flag=lambda wildcards: get_canu_readtype_flag(wildcards.readtype),
         outdir="analysis/{sample}/{readtype}/{label}/canu",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
-        canu {params.readtype_flag} {input.reads} maxThreads={threads} -p {wildcards.sample} -d {params.outdir} {params.extra_args} useGrid=false
+        canu -pacbio-hifi {input.reads} maxThreads={threads} -p {wildcards.sample} -d {params.outdir} {params.extra_args} useGrid=false
         ln -s {wildcards.sample}.contigs.fasta {output.contigs}
         """
 
 
 rule hifiasm:
-    output:
-        contigs="analysis/{sample}/pacbio-hifi/{label}/hifiasm/contigs.fasta"
     input:
-        reads="seq/input/{sample}/pacbio-hifi/combined-reads.fq.gz"
+        read="analysis/{sample}/qc/hifi/downsample/read.fastq.gz"
+    output:
+        contigs="analysis/{sample}/hifi/{label}/hifiasm/contigs.fasta"
     threads: 128
     params:
-        prefix="analysis/{sample}/pacbio-hifi/{label}/hifiasm/{sample}",
+        prefix="analysis/{sample}/hifi/{label}/hifiasm/{sample}",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
@@ -61,13 +73,13 @@ rule hifiasm:
 
 
 rule hifiasm_meta:
-    output:
-        contigs="analysis/{sample}/pacbio-hifi/{label}/hifiasm_meta/contigs.fasta"
     input:
-        reads="seq/input/{sample}/pacbio-hifi/combined-reads.fq.gz"
+        read="analysis/{sample}/qc/hifi/downsample/read.fastq.gz"
+    output:
+        contigs="analysis/{sample}/hifi/{label}/hifiasm_meta/contigs.fasta"
     threads: 128
     params:
-        prefix="analysis/{sample}/pacbio-hifi/{label}/hifiasm_meta/{sample}",
+        prefix="analysis/{sample}/hifi/{label}/hifiasm_meta/{sample}",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """
@@ -77,30 +89,14 @@ rule hifiasm_meta:
         """
 
 
-rule unicycler:
-    output:
-        contigs="analysis/{sample}/{readtype,pacbio-raw|pacbio-corr|pacbio-hifi}/{label}/unicycler/contigs.fasta"
-    input:
-        reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
-    threads: 128
-    params:
-        outdir="analysis/{sample}/{readtype}/{label}/unicycler",
-        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
-    shell:
-        """
-        unicycler -l {input.reads} -t {threads} -o {params.outdir} {params.extra_args}
-        ln -s assembly.fasta {output.contigs}
-        """
-
-
 rule metamdbg:
-    output:
-        contigs="analysis/{sample}/pacbio-hifi/{label}/metamdbg/contigs.fasta"
     input:
-        reads="seq/input/{sample}/pacbio-hifi/combined-reads.fq.gz"
+        read="analysis/{sample}/hifi/downsample/read.fastq.gz"
+    output:
+        contigs="analysis/{sample}/hifi/{label}/metamdbg/contigs.fasta"
     threads: 128
     params:
-        outdir="analysis/{sample}/pacbio-hifi/{label}/metamdbg",
+        outdir="analysis/{sample}/hifi/{label}/metamdbg",
         extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
     shell:
         """

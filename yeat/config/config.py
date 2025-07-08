@@ -7,64 +7,74 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from .assembly import Assembly
+from .assemblers import select
 from .sample import Sample
-from dataclasses import dataclass
-from io import StringIO
+from pydantic import BaseModel
 from typing import Dict
 
 
-@dataclass
-class Config:
-    samples: Dict[str, Sample]
-    assemblies: Dict[str, Assembly]
+class AssemblyConfiguration(BaseModel):
+    samples: Dict
+    assemblers: Dict
 
-    def __post_init__(self):
-        # print("in constructor")
+    @classmethod
+    def parse_toml(cls, config_data):
+        cls._check_required_input_data(config_data)
+        samples = cls._parse_samples(config_data)
+        assemblers = cls._parse_assemblers(config_data)
+        config = cls(samples=samples, assemblers=assemblers)
+        return config
 
-        self.target_files = []
-        pass
+    @staticmethod
+    def _check_required_input_data(config_data):
+        if "samples" not in config_data:
+            raise ConfigurationError("YEAT configuration must include [samples]")
+        if "assemblers" not in config_data:
+            raise ConfigurationError("YEAT configuration must include [assemblers]")
+        for assembler_data in config_data["assemblers"].values():
+            if "algorithm" not in assembler_data:
+                raise ConfigurationError("algorithm missing from [assemblers] configuration")
 
-    def __str__(self):
-        output = StringIO()
-        for sample_label, sample in self.samples.items():
-            print(f"[sample.{sample_label}]\n{sample}\n", file=output)
-        for assembly_label, assembly in self.assemblies.items():
-            print(f"[assemblies.{assembly_label}]\n{assembly}\n", file=output)
-        return output.getvalue().strip()
+    @staticmethod
+    def _parse_samples(config_data):
+        samples = dict()
+        for label, sample_data in config_data["samples"].items():
+            samples[label] = Sample(label=label, data=sample_data)
+        return samples
 
-    combos = {"paired": [""]}
+    @staticmethod
+    def _parse_assemblers(config_data):
+        assemblers = dict()
+        for label, assembler_data in config_data["assemblers"].items():
+            assembler_class = select(assembler_data["algorithm"])
+            assembler = assembler_class.parse_data(label, assembler_data)
+            assemblers[label] = assembler
+        return assemblers
 
-    def get_target_files(self, workdir):
-        target_files = []
-        for sample_label, sample in self.samples.items():
-            temp = f"analysis/{sample_label}"
-            for item in sample.get_target_files():
-                target_files.append(f"{temp}/{item}")
+    @property
+    def assembly_targets(self):
+        targets = list()
+        # for sample in self.samples.values():
+        #     targets.extend(sample.target_files)
+        for assembler in self.assemblers.values():
+            targets.extend(assembler.target_files)
+        return targets
 
-            for assembly_label, assembly in self.assemblies.items():
-                print(sample.hybrid)
-                print(assembly_label, assembly.mode)
+    # def input_files(self, sample, seqtypes=None):
+    #     if sample not in self.samples:
+    #         raise ConfigurationError(f"sample {sample} not found")
+    #     paths = self.samples[sample].input_paths(seqtypes)
+    #     return list(paths)
 
-            # print(sample.get_target_files())
-            # for target_file in sample.get_target_files():
-            #     target_files.append(f"{temp}/{target_file}")
-            # for assembly_label, assembly in self.assemblies.items():
+    # def spades_input(self, sample):
+    #     return self.samples[sample].fastp_targets
 
-            #     print(assembly.algorithm)
-            # print(assembly.get_target_files())
+    # def unicycler_input(self, sample):
+    #     return self.samples[sample].hybrid_inputs
 
-        return target_files
+    # def hifiasm_meta_input(self, sample):
+    #     return self.samples[sample].input_paths(seqtypes={"pacbio_hifi"})
 
 
-#     def check_sample_readtypes_match_assembly_mode(self):
-#         for sample in self.samples.values():
-#             if not self.mode_and_readtypes_are_compatible(sample):
-#                 message = f"No readtypes in '{sample.label}' match '{self.label}' assembly mode '{self.mode}'"
-#                 raise AssemblyConfigError(message)
-
-#     def get_target_files(self):
-#         target_files = []
-#         for element in chain(self.samples.values(), self.assemblies.values()):
-#             target_files += element.target_files
-#         return target_files
+class ConfigurationError(ValueError):
+    pass

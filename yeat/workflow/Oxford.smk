@@ -7,100 +7,74 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from yeat.workflow.aux import get_canu_readtype_flag
-
-
-rule nanofilt:
-    output:
-        filtered_reads="seq/nanofilt/{sample}/{readtype}/highQuality-reads.fq.gz"
+rule unicycler:
     input:
-        raw_reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
+        read="analysis/{sample}/qc/{platform}/downsample/read.fastq.gz"
+    output:
+        contigs="analysis/{sample}/yeat/unicycler/{label}/contigs.fasta"
     threads: 128
+    wildcard_constraints:
+        platform="simplex|duplex|ultra_long"
     params:
-        filter="-q 10"
+        outdir="analysis/{sample}/yeat/unicycler/{label}",
+        extra_args=lambda wildcards: config["config"].assemblies[wildcards.label].extra_args
     shell:
         """
-        gunzip -c {input.raw_reads} | NanoFilt {params.filter} | gzip > {output.filtered_reads}
-        """
-
-
-rule nanoplot:
-    output:
-        raw_report="seq/nanoplot/{sample}/{readtype}/raw_LengthvsQualityScatterPlot_dot.pdf",
-        filtered_report="seq/nanoplot/{sample}/{readtype}/filtered_LengthvsQualityScatterPlot_dot.pdf"
-    input:
-        raw_reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz",
-        filtered_reads="seq/nanofilt/{sample}/{readtype}/highQuality-reads.fq.gz"
-    threads: 128
-    params:
-        outdir="seq/nanoplot/{sample}/{readtype}"
-    shell:
-        """
-        NanoPlot -t {threads} --fastq {input.raw_reads} -o {params.outdir} --N50 -p raw_ --title "{wildcards.sample} Raw" -f pdf --plots dot
-        NanoPlot -t {threads} --fastq {input.filtered_reads} -o {params.outdir} --N50 -p filtered_ --title "{wildcards.sample} Filtered" -f pdf --plots dot
+        unicycler -l {input.read} -t {threads} -o {params.outdir} {params.extra_args}
+        ln -s assembly.fasta {output.contigs}
         """
 
 
 rule flye:
-    output:
-        contigs="analysis/{sample}/{readtype,nano-raw|nano-corr|nano-hq}/{label}/flye/contigs.fasta"
     input:
-        reads="seq/nanofilt/{sample}/{readtype}/highQuality-reads.fq.gz"
+        read="analysis/{sample}/qc/{platform}/downsample/read.fastq.gz"
+    output:
+        contigs="analysis/{sample}/yeat/flye/{label}/contigs.fasta"
     threads: 128
+    wildcard_constraints:
+        platform="simplex|duplex|ultra_long"
     params:
-        outdir="analysis/{sample}/{readtype}/{label}/flye",
-        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
+        outdir="analysis/{sample}/yeat/flye/{label}",
+        extra_args=lambda wildcards: config["config"].assemblies[wildcards.label].extra_args
     shell:
         """
-        flye --{wildcards.readtype} {input.reads} -t {threads} -o {params.outdir} {params.extra_args}
+        flye --nano-hq {input.read} -t {threads} -o {params.outdir} {params.extra_args}
         ln -s assembly.fasta {output.contigs}
         """
 
 
 rule canu:
-    output:
-        contigs="analysis/{sample}/{readtype,nano-raw|nano-corr|nano-hq}/{label}/canu/contigs.fasta"
     input:
-        reads="seq/nanofilt/{sample}/{readtype}/highQuality-reads.fq.gz"
+        read="analysis/{sample}/qc/{platform}/downsample/read.fastq.gz"
+    output:
+        contigs="analysis/{sample}/yeat/canu/{label}/contigs.fasta"
     threads: 128
+    wildcard_constraints:
+        platform="simplex|duplex|ultra_long"
     params:
-        outdir="analysis/{sample}/{readtype}/{label}/canu",
-        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
+        outdir="analysis/{sample}/yeat/canu/{label}",
+        extra_args=lambda wildcards: config["config"].assemblies[wildcards.label].extra_args
     shell:
         """
-        canu -nanopore {input.reads} maxThreads={threads} -p {wildcards.sample} -d {params.outdir} {params.extra_args} useGrid=false
+        canu -nanopore {input.read} maxThreads={threads} -p {wildcards.sample} -d {params.outdir} {params.extra_args} useGrid=false
         ln -s {wildcards.sample}.contigs.fasta {output.contigs}
         """
 
 
-rule unicycler:
-    output:
-        contigs="analysis/{sample}/{readtype,nano-raw|nano-corr|nano-hq}/{label}/unicycler/contigs.fasta"
-    input:
-        reads="seq/nanofilt/{sample}/{readtype}/highQuality-reads.fq.gz"
-    threads: 128
-    params:
-        outdir="analysis/{sample}/{readtype}/{label}/unicycler",
-        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
-    shell:
-        """
-        unicycler -l {input.reads} -t {threads} -o {params.outdir} {params.extra_args}
-        ln -s assembly.fasta {output.contigs}
-        """
-
-
 rule metamdbg:
-    output:
-        contigs="analysis/{sample}/{readtype,nano-raw|nano-corr|nano-hq}/{label}/metamdbg/contigs.fasta"
     input:
-        reads="seq/input/{sample}/{readtype}/combined-reads.fq.gz"
+        read="analysis/{sample}/qc/{platform}/downsample/read.fastq.gz"
+    output:
+        contigs="analysis/{sample}/yeat/metamdbg/{label}/contigs.fasta"
     threads: 128
+    wildcard_constraints:
+        platform="simplex|duplex|ultra_long"
     params:
-        outdir="analysis/{sample}/{readtype}/{label}/metamdbg",
-        extra_args=lambda wildcards: config["assemblies"][wildcards.label].extra_args
+        outdir="analysis/{sample}/yeat/metamdbg/{label}",
+        extra_args=lambda wildcards: config["config"].assemblies[wildcards.label].extra_args
     shell:
         """
-        metaMDBG asm --out-dir {params.outdir} --in-ont {input.reads} --threads {threads} {params.extra_args}
+        metaMDBG asm --out-dir {params.outdir} --in-ont {input.read} --threads {threads} {params.extra_args}
         gunzip {params.outdir}/contigs.fasta.gz
         """
     

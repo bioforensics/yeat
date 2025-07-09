@@ -7,67 +7,79 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import READ_TYPES, DOWNSAMPLE_KEYS, AssemblyConfigError
-from .assembly import Assembly
+from .assemblers import select
 from .sample import Sample
-from itertools import chain
+from pydantic import BaseModel
+from typing import Dict
 
 
-CONFIG_KEYS = ("samples", "assemblies")
-SAMPLE_KEYS = READ_TYPES + DOWNSAMPLE_KEYS
-ASSEMBLY_KEYS = ("algorithm", "extra_args", "samples", "mode")
+class AssemblyConfiguration(BaseModel):
+    samples: Dict
+    assemblers: Dict
 
+    @classmethod
+    def parse_toml(cls, config_data):
+        cls._check_required_input_data(config_data)
+        samples = cls._parse_samples(config_data)
+        print(samples)
+        assert 0
+        assemblers = cls._parse_assemblers(config_data, samples)
+        config = cls(samples=samples, assemblers=assemblers)
+        return config
 
-class AssemblyConfig:
-    def __init__(self, config, threads=1, bandage=False):
-        self.config = config
-        self.validate_config_keys()
-        self.threads = threads
-        self.bandage = bandage
-        self.samples = self.create_sample_objects()
-        self.assemblies = self.create_assembly_objects()
-        self.target_files = self.get_target_files()
+    @staticmethod
+    def _check_required_input_data(config_data):
+        if "samples" not in config_data:
+            raise ConfigurationError("YEAT configuration must include [samples]")
+        if "assemblers" not in config_data:
+            raise ConfigurationError("YEAT configuration must include [assemblers]")
+        for assembler_data in config_data["assemblers"].values():
+            if "algorithm" not in assembler_data:
+                raise ConfigurationError("algorithm missing from [assemblers] configuration")
 
-    def validate_config_keys(self):
-        self.check_required_keys(self.config.keys(), CONFIG_KEYS)
-        for sample in self.config["samples"].values():
-            self.check_valid_keys(sample.keys(), SAMPLE_KEYS)
-        for assembly in self.config["assemblies"].values():
-            self.check_required_keys(assembly.keys(), ASSEMBLY_KEYS)
-
-    def check_required_keys(self, observed_keys, expected_keys):
-        missing_keys = set(expected_keys) - set(observed_keys)
-        if missing_keys:
-            key_str = ",".join(sorted(missing_keys))
-            message = f"Missing assembly configuration setting(s) '{key_str}'"
-            raise AssemblyConfigError(message)
-        self.check_valid_keys(observed_keys, expected_keys)
-
-    def check_valid_keys(self, observed_keys, expected_keys):
-        extra_keys = set(observed_keys) - set(expected_keys)
-        if extra_keys:
-            key_str = ",".join(sorted(extra_keys))
-            message = f"Found unsupported configuration key(s) '{key_str}'"
-            raise AssemblyConfigError(message)
-
-    def create_sample_objects(self):
-        samples = {}
-        for label, sample in self.config["samples"].items():
-            samples[label] = Sample(label, sample)
+    @staticmethod
+    def _parse_samples(config_data):
+        samples = dict()
+        for label, sample_data in config_data["samples"].items():
+            samples[label] = Sample(label=label, data=sample_data)
         return samples
 
-    def create_assembly_objects(self):
-        assemblies = {}
-        for label, assembly in self.config["assemblies"].items():
-            assembly["samples"] = self.get_sample_objects(assembly["samples"])
-            assemblies[label] = Assembly(label, assembly, self.threads, self.bandage)
-        return assemblies
+    @staticmethod
+    def _parse_assemblers(config_data, samples):
+        assemblers = dict()
+        for label, assembler_data in config_data["assemblers"].items():
+            assembler_class = select(assembler_data["algorithm"])
+            assembler = assembler_class.parse_data(label, assembler_data, samples)
+            assemblers[label] = assembler
+        return assemblers
 
-    def get_sample_objects(self, samples):
-        return dict(((sample, self.samples[sample]) for sample in samples))
+    @property
+    def assembly_targets(self):
+        targets = list()
+        for sample in self.samples.values():
+            targets.extend(sample.target_files)
+        print(targets)
+        assert 0
+        # for assembler in self.assemblers.values():
+        #     targets.extend(assembler.quast_files())
+        return targets
 
-    def get_target_files(self):
-        target_files = []
-        for element in chain(self.samples.values(), self.assemblies.values()):
-            target_files += element.target_files
-        return target_files
+    def input_files(self, sample, seqtypes=None):
+        if sample not in self.samples:
+            raise ConfigurationError(f"sample {sample} not found")
+        # paths = self.samples[sample].input_paths(seqtypes)
+        paths = self.samples[sample].input_paths()
+        return list(paths)
+
+    # def spades_input(self, sample):
+    #     return self.samples[sample].fastp_targets
+
+    # def unicycler_input(self, sample):
+    #     return self.samples[sample].hybrid_inputs
+
+    # def hifiasm_meta_input(self, sample):
+    #     return self.samples[sample].input_paths(seqtypes={"pacbio_hifi"})
+
+
+class ConfigurationError(ValueError):
+    pass

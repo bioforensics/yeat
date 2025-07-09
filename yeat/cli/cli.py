@@ -7,99 +7,32 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import illumina
-from .aux import check_positive
-from argparse import Action, ArgumentParser
-import json
+from argparse import ArgumentParser, Action
 from pathlib import Path
-import sys
-import yeat
-
-
-CONFIG_TEMPLATE = {
-    "samples": {
-        "sample1": {
-            "paired": [
-                [
-                    "yeat/tests/data/short_reads_1.fastq.gz",
-                    "yeat/tests/data/short_reads_2.fastq.gz",
-                ]
-            ],
-            "downsample": 0,
-            "genome_size": 0,
-            "coverage_depth": 150,
-        },
-        "sample2": {
-            "paired": [
-                ["yeat/tests/data/Animal_289_R1.fq.gz", "yeat/tests/data/Animal_289_R2.fq.gz"]
-            ],
-            "downsample": 0,
-            "genome_size": 0,
-            "coverage_depth": 150,
-        },
-        "sample3": {
-            "pacbio-hifi": ["yeat/tests/data/ecoli.fastq.gz"],
-            "downsample": 0,
-            "genome_size": 0,
-            "coverage_depth": 150,
-        },
-        "sample4": {
-            "nano-hq": ["yeat/tests/data/ecolk12mg1655_R10_3_guppy_345_HAC.fastq.gz"],
-            "downsample": 0,
-            "genome_size": 0,
-            "coverage_depth": 150,
-        },
-    },
-    "assemblies": {
-        "spades-default": {
-            "algorithm": "spades",
-            "extra_args": "",
-            "samples": ["sample1", "sample2"],
-            "mode": "paired",
-        },
-        "hicanu": {
-            "algorithm": "canu",
-            "extra_args": "genomeSize=4.8m",
-            "samples": ["sample3"],
-            "mode": "pacbio",
-        },
-        "flye_ONT": {
-            "algorithm": "flye",
-            "extra_args": "",
-            "samples": ["sample4"],
-            "mode": "oxford",
-        },
-    },
-}
-
-
-class InitAction(Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        json.dump(CONFIG_TEMPLATE, sys.stdout, indent=4)
-        print()
-        raise SystemExit()
+from yeat import __version__
 
 
 def get_parser(exit_on_error=True):
     parser = ArgumentParser(add_help=False, exit_on_error=exit_on_error)
+    workflow_inputs(parser)
     options(parser)
     workflow_configuration(parser)
-    grid_configuration(parser)
-    illumina.fastp_configuration(parser)
-    illumina.downsample_configuration(parser)
-    parser._positionals.title = "required arguments"
-    parser.add_argument("config", help="config file", type=lambda p: str(Path(p).resolve()))
+    preprocessing_and_qc_configuration(parser)
+    # grid_configuration(parser)
     return parser
 
 
-def options(parser):
-    parser._optionals.title = "options"
+def workflow_inputs(parser):
+    parser._positionals.title = "Workflow Inputs"
     parser.add_argument(
-        "--init",
-        action=InitAction,
-        nargs=0,
-        help="print a template assembly config file to the terminal (stdout) and exit",
+        "config",
+        help="path to configuration file",
+        type=lambda config: str(Path(config).resolve()),
     )
+
+
+def options(parser):
+    parser._optionals.title = "Options"
     parser.add_argument(
         "-h",
         "--help",
@@ -110,25 +43,23 @@ def options(parser):
         "-v",
         "--version",
         action="version",
-        version=f"YEAT v{yeat.__version__}",
+        version=f"YEAT v{__version__}",
+    )
+    parser.add_argument(
+        "--init",
+        action=InitAction,
+        nargs=0,
+        help="print a template config file to the terminal (stdout) and exit",
     )
 
 
 def workflow_configuration(parser):
-    workflow = parser.add_argument_group("workflow configuration")
+    workflow = parser.add_argument_group("Workflow Configuration")
     workflow.add_argument(
         "-n",
         "--dry-run",
         action="store_true",
         help="construct workflow DAG and print a summary but do not execute",
-    )
-    workflow.add_argument(
-        "-o",
-        "--outdir",
-        default=".",
-        help="output directory; default is current working directory",
-        metavar="DIR",
-        type=str,
     )
     workflow.add_argument(
         "-t",
@@ -138,34 +69,146 @@ def workflow_configuration(parser):
         metavar="T",
         type=int,
     )
+    workflow.add_argument(
+        "-w",
+        "--workdir",
+        default=".",
+        help="working directory; default is current working directory",
+        metavar="DIR",
+        type=str,
+    )
+    workflow.add_argument(
+        "--copy_input",
+        action="store_true",
+        help="copy input Fastq files to the working directory to ensure complete data provenance; by default, input Fastq files are symbolically linked to the working directory",
+    )
+
+
+def preprocessing_and_qc_configuration(parser, just_yeat_it=False):
+    illumina = parser.add_argument_group("Preprocessing and Quality Control Settings")
+    illumina.add_argument(
+        "-s",
+        "--seed",
+        default=None,
+        help="seed for the random number generator used for downsampling; by default, the seed is chosen randomly",
+        metavar="S",
+        type=int,
+    )
+    illumina.add_argument(
+        "-d",
+        "--downsample",
+        metavar="D",
+        type=int,
+        default=-1,
+        help="[illumina|ont|ont_ultra_long|pacbio-hifi] randomly downsample D reads from the input; set D=-1 to disable downsampling; by default D=-1",
+    )
+    illumina.add_argument(
+        "-g",
+        "--genome-size",
+        default=0,
+        help="provide known genome size in base pairs (bp); by default, G=0",
+        metavar="G",
+        type=int,
+    )
+    illumina.add_argument(
+        "-c",
+        "--coverage-depth",
+        default=150,
+        help="target an average depth of coverage Cx when auto-downsampling; by default, C=150",
+        metavar="C",
+        type=int,
+    )
+    illumina.add_argument(
+        "--skip-filter",
+        action="store_true",
+        help="[illumina|ont|ont_ultra_long|pacbio-hifi] skip read quality filtering and trimming step",
+    )
+    illumina.add_argument(
+        "--window-size",
+        type=int,
+        metavar="W",
+        default=6,
+        help="[illumina] window size in bp for quality trimming reads; by default W=6",
+    )
+    illumina.add_argument(
+        "--avg-qual",
+        type=int,
+        metavar="Q",
+        default=15,
+        help="[illumina] minimum average window score for quality trimming reads; by default Q=15",
+    )
+    illumina.add_argument(
+        "--min-length",
+        type=int,
+        metavar="L",
+        default=100,
+        help="[illumina|ont|ont_ultra_long|pacbio-hifi] minimum required read length; by default L=100",
+    )
+    illumina.add_argument(
+        "--quality",
+        type=int,
+        metavar="Q",
+        default=10,
+        help="[ont|ont_ultra_long|pacbio-hifi] minimum phred average quality score; by default Q=10",
+    )
 
 
 def grid_configuration(parser):
-    grid = parser.add_argument_group("grid configuration")
+    grid = parser.add_argument_group("Grid Configuration")
+    grid.add_argument(
+        "-g",
+        "--grid-limit",
+        dest="gridnodes",
+        metavar="N",
+        type=int,
+        default=1024,
+        help="limit on the number of concurrent jobs to submit to the grid scheduler; by default N=1024",
+    )
+    grid.add_argument(
+        "-G",
+        "--grid-args",
+        metavar="A",
+        default=None,
+        help='additional arguments passed to the scheduler to configure grid execution; " -V " '
+        'is passed by default, or " -V -pe threads <T> " ("sbatch -c <T> " if using SLURM) '
+        "if --threads is set; this can be used for example to configure grid queue or priority "
+        ', e.g., " -q largemem -p -1000 " ("sbatch -p largemem --priority -1000 "); '
+        'note that when overriding the defaults, the user must explicitly add the " -V " ("sbatch") and threads '
+        "configuration if those are still desired",
+    )
     grid.add_argument(
         "--grid",
         const=True,
         type=str.lower,
         nargs="?",
-        help="""process input in batches using parallel processing on a grid. By default, if `--grid` is 
-        invoked with no following arguments, DRMAA will be used to configure jobs on the grid. However, 
-        if the scheduler being used is SLURM, users must provide `slurm` as a following argument to `--grid`""",
+        help="process input in batches using parallel processing on a grid. By default, if `--grid` is "
+        "invoked with no following arguments, DRMAA will be used to configure jobs on the grid. However, "
+        "if the scheduler being used is SLURM, users must provide `slurm` as a following argument to `--grid`",
     )
-    grid.add_argument(
-        "--grid-limit",
-        default=1024,
-        help="limit on the number of concurrent jobs to submit to the grid scheduler; by default, N=1024",
-        metavar="N",
-        type=check_positive,
-    )
-    grid.add_argument(
-        "--grid-args",
-        default=None,
-        help="""additional arguments passed to the scheduler to configure grid execution; " -V " 
-        is passed by default, or " -V -pe threads <T> " ("sbatch -o ${log_output} -e ${log_output} -c <T> " if using SLURM) 
-        if --threads is set; this can be used for example to configure grid queue or priority, 
-        e.g., " -q largemem -p -1000 " ("sbatch -p largemem --priority -1000 "); 
-        note that when overriding the defaults, the user must explicitly add the " -V " ("sbatch") and threads 
-        configuration if those are still desired""",
-        metavar="A",
-    )
+
+
+class InitAction(Action):
+    config_template = '''[sample.sample1]
+illumina: ['path/to/data/sample1_R1.fastq.gz', 'path/to/data/sample1_R2.fastq.gz']
+
+[sample.sample2]
+ont: path/to/data/sample3_ont.fastq.gz
+
+[sample.sample3]
+pacbio-hifi: path/to/data/sample4_hifi.fastq.gz
+
+[assemblies.short_paired]
+algorithm = "spades"
+mode = "paired"
+
+[assemblies.long_ont]
+algorithm = "flye"
+mode = "ont"
+
+[assemblies.long_hifi]
+algorithm = "flye"
+mode = "pacbio-hifi"'''
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        print(self.config_template)
+        raise SystemExit()

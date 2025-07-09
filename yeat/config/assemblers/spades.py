@@ -13,9 +13,10 @@ from .assembler import Assembler
 class SPAdesAssembler(Assembler):
     def hello(self):
         pass
-#     @property
-#     def compatible_samples(self):
-#         return sorted(label for label, sample in self.samples.items() if sample.has_illumina)
+
+    #     @property
+    #     def compatible_samples(self):
+    #         return sorted(label for label, sample in self.samples.items() if sample.has_illumina)
 
     # def input_args(self, sample):
     #     if sample not in self.compatible_samples:
@@ -34,6 +35,15 @@ class SPAdesAssembler(Assembler):
 
     def graph_file(self, sample):
         return f"analysis/{sample}/yeat/{self.label}/spades/graph_files.txt"
+
+    def quast_file(self, sample):
+        return f"analysis/{sample}/yeat/spades/{self.label}/quast/report.html"
+
+    def quast_files(self):
+        temp = []
+        for sample in self.samples.values():
+            temp.append(f"analysis/{sample.label}/yeat/spades/{self.label}/quast/report.html")
+        return temp
 
 
 class SampleConfigurationError(ValueError):

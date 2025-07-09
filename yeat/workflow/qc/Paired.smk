@@ -12,7 +12,7 @@ from yeat.workflow.aux import copy_input
 
 rule copy_input:
     input:
-        reads=lambda wildcards: config["config"].samples[wildcards.sample].illumina
+        reads=lambda wildcards: config["asm_cfg"].input_files(wildcards.sample)
     output:
         r1="analysis/{sample}/qc/illumina/R1.fastq.gz",
         r2="analysis/{sample}/qc/illumina/R2.fastq.gz",
@@ -89,9 +89,9 @@ rule downsample:
         r2="analysis/{sample}/qc/illumina/downsample/R2.fastq.gz"
     params:
         seed=config["seed"],
-        downsample=lambda wildcards: config["config"].samples[wildcards.sample].downsample,
-        genome_size=lambda wildcards: config["config"].samples[wildcards.sample].genome_size,
-        coverage_depth=lambda wildcards: config["config"].samples[wildcards.sample].coverage_depth,
+        downsample=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].downsample,
+        genome_size=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].genome_size,
+        coverage_depth=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].coverage_depth,
         symlink_r1="../R1.fastq.gz",
         symlink_r2="../R2.fastq.gz",
         fastp_report="seq/fastp/{sample}/paired/fastp.json",

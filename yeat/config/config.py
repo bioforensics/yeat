@@ -21,7 +21,9 @@ class AssemblyConfiguration(BaseModel):
     def parse_toml(cls, config_data):
         cls._check_required_input_data(config_data)
         samples = cls._parse_samples(config_data)
-        assemblers = cls._parse_assemblers(config_data)
+        print(samples)
+        assert 0
+        assemblers = cls._parse_assemblers(config_data, samples)
         config = cls(samples=samples, assemblers=assemblers)
         return config
 
@@ -43,28 +45,31 @@ class AssemblyConfiguration(BaseModel):
         return samples
 
     @staticmethod
-    def _parse_assemblers(config_data):
+    def _parse_assemblers(config_data, samples):
         assemblers = dict()
         for label, assembler_data in config_data["assemblers"].items():
             assembler_class = select(assembler_data["algorithm"])
-            assembler = assembler_class.parse_data(label, assembler_data)
+            assembler = assembler_class.parse_data(label, assembler_data, samples)
             assemblers[label] = assembler
         return assemblers
 
     @property
     def assembly_targets(self):
         targets = list()
-        # for sample in self.samples.values():
-        #     targets.extend(sample.target_files)
-        for assembler in self.assemblers.values():
-            targets.extend(assembler.target_files)
+        for sample in self.samples.values():
+            targets.extend(sample.target_files)
+        print(targets)
+        assert 0
+        # for assembler in self.assemblers.values():
+        #     targets.extend(assembler.quast_files())
         return targets
 
-    # def input_files(self, sample, seqtypes=None):
-    #     if sample not in self.samples:
-    #         raise ConfigurationError(f"sample {sample} not found")
-    #     paths = self.samples[sample].input_paths(seqtypes)
-    #     return list(paths)
+    def input_files(self, sample, seqtypes=None):
+        if sample not in self.samples:
+            raise ConfigurationError(f"sample {sample} not found")
+        # paths = self.samples[sample].input_paths(seqtypes)
+        paths = self.samples[sample].input_paths()
+        return list(paths)
 
     # def spades_input(self, sample):
     #     return self.samples[sample].fastp_targets

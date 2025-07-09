@@ -7,14 +7,9 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from .spades import SPAdesAssembler
-from .unicycler import UnicyclerAssembler
+from .assembler import Assembler
 
 
-algorithm_configs = {"spades": SPAdesAssembler, "unicycler": UnicyclerAssembler}
-
-
-def select(algorithm):
-    if algorithm not in algorithm_configs:
-        raise KeyError(f"unknown assembly algorithm {algorithm}")
-    return algorithm_configs[algorithm]
+class UnicyclerAssembler(Assembler):
+    def hello(self):
+        pass

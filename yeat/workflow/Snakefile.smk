@@ -10,47 +10,54 @@
 from yeat.config.config import AssemblyConfiguration
 
 
+print(config)
+assert 0
+
 asm_cfg = AssemblyConfiguration.parse_toml(config["config"])
-print(asm_cfg.assembly_targets)
+config["asm_cfg"] = asm_cfg
 
 
-# rule all:
-#     input:
-#         cfg.get_target_files(config["workdir"])
+
+include: "Assemblers.smk"
 
 
-# module qc_paired_workflow:
-#     snakefile: "qc/Paired.smk"
+rule all:
+    input:
+        asm_cfg.assembly_targets
+
+
+module qc_paired_workflow:
+    snakefile: "qc/Paired.smk"
+    config: config
+
+use rule * from qc_paired_workflow as qc_paired_*
+
+
+module qc_single_workflow:
+    snakefile: "qc/Single.smk"
+    config: config
+
+use rule * from qc_single_workflow as qc_single_*
+
+
+module qc_long_workflow:
+    snakefile: "qc/Long.smk"
+    config: config
+
+use rule * from qc_long_workflow as qc_long_*
+
+
+
+
+
+
+
+
+# module shared_workflow:
+#     snakefile: "Shared.smk"
 #     config: config
 
-# use rule * from qc_paired_workflow as qc_paired_*
-
-
-# module qc_single_workflow:
-#     snakefile: "qc/Single.smk"
-#     config: config
-
-# use rule * from qc_single_workflow as qc_single_*
-
-
-# module qc_long_workflow:
-#     snakefile: "qc/Long.smk"
-#     config: config
-
-# use rule * from qc_long_workflow as qc_long_*
-
-
-
-
-
-
-
-
-# # module shared_workflow:
-# #     snakefile: "Shared"
-# #     config: config
-
-# # use rule * from shared_workflow as shared_*
+# use rule * from shared_workflow as shared_*
 
 
 # module paired_workflow:

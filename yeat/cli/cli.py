@@ -14,15 +14,21 @@ from yeat import __version__
 
 def get_parser(exit_on_error=True):
     parser = ArgumentParser(add_help=False, exit_on_error=exit_on_error)
-    parser._positionals.title = "Workflow inputs"
-    parser.add_argument(
-        "config", help="path to configuration file", type=lambda p: str(Path(p).resolve())
-    )
+    workflow_inputs(parser)
     options(parser)
     workflow_configuration(parser)
     preprocessing_and_qc_configuration(parser)
-    grid_configuration(parser)
+    # grid_configuration(parser)
     return parser
+
+
+def workflow_inputs(parser):
+    parser._positionals.title = "Workflow Inputs"
+    parser.add_argument(
+        "config",
+        help="path to configuration file",
+        type=lambda config: str(Path(config).resolve()),
+    )
 
 
 def options(parser):
@@ -81,14 +87,6 @@ def workflow_configuration(parser):
 def preprocessing_and_qc_configuration(parser, just_yeat_it=False):
     illumina = parser.add_argument_group("Preprocessing and Quality Control Settings")
     illumina.add_argument(
-        "-d",
-        "--downsample",
-        metavar="D",
-        type=int,
-        default=-1,
-        help="[illumina|ont|ont_ultra_long|pacbio] randomly downsample D reads from the input; set D=-1 to disable downsampling; by default D=-1",
-    )
-    illumina.add_argument(
         "-s",
         "--seed",
         default=None,
@@ -97,9 +95,33 @@ def preprocessing_and_qc_configuration(parser, just_yeat_it=False):
         type=int,
     )
     illumina.add_argument(
+        "-d",
+        "--downsample",
+        metavar="D",
+        type=int,
+        default=-1,
+        help="[illumina|ont|ont_ultra_long|pacbio-hifi] randomly downsample D reads from the input; set D=-1 to disable downsampling; by default D=-1",
+    )
+    illumina.add_argument(
+        "-g",
+        "--genome-size",
+        default=0,
+        help="provide known genome size in base pairs (bp); by default, G=0",
+        metavar="G",
+        type=int,
+    )
+    illumina.add_argument(
+        "-c",
+        "--coverage-depth",
+        default=150,
+        help="target an average depth of coverage Cx when auto-downsampling; by default, C=150",
+        metavar="C",
+        type=int,
+    )
+    illumina.add_argument(
         "--skip-filter",
         action="store_true",
-        help="[illumina|ont|ont_ultra_long|pacbio] skip read quality filtering and trimming step",
+        help="[illumina|ont|ont_ultra_long|pacbio-hifi] skip read quality filtering and trimming step",
     )
     illumina.add_argument(
         "--window-size",
@@ -120,40 +142,15 @@ def preprocessing_and_qc_configuration(parser, just_yeat_it=False):
         type=int,
         metavar="L",
         default=100,
-        help="[illumina|ont|ont_ultra_long|pacbio] minimum required read length; by default L=100",
+        help="[illumina|ont|ont_ultra_long|pacbio-hifi] minimum required read length; by default L=100",
     )
     illumina.add_argument(
         "--quality",
         type=int,
         metavar="Q",
         default=10,
-        help="[ont|ont_ultra_long|pacbio] minimum phred average quality score; by default Q=10",
+        help="[ont|ont_ultra_long|pacbio-hifi] minimum phred average quality score; by default Q=10",
     )
-    # if just_yeat_it:
-    #     illumina.add_argument(
-    #         "-d",
-    #         "--downsample",
-    #         default=0,
-    #         help="randomly sample D reads from the input rather than assembling the full set; set D=0 to perform auto-downsampling to a desired level of coverage (see --coverage-depth); set D=-1 to disable downsampling; by default, D=0",
-    #         metavar="D",
-    #         type=int,
-    #     )
-    #     illumina.add_argument(
-    #         "-g",
-    #         "--genome-size",
-    #         default=0,
-    #         help="provide known genome size in base pairs (bp); by default, G=0",
-    #         metavar="G",
-    #         type=int,
-    #     )
-    #     illumina.add_argument(
-    #         "-c",
-    #         "--coverage-depth",
-    #         default=150,
-    #         help="target an average depth of coverage Cx when auto-downsampling; by default, C=150",
-    #         metavar="C",
-    #         type=int,
-    #     )
 
 
 def grid_configuration(parser):
@@ -198,7 +195,7 @@ illumina: ['path/to/data/sample1_R1.fastq.gz', 'path/to/data/sample1_R2.fastq.gz
 ont: path/to/data/sample3_ont.fastq.gz
 
 [sample.sample3]
-pacbio: path/to/data/sample4_hifi.fastq.gz
+pacbio-hifi: path/to/data/sample4_hifi.fastq.gz
 
 [assemblies.short_paired]
 algorithm = "spades"
@@ -210,7 +207,7 @@ mode = "ont"
 
 [assemblies.long_hifi]
 algorithm = "flye"
-mode = "pacbio"'''
+mode = "pacbio-hifi"'''
 
     def __call__(self, parser, namespace, values, option_string=None):
         print(self.config_template)

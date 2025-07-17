@@ -10,11 +10,22 @@
 import glob
 import json
 import pandas as pd
-from random import randint
 import re
 import shutil
 import subprocess
-from yeat.config import PACBIO_READS, OXFORD_READS
+
+# from yeat.config import PACBIO_READS, OXFORD_READS
+
+
+# from yeat.assemblers.assembler import Assembly
+# from yeat.config.config import Config
+# from yeat.config.sample import Sample
+
+
+# def create_config(config):
+#     samples = {key: Sample(**value) for key, value in config.get("samples", {}).items()}
+#     assemblies = {key: Assembly(**value) for key, value in config.get("assemblies", {}).items()}
+#     return Config(samples, assemblies)
 
 
 def get_and_filter_contig_files(sample, readtype, label):
@@ -49,46 +60,26 @@ def combine(reads, direction, outdir):
     subprocess.run(commands, shell=True)
 
 
-def get_genome_size(genome_size, mash_report):
-    if genome_size == 0:
-        df = pd.read_csv(mash_report, sep="\t")
-        return df["Length"].iloc[0]
-    return genome_size
-
-
-def get_avg_read_length(fastp_report):
-    with open(fastp_report, "r") as fh:
-        qcdata = json.load(fh)
-    base_count = qcdata["summary"]["after_filtering"]["total_bases"]
-    read_count = qcdata["summary"]["after_filtering"]["total_reads"]
-    return base_count / read_count
-
-
-def get_down(downsample, genome_size, coverage_depth, avg_read_length):
-    if downsample == 0:
-        return int((genome_size * coverage_depth) / (2 * avg_read_length))
-    return downsample
-
-
-def get_seed(seed):
-    if seed == "None":
-        return randint(1, 2**16 - 1)
-    return seed
-
-
-def print_downsample_values(genome_size, avg_read_length, coverage_depth, down, seed):
+def print_downsample_values(genome_size, average_read_length, coverage_depth, down, seed):
     print(f"[yeat] genome size: {genome_size}")
-    print(f"[yeat] average read length: {avg_read_length}")
+    print(f"[yeat] average read length: {average_read_length}")
     print(f"[yeat] target depth of coverage: {coverage_depth}x")
     print(f"[yeat] number of reads to sample: {down}")
     print(f"[yeat] random seed for sampling: {seed}")
 
 
-def get_longread_file(sample, long_readtype):
-    if long_readtype in PACBIO_READS:
-        return f"seq/input/{sample}/{long_readtype}/combined-reads.fq.gz"
-    elif long_readtype in OXFORD_READS:
-        return f"seq/nanofilt/{sample}/{long_readtype}/highQuality-reads.fq.gz"
-    else:  # pragma: no cover
-        message = f"Invalid long readtype '{long_readtype}'"
-        raise ValueError(message)
+# def get_longread_file(sample, long_readtype):
+#     if long_readtype in PACBIO_READS:
+#         return f"seq/input/{sample}/{long_readtype}/combined-reads.fq.gz"
+#     elif long_readtype in OXFORD_READS:
+#         return f"seq/nanofilt/{sample}/{long_readtype}/highQuality-reads.fq.gz"
+#     else:  # pragma: no cover
+#         message = f"Invalid long readtype '{long_readtype}'"
+#         raise ValueError(message)
+
+
+from pathlib import Path
+
+
+def get_slurm_logs_dir(wd):
+    return Path(wd).resolve() / "slurm-logs/"

@@ -72,17 +72,17 @@ def test_get_genome_size(input):
         assert genome_size == input
 
 
-def test_get_avg_read_length():
-    avg_read_length = aux.get_avg_read_length(data_file("fastp.json"))
-    assert avg_read_length == 125.0
+def test_get_average_read_length():
+    average_read_length = aux.get_average_read_length(data_file("fastp.json"))
+    assert average_read_length == 125.0
 
 
 @pytest.mark.parametrize("downsample", [(0), (3765000)])
 def test_get_down(downsample):
     genome_size = 6275000
     coverage_depth = 150
-    avg_read_length = 125.0
-    down = aux.get_down(downsample, genome_size, coverage_depth, avg_read_length)
+    average_read_length = 125.0
+    down = aux.get_down(downsample, genome_size, coverage_depth, average_read_length)
     assert isinstance(down, int)
     assert down >= 0
     if downsample != 0:
@@ -100,15 +100,15 @@ def test_get_seed(input):
 
 def test_print_downsample_values(capsys):
     genome_size = 6275000
-    avg_read_length = 125.0
+    average_read_length = 125.0
     coverage_depth = 150
     down = 3765000
     seed = 802
-    aux.print_downsample_values(genome_size, avg_read_length, coverage_depth, down, seed)
+    aux.print_downsample_values(genome_size, average_read_length, coverage_depth, down, seed)
     captured = capsys.readouterr()
     expected = (
         f"[yeat] genome size: {genome_size}\n"
-        f"[yeat] average read length: {avg_read_length}\n"
+        f"[yeat] average read length: {average_read_length}\n"
         f"[yeat] target depth of coverage: {coverage_depth}x\n"
         f"[yeat] number of reads to sample: {down}\n"
         f"[yeat] random seed for sampling: {seed}\n"

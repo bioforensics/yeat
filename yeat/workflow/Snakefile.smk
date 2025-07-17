@@ -7,19 +7,37 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from argparse import ArgumentTypeError
-from pathlib import Path
+from yeat.config.config import AssemblyConfiguration
 
 
-def check_positive(value):
-    try:
-        value = int(value)
-        if value <= 0:
-            raise ArgumentTypeError(f"{value} is not a positive integer")
-    except ValueError:
-        raise ArgumentTypeError(f"{value} is not an integer")
-    return value
+asm_cfg = AssemblyConfiguration.parse_snakemake_config(config)
+config["asm_cfg"] = asm_cfg
 
 
-def get_slurm_logs_dir(wd):
-    return Path(wd).resolve() / "slurm-logs/"
+include: "Assemblers.smk"
+
+
+rule all:
+    input:
+        asm_cfg.rule_all_targets
+
+
+module qc_paired_workflow:
+    snakefile: "qc/Paired.smk"
+    config: config
+
+use rule * from qc_paired_workflow as qc_paired_*
+
+
+module qc_single_workflow:
+    snakefile: "qc/Single.smk"
+    config: config
+
+use rule * from qc_single_workflow as qc_single_*
+
+
+module qc_long_workflow:
+    snakefile: "qc/Long.smk"
+    config: config
+
+use rule * from qc_long_workflow as qc_long_*

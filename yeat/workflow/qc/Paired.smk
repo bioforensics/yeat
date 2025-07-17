@@ -7,12 +7,12 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from yeat.workflow.aux import copy_input
+from yeat.workflow.qc.aux import copy_input
 
 
 rule copy_input:
     input:
-        reads=lambda wildcards: config["asm_cfg"].input_files(wildcards.sample)
+        reads=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].data["illumina"]
     output:
         r1="analysis/{sample}/qc/illumina/R1.fastq.gz",
         r2="analysis/{sample}/qc/illumina/R2.fastq.gz",
@@ -49,8 +49,8 @@ rule fastp:
         r1="analysis/{sample}/qc/illumina/fastp/R1.fastq.gz",
         r2="analysis/{sample}/qc/illumina/fastp/R2.fastq.gz",
     params:
-        skip_filter=config["skip_filter"],
-        min_length=config["min_length"],
+        skip_filter=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].skip_filter,
+        min_length=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].min_length,
         symlink_r1="../R1.fastq.gz",
         symlink_r2="../R2.fastq.gz",
         html_report="analysis/{sample}/qc/illumina/fastp/fastp.html",
@@ -102,9 +102,8 @@ rule downsample:
             Path(output.r2).symlink_to(params.symlink_r2)
             return
         genome_size = get_genome_size(params.genome_size, input.mash_report)
-        avg_read_length = get_avg_read_length(params.fastp_report)
-        down = get_down(params.downsample, genome_size, params.coverage_depth, avg_read_length)
-        seed = get_seed(params.seed)
-        print_downsample_values(genome_size, avg_read_length, params.coverage_depth, down, seed)
-        shell("seqtk sample -s {seed} {input.read1} {down} | gzip > {params.outdir}/R1.fastq.gz")
-        shell("seqtk sample -s {seed} {input.read2} {down} | gzip > {params.outdir}/R2.fastq.gz")
+        average_read_length = get_average_read_length(params.fastp_report)
+        down = get_down(params.downsample, genome_size, params.coverage_depth, average_read_length)
+        print_downsample_values(genome_size, average_read_length, params.coverage_depth, down, seed)
+        shell("seqtk sample -s {params.seed} {input.read1} {down} | gzip > {params.outdir}/R1.fastq.gz")
+        shell("seqtk sample -s {params.seed} {input.read2} {down} | gzip > {params.outdir}/R2.fastq.gz")

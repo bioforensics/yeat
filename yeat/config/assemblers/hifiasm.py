@@ -10,30 +10,22 @@
 from .assembler import Assembler
 
 
-class SPAdesAssembler(Assembler):
+class HifiasmAssembler(Assembler):
     @staticmethod
     def _check_sample_compatibility(sample):
-        return sample.has_illumina
+        return sample.has_long_reads
 
     @property
     def target_files(self):
         targets = list()
         for sample in self.samples.values():
-            targets.append(f"analysis/{sample.label}/yeat/spades/{self.label}/quast/report.html")
+            targets.append(f"analysis/{sample.label}/yeat/megahit/{self.label}/quast/report.html")
         return targets
 
     def input_files(self, sample):
-        reads = self.samples[sample].data["illumina"]
-        if len(reads) == 1:
-            return [f"analysis/{sample}/qc/illumina/downsample/read.fastq.gz"]
-        r1 = f"analysis/{sample}/qc/illumina/downsample/R1.fastq.gz"
-        r2 = f"analysis/{sample}/qc/illumina/downsample/R2.fastq.gz"
-        return [r1, r2]
+        best_read_type = self.samples[sample].best_long_read_type
+        return [f"analysis/{sample}/qc/{best_read_type}/downsample/read.fastq.gz"]
 
     def input_args(self, sample):
         reads = self.input_files(sample)
-        if len(reads) == 1:
-            args = f"-s {reads[0]}"
-        else:
-            args = f"-1 {reads[0]} -2 {reads[1]}"
-        return args
+        return f"{reads[0]}"

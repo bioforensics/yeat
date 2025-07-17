@@ -12,30 +12,59 @@ from pydantic import BaseModel
 from typing import Dict, Optional
 
 
+REQUIRED_KEYS = {"algorithm"}
+OPTIONAL_KEYS = {"arguments", "samples"}
+VALID_KEYS = REQUIRED_KEYS.union(OPTIONAL_KEYS)
+
+
 class Assembler(BaseModel):
     label: str
-    samples: Dict[str, Sample]
     arguments: Optional[str] = None
+    samples: Dict[str, Sample]
 
     @classmethod
-    def parse_data(cls, label, assembler_data, samples):
-        if "samples" in assembler_data:
-            samples = {
-                label: sample
-                for label, sample in samples.items()
-                if label in assembler_data["samples"]
-            }
-        arguments = assembler_data["argument"] if "argument" in assembler_data else None
-        return cls(label=label, arguments=arguments, samples=samples)
+    def parse_data(cls, label, data, samples):
+        keys = set(data.keys())
+        cls._check_required_keys(keys)
+        cls._check_optional_keys(keys)
+        arguments = data["argument"] if "argument" in data else None
+        s = cls._select_samples(cls, data, samples)
+        return cls(label=label, arguments=arguments, samples=s)
+
+    @staticmethod
+    def _check_required_keys(keys):
+        intersection_list = list(keys & REQUIRED_KEYS)
+        if len(intersection_list) == 0:
+            raise (
+                AssemblerConfigurationError("algorithm missing from [assemblers] configuration")
+            )
+
+    @staticmethod
+    def _check_optional_keys(keys):
+        elements_only_in_list1 = list(keys.difference(VALID_KEYS))
+        if len(elements_only_in_list1) > 0:
+            raise (AssemblerConfigurationError("found unrecongizable keys!"))
+
+    @staticmethod
+    def _select_samples(cls, data, samples):
+        s = data.get("samples", samples)
+        return {
+            label: sample for label, sample in s.items() if cls._check_sample_compatibility(sample)
+        }
 
     @property
     def extra_args(self):
-        return "" if self.arguments is None else self.arguments
+        return self.arguments or ""
 
-    # @property
-    # def target_files(self):
-    #     quast_files = [
-    #         f"analysis/{sample}/yeat/{self.label}/quast/report.html"
-    #         for sample in self.samples
-    #     ]
-    #     return sorted(quast_files)
+    # def input_files(self, sample, algorithm, read_type):
+    #     temp = self.samples[sample].data[read_type]
+    #     if len(temp) == 1:
+    #         return [f"analysis/{sample}/qc/{algorithm}/downsample/read.fastq.gz"]
+    #     else:
+    #         r1=f"analysis/{sample}/qc/{algorithm}/downsample/R1.fastq.gz"
+    #         r2=f"analysis/{sample}/qc/{algorithm}/downsample/R2.fastq.gz"
+    #         return [r1, r2]
+
+
+class AssemblerConfigurationError(ValueError):
+    pass

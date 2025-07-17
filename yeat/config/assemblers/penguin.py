@@ -10,7 +10,7 @@
 from .assembler import Assembler
 
 
-class SPAdesAssembler(Assembler):
+class PenguiNAssembler(Assembler):
     @staticmethod
     def _check_sample_compatibility(sample):
         return sample.has_illumina
@@ -19,7 +19,7 @@ class SPAdesAssembler(Assembler):
     def target_files(self):
         targets = list()
         for sample in self.samples.values():
-            targets.append(f"analysis/{sample.label}/yeat/spades/{self.label}/quast/report.html")
+            targets.append(f"analysis/{sample.label}/yeat/penguin/{self.label}/quast/report.html")
         return targets
 
     def input_files(self, sample):
@@ -33,7 +33,15 @@ class SPAdesAssembler(Assembler):
     def input_args(self, sample):
         reads = self.input_files(sample)
         if len(reads) == 1:
-            args = f"-s {reads[0]}"
+            args = f"{reads[0]}"
+        else:
+            args = f"{reads[0]} {reads[1]}"
+        return args
+
+    def bowtie2_input_args(self, sample):
+        reads = self.input_files(sample)
+        if len(reads) == 1:
+            args = f"-U {reads[0]}"
         else:
             args = f"-1 {reads[0]} -2 {reads[1]}"
         return args

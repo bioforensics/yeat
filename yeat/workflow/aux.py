@@ -10,7 +10,6 @@
 import glob
 import json
 import pandas as pd
-from random import randint
 import re
 import shutil
 import subprocess
@@ -61,9 +60,9 @@ def combine(reads, direction, outdir):
     subprocess.run(commands, shell=True)
 
 
-def print_downsample_values(genome_size, avg_read_length, coverage_depth, down, seed):
+def print_downsample_values(genome_size, average_read_length, coverage_depth, down, seed):
     print(f"[yeat] genome size: {genome_size}")
-    print(f"[yeat] average read length: {avg_read_length}")
+    print(f"[yeat] average read length: {average_read_length}")
     print(f"[yeat] target depth of coverage: {coverage_depth}x")
     print(f"[yeat] number of reads to sample: {down}")
     print(f"[yeat] random seed for sampling: {seed}")
@@ -84,10 +83,3 @@ from pathlib import Path
 
 def get_slurm_logs_dir(wd):
     return Path(wd).resolve() / "slurm-logs/"
-
-
-def copy_input(input, output, do_copy):
-    if do_copy:
-        subprocess.run(["cp", input, output])
-    else:
-        subprocess.run(["ln", "-sf", input, output])

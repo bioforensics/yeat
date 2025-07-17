@@ -7,21 +7,20 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from yeat.workflow.aux import copy_input
+from yeat.workflow.qc.aux import copy_input
 
 
 rule copy_input:
     input:
-        read=lambda wildcards: getattr(config["config"].samples[wildcards.sample], (wildcards.platform)),
+        read=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].data[wildcards.platform],
     output:
         read="analysis/{sample}/qc/{platform}/read.fastq.gz",
     wildcard_constraints:
-        platform="simplex|duplex|ultra_long|hifi",
+        platform="ont_simplex|ont_duplex|pacbio_hifi",
     params:
         do_copy=config["copy_input"],
     run:
-        copy_input(input.read, output.read, params.do_copy)
-
+        copy_input(input.read[0], output.read, params.do_copy)
 
 
 rule fastqc:
@@ -30,7 +29,7 @@ rule fastqc:
     output:
         html="analysis/{sample}/qc/{platform}/fastqc/read_fastqc.html"
     wildcard_constraints:
-        platform="simplex|duplex|ultra_long|hifi",
+        platform="ont_simplex|ont_duplex|pacbio_hifi",
     threads: 128
     params:
         outdir="analysis/{sample}/qc/{platform}/fastqc"
@@ -44,16 +43,16 @@ rule fastqc:
 
 rule chopper:
     input:
-        read=rules.copy_input.output.read,
+        read="analysis/{sample}/qc/{platform}/read.fastq.gz",
     output:
         read="analysis/{sample}/qc/{platform}/chopper/read.fastq.gz",
     wildcard_constraints:
-        platform="simplex|duplex|ultra_long|hifi",
+        platform="ont_simplex|ont_duplex|pacbio_hifi",
     threads: 128
     params:
-        skip_filter=config["skip_filter"],
+        skip_filter=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].skip_filter,
         symlink_read="../read.fastq.gz",
-        args=f"-q {config['quality']} -l {config['min_length']}",
+        args=lambda wildcards: f"-q {config['asm_cfg'].samples[wildcards.sample].quality} -l {config['asm_cfg'].samples[wildcards.sample].min_length}",
         raw_x_label="Raw Read Length",
         filtered_x_label="Filtered Read Length",
         raw_png="analysis/{sample}/magenta/{platform}/qc/chopper/raw_rld.png",
@@ -74,16 +73,16 @@ rule downsample:
     output:
         read="analysis/{sample}/qc/{platform}/downsample/read.fastq.gz",
     wildcard_constraints:
-        platform="simplex|duplex|ultra_long|hifi",
+        platform="ont_simplex|ont_duplex|pacbio_hifi",
     params:
-        # down=config["down"],
-        # seed=config["seed"],
-        downsample=lambda wildcards: config["config"].samples[wildcards.sample].downsample,
+        seed=config["seed"],
+        downsample=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].downsample,
+        # genome_size=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].genome_size,
+        # coverage_depth=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].coverage_depth,
         symlink_read="../chopper/read.fastq.gz",
     threads: 8
     run:
         if params.downsample == -1:
             Path(output.read).symlink_to(params.symlink_read)
             return
-        
-        # shell("seqtk sample -s {params.seed} {input.read} {params.down} | gzip > {output.read}")
+        shell("seqtk sample -s {params.seed} {input.read} {params.down} | gzip > {output.read}")

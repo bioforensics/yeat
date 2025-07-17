@@ -7,19 +7,18 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from yeat.workflow.aux import copy_input
+from yeat.workflow.qc.aux import copy_input
 
 
 rule copy_input:
     input:
-        read=lambda wildcards: config["config"].samples[wildcards.sample].illumina,
+        read=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].data["illumina"],
     output:
         read="analysis/{sample}/qc/illumina/read.fastq.gz",
     params:
         do_copy=config["copy_input"],
     run:
-        copy_input(input.read, output.read, params.do_copy)
-
+        copy_input(input.read[0], output.read, params.do_copy)
 
 
 rule fastqc:
@@ -44,8 +43,8 @@ rule fastp:
     output:
         read="analysis/{sample}/qc/illumina/fastp/read.fastq.gz"
     params:
-        skip_filter=config["skip_filter"],
-        min_length=config["min_length"],
+        skip_filter=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].skip_filter,
+        min_length=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].min_length,
         symlink_read="../read.fastq.gz",
         html_report="analysis/{sample}/qc/illumina/fastp/fastp.html",
         json_report="analysis/{sample}/qc/illumina/fastp/fastp.json",
@@ -56,7 +55,6 @@ rule fastp:
             return
         cmd = "fastp -i {input.read} -o {output.read} -l {params.min_length} --detect_adapter_for_pe --html {params.html_report} --json {params.json_report} 2> {params.txt_report}"
         shell(cmd)
-
 
 
 rule mash:
@@ -80,9 +78,9 @@ rule downsample:
         read="analysis/{sample}/qc/illumina/downsample/read.fastq.gz",
     params:
         seed=config["seed"],
-        downsample=lambda wildcards: config["config"].samples[wildcards.sample].downsample,
-        genome_size=lambda wildcards: config["config"].samples[wildcards.sample].genome_size,
-        coverage_depth=lambda wildcards: config["config"].samples[wildcards.sample].coverage_depth,
+        downsample=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].downsample,
+        genome_size=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].genome_size,
+        coverage_depth=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].coverage_depth,
         symlink_read="../read.fastq.gz",
         fastp_report="seq/fastp/{sample}/paired/fastp.json",
         outdir="analysis/{sample}/qc/illumina/downsample"
@@ -91,8 +89,7 @@ rule downsample:
             Path(output.read).symlink_to(params.symlink_read)
             return
         genome_size = get_genome_size(params.genome_size, input.mash_report)
-        avg_read_length = get_avg_read_length(params.fastp_report)
-        down = get_down(params.downsample, genome_size, params.coverage_depth, avg_read_length)
-        seed = get_seed(params.seed)
-        print_downsample_values(genome_size, avg_read_length, params.coverage_depth, down, seed)
-        shell("seqtk sample -s {seed} {input.read1} {down} | gzip > {params.outdir}/read.fastq.gz")
+        average_read_length = get_average_read_length(params.fastp_report)
+        down = get_down(params.downsample, genome_size, params.coverage_depth, average_read_length)
+        print_downsample_values(genome_size, average_read_length, params.coverage_depth, down, seed)
+        shell("seqtk sample -s {params.seed} {input.read1} {down} | gzip > {params.outdir}/read.fastq.gz")

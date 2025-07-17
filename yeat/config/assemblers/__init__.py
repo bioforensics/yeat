@@ -7,11 +7,30 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+from .canu import CanuAssembler
+from .flye import FlyeAssembler
+from .hifiasm import HifiasmAssembler
+from .hifiasm_meta import HifiasmMetaAssembler
+from .megahit import MEGAHITAssembler
+from .metamdbg import MetaMDBGAssembler
+from .penguin import PenguiNAssembler
 from .spades import SPAdesAssembler
 from .unicycler import UnicyclerAssembler
+from .velvet import VelvetAssembler
 
 
-algorithm_configs = {"spades": SPAdesAssembler, "unicycler": UnicyclerAssembler}
+algorithm_configs = {
+    "spades": SPAdesAssembler,
+    "megahit": MEGAHITAssembler,
+    "unicycler": UnicyclerAssembler,
+    "penguin": PenguiNAssembler,
+    "velvet": VelvetAssembler,
+    "canu": CanuAssembler,
+    "flye": FlyeAssembler,
+    "hifiasm": HifiasmAssembler,
+    "hifiasm_meta": HifiasmMetaAssembler,
+    "metamdbg": MetaMDBGAssembler,
+}
 
 
 def select(algorithm):

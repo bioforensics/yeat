@@ -10,12 +10,8 @@
 from yeat.config.config import AssemblyConfiguration
 
 
-print(config)
-assert 0
-
-asm_cfg = AssemblyConfiguration.parse_toml(config["config"])
+asm_cfg = AssemblyConfiguration.parse_snakemake_config(config)
 config["asm_cfg"] = asm_cfg
-
 
 
 include: "Assemblers.smk"
@@ -23,7 +19,7 @@ include: "Assemblers.smk"
 
 rule all:
     input:
-        asm_cfg.assembly_targets
+        asm_cfg.rule_all_targets
 
 
 module qc_paired_workflow:
@@ -45,61 +41,3 @@ module qc_long_workflow:
     config: config
 
 use rule * from qc_long_workflow as qc_long_*
-
-
-
-
-
-
-
-
-# module shared_workflow:
-#     snakefile: "Shared.smk"
-#     config: config
-
-# use rule * from shared_workflow as shared_*
-
-
-# module paired_workflow:
-#     snakefile: "Paired.smk"
-#     config: config
-
-# use rule * from paired_workflow as paired_*
-
-
-# module single_workflow:
-#     snakefile: "Single.smk"
-#     config: config
-
-# use rule * from single_workflow as single_*
-
-
-# module oxford_workflow:
-#     snakefile: "Oxford.smk"
-#     config: config
-
-# use rule * from oxford_workflow as oxford_*
-
-
-# module pacbio_workflow:
-#     snakefile: "Pacbio.smk"
-#     config: config
-
-# use rule * from pacbio_workflow as pacbio_*
-
-
-# module hybrid_workflow:
-#     snakefile: "Hybrid.smk"
-#     config: config
-
-# use rule * from hybrid_workflow as hybrid_*
-
-
-# module bandage_workflow:
-#     snakefile: "Bandage"
-#     config: config
-
-# use rule * from bandage_workflow as bandage_*
-
-
-

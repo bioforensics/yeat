@@ -9,76 +9,83 @@
 
 from .assemblers import select
 from .sample import Sample
+from collections import defaultdict
 from pydantic import BaseModel
 from typing import Dict
 
 
+QC_DEFUALT_VALUES = {
+    "coverage_depth": 150,
+    "downsample": -1,
+    "genome_size": 0,
+    "min_length": 100,
+    "quality": 10,
+    "skip_filter": False,
+}
+
+
 class AssemblyConfiguration(BaseModel):
+    flags: Dict
     samples: Dict
     assemblers: Dict
 
     @classmethod
-    def parse_toml(cls, config_data):
-        cls._check_required_input_data(config_data)
-        samples = cls._parse_samples(config_data)
-        print(samples)
-        assert 0
-        assemblers = cls._parse_assemblers(config_data, samples)
-        config = cls(samples=samples, assemblers=assemblers)
-        return config
+    def parse_snakemake_config(cls, config):
+        keys = config["config"].keys()
+        cls._check_required_keys(keys)
+        cls._check_optional_keys(keys)
+        flags = cls._parse_flags(config["config"])  # need to do value type checking
+        samples = cls._parse_samples(config, flags)
+        assemblers = cls._parse_assemblers(config, samples)
+        return cls(flags=flags, samples=samples, assemblers=assemblers)
 
     @staticmethod
-    def _check_required_input_data(config_data):
-        if "samples" not in config_data:
+    def _check_required_keys(keys):
+        if "samples" not in keys:
             raise ConfigurationError("YEAT configuration must include [samples]")
-        if "assemblers" not in config_data:
+        if "assemblers" not in keys:
             raise ConfigurationError("YEAT configuration must include [assemblers]")
-        for assembler_data in config_data["assemblers"].values():
-            if "algorithm" not in assembler_data:
-                raise ConfigurationError("algorithm missing from [assemblers] configuration")
 
     @staticmethod
-    def _parse_samples(config_data):
+    def _check_optional_keys(keys):
+        valid_keys = set(QC_DEFUALT_VALUES.keys()).union({"samples", "assemblers"})
+        elements_only_in_list1 = list(set(keys).difference(valid_keys))
+        if len(elements_only_in_list1) > 0:
+            raise (ConfigurationError("found unrecongizable keys!"))
+
+    @staticmethod
+    def _parse_flags(config):
+        flags = defaultdict(lambda: None)
+        for key, value in QC_DEFUALT_VALUES.items():
+            if key in config:
+                flags[key] = config[key]
+                continue
+            flags[key] = value
+        return flags
+
+    @staticmethod
+    def _parse_samples(config, flags):
         samples = dict()
-        for label, sample_data in config_data["samples"].items():
-            samples[label] = Sample(label=label, data=sample_data)
+        for label, sample_data in config["config"]["samples"].items():
+            samples[label] = Sample.parse_data(label, sample_data, flags)
         return samples
 
     @staticmethod
-    def _parse_assemblers(config_data, samples):
+    def _parse_assemblers(config, samples):
         assemblers = dict()
-        for label, assembler_data in config_data["assemblers"].items():
+        for label, assembler_data in config["config"]["assemblers"].items():
             assembler_class = select(assembler_data["algorithm"])
-            assembler = assembler_class.parse_data(label, assembler_data, samples)
-            assemblers[label] = assembler
+            assemblers[label] = assembler_class.parse_data(label, assembler_data, samples)
         return assemblers
 
     @property
-    def assembly_targets(self):
+    def rule_all_targets(self):
         targets = list()
         for sample in self.samples.values():
             targets.extend(sample.target_files)
-        print(targets)
-        assert 0
-        # for assembler in self.assemblers.values():
-        #     targets.extend(assembler.quast_files())
+        for assembler in self.assemblers.values():
+            targets.extend(assembler.target_files)
         return targets
-
-    def input_files(self, sample, seqtypes=None):
-        if sample not in self.samples:
-            raise ConfigurationError(f"sample {sample} not found")
-        # paths = self.samples[sample].input_paths(seqtypes)
-        paths = self.samples[sample].input_paths()
-        return list(paths)
-
-    # def spades_input(self, sample):
-    #     return self.samples[sample].fastp_targets
-
-    # def unicycler_input(self, sample):
-    #     return self.samples[sample].hybrid_inputs
-
-    # def hifiasm_meta_input(self, sample):
-    #     return self.samples[sample].input_paths(seqtypes={"pacbio_hifi"})
 
 
 class ConfigurationError(ValueError):

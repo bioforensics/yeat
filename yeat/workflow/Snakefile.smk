@@ -19,7 +19,7 @@ include: "Assemblers.smk"
 
 rule all:
     input:
-        asm_cfg.rule_all_targets
+        asm_cfg.targets
 
 
 module qc_paired_workflow:

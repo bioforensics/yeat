@@ -19,7 +19,7 @@ from .unicycler import UnicyclerAssembler
 from .velvet import VelvetAssembler
 
 
-algorithm_configs = {
+ALGORITHM_CONFIGS = {
     "spades": SPAdesAssembler,
     "megahit": MEGAHITAssembler,
     "unicycler": UnicyclerAssembler,
@@ -34,6 +34,6 @@ algorithm_configs = {
 
 
 def select(algorithm):
-    if algorithm not in algorithm_configs:
+    if algorithm not in ALGORITHM_CONFIGS:
         raise KeyError(f"unknown assembly algorithm {algorithm}")
-    return algorithm_configs[algorithm]
+    return ALGORITHM_CONFIGS[algorithm]

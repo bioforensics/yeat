@@ -7,6 +7,9 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+from pathlib import Path
+
+
 rule spades:
     input:
         reads=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_files(wildcards.sample)
@@ -32,17 +35,17 @@ rule megahit:
         contigs="analysis/{sample}/yeat/megahit/{label}/contigs.fasta"
     threads: 128
     params:
-        temp_dir="analysis/{sample}/yeat/megahit/{label}/megahit-temp",
-        actual_dir="analysis/{sample}/yeat/megahit/{label}",
+        temp_outdir="analysis/{sample}/yeat/megahit/{label}/megahit-temp",
+        outdir="analysis/{sample}/yeat/megahit/{label}",
         input_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_args(wildcards.sample),
         extra_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].extra_args
     log:
         "analysis/{sample}/yeat/megahit/{label}/megahit.log"
     shell:
         """
-        megahit {params.input_args} -t {threads} -o {params.temp_dir} {params.extra_args} > {log} 2>&1
-        mv {params.temp_dir}/* {params.actual_dir}
-        rm -r {params.temp_dir}
+        megahit {params.input_args} -t {threads} -o {params.temp_outdir} {params.extra_args} > {log} 2>&1
+        mv {params.temp_outdir}/* {params.outdir}
+        rm -r {params.temp_outdir}
         ln -s final.contigs.fa {output.contigs}
         """
 
@@ -78,9 +81,9 @@ rule penguin:
     shell:
         """
         penguin guided_nuclassemble {params.input_args} {params.outdir}/unpolished_contigs.fasta {params.outdir} --threads {threads} {params.extra_args}
-        bowtie2-build {params.outdir}/unpolished_contigs.fasta {params.outdir}/unpolished_contigs.fasta
+        bowtie2-build --threads {threads} {params.outdir}/unpolished_contigs.fasta {params.outdir}/unpolished_contigs.fasta
         bowtie2 -p {threads} -x {params.outdir}/unpolished_contigs.fasta {params.bowtie2_input_args} 2> {params.outdir}/unpolished_contigs.bowtie.log | samtools view -b -@ {threads} | samtools sort -@ {threads} -o {params.outdir}/unpolished_contigs.sorted.bam
-        samtools index {params.outdir}/unpolished_contigs.sorted.bam
+        samtools index -@ {threads} {params.outdir}/unpolished_contigs.sorted.bamclear
         pilon --genome {params.outdir}/unpolished_contigs.fasta --bam {params.outdir}/unpolished_contigs.sorted.bam --output {params.outdir}/contigs
         """
 
@@ -94,15 +97,15 @@ rule velvet:
         "yeat-velvet"
     threads: 128
     params:
-        temp_dir="analysis/{sample}/yeat/velvet/{label}/velvet-temp",
-        actual_dir="analysis/{sample}/yeat/velvet/{label}",
+        temp_outdir="analysis/{sample}/yeat/velvet/{label}/velvet-temp",
+        outdir="analysis/{sample}/yeat/velvet/{label}",
         input_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_args(wildcards.sample),
         extra_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].extra_args,
     shell:
         """
-        VelvetOptimiser.pl -f {params.input_args} -t {threads} -p {params.actual_dir}/auto -d {params.temp_dir} {params.extra_args}
-        mv {params.temp_dir}/* {params.actual_dir}
-        rm -r {params.temp_dir}
+        VelvetOptimiser.pl -f {params.input_args} -t {threads} -p {params.outdir}/auto -d {params.temp_outdir} {params.extra_args}
+        mv {params.temp_outdir}/* {params.outdir}
+        rm -r {params.temp_outdir}
         ln -s contigs.fa {output.contigs}
         """
 
@@ -207,3 +210,18 @@ rule quast:
         """
         quast.py {input.contigs} -o {params.outdir} > {log} 2>&1
         """
+
+
+rule bandage:
+    input:
+        contigs="analysis/{sample}/yeat/{algorithm}/{label}/contigs.fasta"
+    output:
+        status="analysis/{sample}/yeat/{algorithm}/{label}/bandage/.done"
+    params:
+        outdir="analysis/{sample}/yeat/{algorithm}/{label}/bandage"
+    run:
+        gfa_files=config["asm_cfg"].assemblers[wildcards.label].gfa_files(wildcards.sample)
+        for gfa in gfa_files:
+            filename = Path(gfa).stem
+            shell("Bandage image {gfa} {params.outdir}/{filename}.jpg")
+        shell("touch {output.status}")

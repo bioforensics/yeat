@@ -14,10 +14,11 @@ from pydantic import BaseModel
 from typing import Dict
 
 
-QC_DEFUALT_VALUES = {
+REQUIRED_KEYS = {"samples", "assemblers"}
+OPTIONAL_KEYS = {
     "coverage_depth": 150,
-    "downsample": -1,
-    "genome_size": 0,
+    "downsample": -1,  # -1 disable, 0 auto
+    "genome_size": 0,  # 0 auto
     "min_length": 100,
     "quality": 10,
     "skip_filter": False,
@@ -25,7 +26,7 @@ QC_DEFUALT_VALUES = {
 
 
 class AssemblyConfiguration(BaseModel):
-    flags: Dict
+    global_settings: Dict
     samples: Dict
     assemblers: Dict
 
@@ -34,57 +35,58 @@ class AssemblyConfiguration(BaseModel):
         keys = config["config"].keys()
         cls._check_required_keys(keys)
         cls._check_optional_keys(keys)
-        flags = cls._parse_flags(config["config"])  # need to do value type checking
-        samples = cls._parse_samples(config, flags)
-        assemblers = cls._parse_assemblers(config, samples)
-        return cls(flags=flags, samples=samples, assemblers=assemblers)
+        global_settings = cls._parse_global_settings(config["config"])
+        samples = cls._parse_samples(config["config"], global_settings)
+        assemblers = cls._parse_assemblers(config["config"], samples)
+        return cls(global_settings=global_settings, samples=samples, assemblers=assemblers)
 
     @staticmethod
     def _check_required_keys(keys):
-        if "samples" not in keys:
-            raise ConfigurationError("YEAT configuration must include [samples]")
-        if "assemblers" not in keys:
-            raise ConfigurationError("YEAT configuration must include [assemblers]")
+        intersection = list(keys & REQUIRED_KEYS)
+        if not intersection:
+            raise ConfigurationError(f"YEAT configuration must include {REQUIRED_KEYS}")
 
     @staticmethod
     def _check_optional_keys(keys):
-        valid_keys = set(QC_DEFUALT_VALUES.keys()).union({"samples", "assemblers"})
-        elements_only_in_list1 = list(set(keys).difference(valid_keys))
-        if len(elements_only_in_list1) > 0:
-            raise (ConfigurationError("found unrecongizable keys!"))
+        valid_keys = set(OPTIONAL_KEYS.keys()).union(REQUIRED_KEYS)
+        invalid_keys = list(set(keys).difference(valid_keys))
+        if len(invalid_keys) > 0:
+            raise ConfigurationError(f"YEAT configuration has unrecongizable keys {invalid_keys}")
 
     @staticmethod
-    def _parse_flags(config):
-        flags = defaultdict(lambda: None)
-        for key, value in QC_DEFUALT_VALUES.items():
+    def _parse_global_settings(config):
+        global_settings = defaultdict(lambda: None)
+        for key, value in OPTIONAL_KEYS.items():
             if key in config:
-                flags[key] = config[key]
+                if type(config[key]) != type(value):
+                    raise ConfigurationError("wrong data type for [{key}]")
+                global_settings[key] = config[key]
                 continue
-            flags[key] = value
-        return flags
+            global_settings[key] = value
+        return global_settings
 
     @staticmethod
-    def _parse_samples(config, flags):
+    def _parse_samples(config, global_settings):
         samples = dict()
-        for label, sample_data in config["config"]["samples"].items():
-            samples[label] = Sample.parse_data(label, sample_data, flags)
+        for label, data in config["samples"].items():
+            samples[label] = Sample.parse_data(label, data, global_settings)
         return samples
 
     @staticmethod
     def _parse_assemblers(config, samples):
         assemblers = dict()
-        for label, assembler_data in config["config"]["assemblers"].items():
-            assembler_class = select(assembler_data["algorithm"])
-            assemblers[label] = assembler_class.parse_data(label, assembler_data, samples)
+        for label, data in config["assemblers"].items():
+            assembler_class = select(data["algorithm"])
+            assemblers[label] = assembler_class.parse_data(label, data, samples)
         return assemblers
 
     @property
-    def rule_all_targets(self):
+    def targets(self):
         targets = list()
         for sample in self.samples.values():
-            targets.extend(sample.target_files)
+            targets.extend(sample.targets)
         for assembler in self.assemblers.values():
-            targets.extend(assembler.target_files)
+            targets.extend(assembler.targets)
         return targets
 
 

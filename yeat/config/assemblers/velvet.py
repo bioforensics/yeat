@@ -8,6 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 from .assembler import Assembler
+from glob import glob
 
 
 class VelvetAssembler(Assembler):
@@ -16,10 +17,11 @@ class VelvetAssembler(Assembler):
         return sample.has_illumina
 
     @property
-    def target_files(self):
+    def targets(self):
         targets = list()
         for sample in self.samples.values():
             targets.append(f"analysis/{sample.label}/yeat/velvet/{self.label}/quast/report.html")
+            targets.append(f"analysis/{sample.label}/yeat/velvet/{self.label}/bandage/.done")
         return targets
 
     def input_files(self, sample):
@@ -37,3 +39,6 @@ class VelvetAssembler(Assembler):
         else:
             args = f"'-fastq.gz -shortPaired {reads[0]} -shortPaired2 {reads[1]}'"
         return args
+
+    def gfa_files(self, sample):
+        return glob(f"analysis/{sample}/yeat/velvet/{self.label}/Graph*")

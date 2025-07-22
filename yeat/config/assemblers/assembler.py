@@ -14,7 +14,6 @@ from typing import Dict, Optional
 
 REQUIRED_KEYS = {"algorithm"}
 OPTIONAL_KEYS = {"arguments", "samples"}
-VALID_KEYS = REQUIRED_KEYS.union(OPTIONAL_KEYS)
 
 
 class Assembler(BaseModel):
@@ -33,17 +32,20 @@ class Assembler(BaseModel):
 
     @staticmethod
     def _check_required_keys(keys):
-        intersection_list = list(keys & REQUIRED_KEYS)
-        if len(intersection_list) == 0:
-            raise (
-                AssemblerConfigurationError("algorithm missing from [assemblers] configuration")
-            )
+        intersection = list(keys & REQUIRED_KEYS)
+        if len(intersection) != len(REQUIRED_KEYS):
+            raise (AssemblerConfigurationError(f"YEAT assembler must include {REQUIRED_KEYS}"))
 
     @staticmethod
     def _check_optional_keys(keys):
-        elements_only_in_list1 = list(keys.difference(VALID_KEYS))
-        if len(elements_only_in_list1) > 0:
-            raise (AssemblerConfigurationError("found unrecongizable keys!"))
+        valid_keys = REQUIRED_KEYS.union(OPTIONAL_KEYS)
+        invalid_keys = list(keys.difference(valid_keys))
+        if invalid_keys:
+            raise (
+                AssemblerConfigurationError(
+                    f"YEAT assembler has unrecognizable keys {invalid_keys}"
+                )
+            )
 
     @staticmethod
     def _select_samples(cls, data, samples):
@@ -55,15 +57,6 @@ class Assembler(BaseModel):
     @property
     def extra_args(self):
         return self.arguments or ""
-
-    # def input_files(self, sample, algorithm, read_type):
-    #     temp = self.samples[sample].data[read_type]
-    #     if len(temp) == 1:
-    #         return [f"analysis/{sample}/qc/{algorithm}/downsample/read.fastq.gz"]
-    #     else:
-    #         r1=f"analysis/{sample}/qc/{algorithm}/downsample/R1.fastq.gz"
-    #         r2=f"analysis/{sample}/qc/{algorithm}/downsample/R2.fastq.gz"
-    #         return [r1, r2]
 
 
 class AssemblerConfigurationError(ValueError):

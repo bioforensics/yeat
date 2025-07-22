@@ -4,6 +4,7 @@ channels:
     - bioconda
     - defaults
 dependencies:
+    - bandage>=0.9
     - black=22.10
     - fastp>=0.23
     - fastqc>=0.11

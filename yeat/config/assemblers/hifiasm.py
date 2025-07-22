@@ -8,6 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 from .assembler import Assembler
+from glob import glob
 
 
 class HifiasmAssembler(Assembler):
@@ -16,10 +17,11 @@ class HifiasmAssembler(Assembler):
         return sample.has_long_reads
 
     @property
-    def target_files(self):
+    def targets(self):
         targets = list()
         for sample in self.samples.values():
-            targets.append(f"analysis/{sample.label}/yeat/megahit/{self.label}/quast/report.html")
+            targets.append(f"analysis/{sample.label}/yeat/hifiasm/{self.label}/quast/report.html")
+            targets.append(f"analysis/{sample.label}/yeat/hifiasm/{self.label}/bandage/.done")
         return targets
 
     def input_files(self, sample):
@@ -29,3 +31,6 @@ class HifiasmAssembler(Assembler):
     def input_args(self, sample):
         reads = self.input_files(sample)
         return f"{reads[0]}"
+
+    def gfa_files(self, sample):
+        return glob(f"analysis/{sample}/yeat/hifiasm/{self.label}/*.gfa")

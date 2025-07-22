@@ -8,6 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 from .assembler import Assembler
+from glob import glob
 
 
 class UnicyclerAssembler(Assembler):
@@ -16,12 +17,13 @@ class UnicyclerAssembler(Assembler):
         return sample.has_illumina or sample.has_long_reads
 
     @property
-    def target_files(self):
+    def targets(self):
         targets = list()
         for sample in self.samples.values():
             targets.append(
                 f"analysis/{sample.label}/yeat/unicycler/{self.label}/quast/report.html"
             )
+            targets.append(f"analysis/{sample.label}/yeat/unicycler/{self.label}/bandage/.done")
         return targets
 
     def input_files(self, sample):
@@ -47,3 +49,6 @@ class UnicyclerAssembler(Assembler):
         elif len(reads) == 3:
             args = f"-1 {reads[0]} -2 {reads[1]} -l {reads[2]}"
         return args
+
+    def gfa_files(self, sample):
+        return glob(f"analysis/{sample}/yeat/unicycler/{self.label}/*.gfa")

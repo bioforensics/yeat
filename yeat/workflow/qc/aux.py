@@ -38,3 +38,11 @@ def get_down(downsample, genome_size, coverage_depth, average_read_length):
     if downsample == 0:
         return int((genome_size * coverage_depth) / (2 * average_read_length))
     return downsample
+
+
+def print_downsample_values(genome_size, average_read_length, coverage_depth, down, seed):
+    print(f"[yeat] genome size: {genome_size}")
+    print(f"[yeat] average read length: {average_read_length}")
+    print(f"[yeat] target depth of coverage: {coverage_depth}x")
+    print(f"[yeat] number of reads to sample: {down}")
+    print(f"[yeat] random seed for sampling: {seed}")

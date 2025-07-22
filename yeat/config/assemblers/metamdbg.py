@@ -8,6 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 from .assembler import Assembler
+from glob import glob
 
 
 class MetaMDBGAssembler(Assembler):
@@ -16,10 +17,11 @@ class MetaMDBGAssembler(Assembler):
         return sample.has_long_reads
 
     @property
-    def target_files(self):
+    def targets(self):
         targets = list()
         for sample in self.samples.values():
             targets.append(f"analysis/{sample.label}/yeat/metamdbg/{self.label}/quast/report.html")
+            targets.append(f"analysis/{sample.label}/yeat/metamdbg/{self.label}/bandage/.done")
         return targets
 
     def input_files(self, sample):
@@ -34,3 +36,6 @@ class MetaMDBGAssembler(Assembler):
         else:
             args = f"--in-hifi {reads[0]}"
         return args
+
+    def gfa_files(self, sample):
+        return glob(f"analysis/{sample}/yeat/metamdbg/{self.label}/*.gfa")

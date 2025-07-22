@@ -16,10 +16,11 @@ class PenguiNAssembler(Assembler):
         return sample.has_illumina
 
     @property
-    def target_files(self):
+    def targets(self):
         targets = list()
         for sample in self.samples.values():
             targets.append(f"analysis/{sample.label}/yeat/penguin/{self.label}/quast/report.html")
+            targets.append(f"analysis/{sample.label}/yeat/penguin/{self.label}/bandage/.done")
         return targets
 
     def input_files(self, sample):

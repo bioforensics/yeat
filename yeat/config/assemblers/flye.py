@@ -8,6 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 from .assembler import Assembler
+from glob import glob
 
 
 class FlyeAssembler(Assembler):
@@ -16,10 +17,11 @@ class FlyeAssembler(Assembler):
         return sample.has_long_reads
 
     @property
-    def target_files(self):
+    def targets(self):
         targets = list()
         for sample in self.samples.values():
             targets.append(f"analysis/{sample.label}/yeat/flye/{self.label}/quast/report.html")
+            targets.append(f"analysis/{sample.label}/yeat/flye/{self.label}/bandage/.done")
         return targets
 
     def input_files(self, sample):
@@ -34,3 +36,10 @@ class FlyeAssembler(Assembler):
         else:
             args = f"--pacbio-hifi {reads[0]}"
         return args
+
+    def gfa_files(self, sample):
+        return (
+            glob(f"analysis/{sample}/yeat/flye/{self.label}/30-contigger/*.gfa")
+            + glob(f"analysis/{sample}/yeat/flye/{self.label}/40-polishing/*.gfa")
+            + glob(f"analysis/{sample}/yeat/flye/{self.label}/*.gfa")
+        )

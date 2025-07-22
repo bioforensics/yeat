@@ -22,7 +22,6 @@ OPTIONAL_KEYS = {
     "quality",
     "skip_filter",
 }
-VALID_KEYS = READ_TYPES.union(OPTIONAL_KEYS)
 BEST_LR_ORDER = ("pacbio_hifi", "ont_duplex", "ont_simplex")
 
 
@@ -31,45 +30,41 @@ class Sample(BaseModel):
     data: Dict
 
     @classmethod
-    def parse_data(cls, label, data, flags):
+    def parse_data(cls, label, data, global_settings):
         keys = set(data.keys())
         cls._check_required_keys(keys)
         cls._check_optional_keys(keys)
-        # if len(reads) not in (1, 2):
-        #     raise ValueError(f"expected 1 or 2 FASTQ files, not {len(reads)}")
-        cls._expand_read_paths_in_dict(data)
-        cls._add_default_flag_values(data, flags)
+        cls._expand_read_paths(data)
+        cls._add_global_settings(data, global_settings)
         return cls(label=label, data=data)
 
     @staticmethod
     def _check_required_keys(keys):
-        intersection_list = list(keys & READ_TYPES)
-        if len(intersection_list) == 0:
-            raise (SampleConfigurationError("need to add read data to sample!"))
+        intersection = list(keys & READ_TYPES)
+        if not intersection:
+            raise SampleConfigurationError(f"YEAT sample must include {READ_TYPES}")
 
     @staticmethod
     def _check_optional_keys(keys):
-        elements_only_in_list1 = list(keys.difference(VALID_KEYS))
-        if len(elements_only_in_list1) > 0:
-            raise (SampleConfigurationError("found unrecongizable keys!"))
+        valid_keys = READ_TYPES.union(OPTIONAL_KEYS)
+        invalid_keys = list(keys.difference(valid_keys))
+        if invalid_keys:
+            raise SampleConfigurationError(f"YEAT sample has unrecognizable keys {invalid_keys}")
 
     @staticmethod
-    def _expand_read_paths_in_dict(data):
-        for key, value in data.items():
-            if key in READ_TYPES:
-                data[key] = list(Sample._expand_glob_pattern(value))
+    def _expand_read_paths(data):
+        for read_type, read_path in data.items():
+            data[read_type] = list(Sample._expand_glob_pattern(Path(read_path)))
 
     @staticmethod
     def _expand_glob_pattern(read_path):
-        path = Path(read_path)
-        seq_paths = path.parent.glob(path.name)
-        yield from seq_paths
+        yield from read_path.parent.glob(read_path.name)
 
     @staticmethod
-    def _add_default_flag_values(data, flags):
+    def _add_global_settings(data, global_settings):
         for key in OPTIONAL_KEYS:
             if key not in data:
-                data[key] = flags[key]
+                data[key] = global_settings[key]
 
     @property
     def has_illumina(self):
@@ -85,11 +80,15 @@ class Sample(BaseModel):
 
     @property
     def has_long_reads(self):
-        return self.has_pacbio or self.has_ont
+        return self.has_ont or self.has_pacbio
 
     @property
     def has_both_short_and_long_reads(self):
         return self.has_illumina and self.has_long_reads
+
+    @property
+    def coverage_depth(self):
+        return self.data.get("coverage_depth", 150)
 
     @property
     def downsample(self):
@@ -98,10 +97,6 @@ class Sample(BaseModel):
     @property
     def genome_size(self):
         return self.data.get("genome_size", 0)
-
-    @property
-    def coverage_depth(self):
-        return self.data.get("coverage_depth", 150)
 
     @property
     def min_length(self):
@@ -116,7 +111,13 @@ class Sample(BaseModel):
         return self.data.get("skip_filter", False)
 
     @property
-    def target_files(self):
+    def best_long_read_type(self):
+        for read_type in BEST_LR_ORDER:
+            if read_type in self.data:
+                return read_type
+
+    @property
+    def targets(self):
         fastq_paths = list()
         for read_type in READ_TYPES:
             if read_type not in self.data:
@@ -129,12 +130,6 @@ class Sample(BaseModel):
                 continue
             fastq_paths.append(f"{fastqc_dir}/read_fastqc.html")
         return fastq_paths
-
-    @property
-    def best_long_read_type(self):
-        for read_type in BEST_LR_ORDER:
-            if read_type in self.data:
-                return read_type
 
 
 class SampleConfigurationError(ValueError):

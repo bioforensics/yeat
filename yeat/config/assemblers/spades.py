@@ -8,6 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 from .assembler import Assembler
+from glob import glob
 
 
 class SPAdesAssembler(Assembler):
@@ -16,10 +17,11 @@ class SPAdesAssembler(Assembler):
         return sample.has_illumina
 
     @property
-    def target_files(self):
+    def targets(self):
         targets = list()
         for sample in self.samples.values():
             targets.append(f"analysis/{sample.label}/yeat/spades/{self.label}/quast/report.html")
+            targets.append(f"analysis/{sample.label}/yeat/spades/{self.label}/bandage/.done")
         return targets
 
     def input_files(self, sample):
@@ -37,3 +39,8 @@ class SPAdesAssembler(Assembler):
         else:
             args = f"-1 {reads[0]} -2 {reads[1]}"
         return args
+
+    def gfa_files(self, sample):
+        return glob(f"analysis/{sample}/yeat/spades/{self.label}/*.gfa") + glob(
+            f"analysis/{sample}/yeat/spades/{self.label}/*.fastg"
+        )

@@ -12,20 +12,14 @@ from pathlib import Path
 
 rule spades:
     input:
-        reads=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .input_files(wildcards.sample),
+        reads=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_files(wildcards.sample),
     output:
         contigs="analysis/{sample}/yeat/spades/{label}/contigs.fasta",
     threads: 128
     params:
         outdir="analysis/{sample}/yeat/spades/{label}",
-        input_args=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .input_args(wildcards.sample),
-        extra_args=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .extra_args,
+        input_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_args(wildcards.sample),
+        extra_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].extra_args,
     log:
         "analysis/{sample}/yeat/spades/{label}/spades.log",
     shell:
@@ -36,21 +30,15 @@ rule spades:
 
 rule megahit:
     input:
-        reads=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .input_files(wildcards.sample),
+        reads=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_files(wildcards.sample),
     output:
         contigs="analysis/{sample}/yeat/megahit/{label}/contigs.fasta",
     threads: 128
     params:
         temp_outdir="analysis/{sample}/yeat/megahit/{label}/megahit-temp",
         outdir="analysis/{sample}/yeat/megahit/{label}",
-        input_args=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .input_args(wildcards.sample),
-        extra_args=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .extra_args,
+        input_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_args(wildcards.sample),
+        extra_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].extra_args,
     log:
         "analysis/{sample}/yeat/megahit/{label}/megahit.log",
     shell:
@@ -64,20 +52,14 @@ rule megahit:
 
 rule unicycler:
     input:
-        reads=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .input_files(wildcards.sample),
+        reads=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_files(wildcards.sample),
     output:
         contigs="analysis/{sample}/yeat/unicycler/{label}/contigs.fasta",
     threads: 128
     params:
         outdir="analysis/{sample}/yeat/unicycler/{label}",
-        input_args=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .input_args(wildcards.sample),
-        extra_args=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .extra_args,
+        input_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_args(wildcards.sample),
+        extra_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].extra_args,
     log:
         "analysis/{sample}/yeat/unicycler/{label}/unicycler.log",
     shell:
@@ -89,23 +71,15 @@ rule unicycler:
 
 rule penguin:
     input:
-        reads=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .input_files(wildcards.sample),
+        reads=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_files(wildcards.sample),
     output:
         contigs="analysis/{sample}/yeat/penguin/{label}/contigs.fasta",
     threads: 128
     params:
         outdir="analysis/{sample}/yeat/penguin/{label}",
-        input_args=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .input_args(wildcards.sample),
-        extra_args=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .extra_args,
-        bowtie2_input_args=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .bowtie2_input_args(wildcards.sample),
+        input_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_args(wildcards.sample),
+        extra_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].extra_args,
+        bowtie2_input_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].bowtie2_input_args(wildcards.sample),
     log:
         "analysis/{sample}/yeat/penguin/{label}/penguin.log",
     shell:
@@ -120,9 +94,7 @@ rule penguin:
 
 rule velvet:
     input:
-        reads=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .input_files(wildcards.sample),
+        reads=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_files(wildcards.sample),
     output:
         contigs="analysis/{sample}/yeat/velvet/{label}/contigs.fasta",
     conda:
@@ -131,12 +103,8 @@ rule velvet:
     params:
         temp_outdir="analysis/{sample}/yeat/velvet/{label}/velvet-temp",
         outdir="analysis/{sample}/yeat/velvet/{label}",
-        input_args=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .input_args(wildcards.sample),
-        extra_args=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .extra_args,
+        input_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_args(wildcards.sample),
+        extra_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].extra_args,
     log:
         "analysis/{sample}/yeat/velvet/{label}/velvet.log",
     shell:
@@ -150,20 +118,14 @@ rule velvet:
 
 rule flye:
     input:
-        reads=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .input_files(wildcards.sample),
+        reads=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_files(wildcards.sample),
     output:
         contigs="analysis/{sample}/yeat/flye/{label}/contigs.fasta",
     threads: 128
     params:
         outdir="analysis/{sample}/yeat/flye/{label}",
-        input_args=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .input_args(wildcards.sample),
-        extra_args=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .extra_args,
+        input_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_args(wildcards.sample),
+        extra_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].extra_args,
     log:
         "analysis/{sample}/yeat/flye/{label}/flye.log",
     shell:
@@ -175,20 +137,14 @@ rule flye:
 
 rule canu:
     input:
-        reads=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .input_files(wildcards.sample),
+        reads=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_files(wildcards.sample),
     output:
         contigs="analysis/{sample}/yeat/canu/{label}/contigs.fasta",
     threads: 128
     params:
         outdir="analysis/{sample}/yeat/canu/{label}",
-        input_args=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .input_args(wildcards.sample),
-        extra_args=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .extra_args,
+        input_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_args(wildcards.sample),
+        extra_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].extra_args,
     log:
         "analysis/{sample}/yeat/canu/{label}/canu.log",
     shell:
@@ -200,20 +156,14 @@ rule canu:
 
 rule hifiasm:
     input:
-        reads=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .input_files(wildcards.sample),
+        reads=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_files(wildcards.sample),
     output:
         contigs="analysis/{sample}/yeat/hifiasm/{label}/contigs.fasta",
     threads: 128
     params:
         prefix="analysis/{sample}/hifi/{label}/hifiasm/{sample}",
-        input_args=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .input_args(wildcards.sample),
-        extra_args=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .extra_args,
+        input_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_args(wildcards.sample),
+        extra_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].extra_args,
     shell:
         """
         hifiasm -o {params.prefix} -t {threads} {params.extra_args} {params.input_args}
@@ -224,20 +174,14 @@ rule hifiasm:
 
 rule hifiasm_meta:
     input:
-        reads=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .input_files(wildcards.sample),
+        reads=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_files(wildcards.sample),
     output:
         contigs="analysis/{sample}/yeat/hifiasm_meta/{label}/contigs.fasta",
     threads: 128
     params:
         prefix="analysis/{sample}/hifi/{label}/hifiasm_meta/{sample}",
-        input_args=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .input_args(wildcards.sample),
-        extra_args=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .extra_args,
+        input_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_args(wildcards.sample),
+        extra_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].extra_args,
     shell:
         """
         hifiasm_meta -o {params.prefix} -t {threads} {params.extra_args} {params.input_args}
@@ -248,20 +192,14 @@ rule hifiasm_meta:
 
 rule metamdbg:
     input:
-        reads=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .input_files(wildcards.sample),
+        reads=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_files(wildcards.sample),
     output:
         contigs="analysis/{sample}/yeat/metamdbg/{label}/contigs.fasta",
     threads: 128
     params:
         outdir="analysis/{sample}/yeat/metamdbg/{label}",
-        input_args=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .input_args(wildcards.sample),
-        extra_args=lambda wildcards: config["asm_cfg"]
-        .assemblers[wildcards.label]
-        .extra_args,
+        input_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_args(wildcards.sample),
+        extra_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].extra_args,
     shell:
         """
         metaMDBG asm --out-dir {params.outdir} {params.input_args} -t {threads} {params.extra_args}

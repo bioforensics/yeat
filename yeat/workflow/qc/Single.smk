@@ -12,9 +12,7 @@ from yeat.workflow.qc.aux import copy_input
 
 rule copy_input:
     input:
-        read=lambda wildcards: config["asm_cfg"]
-        .samples[wildcards.sample]
-        .data["illumina"],
+        read=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].data["illumina"],
     output:
         read="analysis/{sample}/qc/illumina/read.fastq.gz",
     params:
@@ -49,12 +47,8 @@ rule fastp:
         html_report="analysis/{sample}/qc/illumina/fastp/fastp.html",
         json_report="analysis/{sample}/qc/illumina/fastp/fastp.json",
         txt_report="analysis/{sample}/qc/illumina/fastp/report.txt",
-        skip_filter=lambda wildcards: config["asm_cfg"]
-        .samples[wildcards.sample]
-        .skip_filter,
-        min_length=lambda wildcards: config["asm_cfg"]
-        .samples[wildcards.sample]
-        .min_length,
+        skip_filter=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].skip_filter,
+        min_length=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].min_length,
     run:
         if params.skip_filter:
             Path(output.read).symlink_to(params.symlink_read)
@@ -87,15 +81,9 @@ rule downsample:
         fastp_report="analysis/{sample}/qc/illumina/fastp/fastp.json",
         outdir="analysis/{sample}/qc/illumina/downsample",
         seed=config["seed"],
-        downsample=lambda wildcards: config["asm_cfg"]
-        .samples[wildcards.sample]
-        .downsample,
-        genome_size=lambda wildcards: config["asm_cfg"]
-        .samples[wildcards.sample]
-        .genome_size,
-        coverage_depth=lambda wildcards: config["asm_cfg"]
-        .samples[wildcards.sample]
-        .coverage_depth,
+        downsample=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].downsample,
+        genome_size=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].genome_size,
+        coverage_depth=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].coverage_depth,
     run:
         if params.downsample == -1:
             Path(output.read).symlink_to(params.symlink_read)

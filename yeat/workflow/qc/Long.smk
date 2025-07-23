@@ -12,9 +12,7 @@ from yeat.workflow.qc.aux import copy_input
 
 rule copy_input:
     input:
-        read=lambda wildcards: config["asm_cfg"]
-        .samples[wildcards.sample]
-        .data[wildcards.platform],
+        read=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].data[wildcards.platform],
     output:
         read="analysis/{sample}/qc/{platform}/read.fastq.gz",
     wildcard_constraints:
@@ -53,13 +51,9 @@ rule chopper:
     threads: 128
     params:
         symlink_read="../read.fastq.gz",
-        skip_filter=lambda wildcards: config["asm_cfg"]
-        .samples[wildcards.sample]
-        .skip_filter,
+        skip_filter=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].skip_filter,
         quality=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].quality,
-        min_length=lambda wildcards: config["asm_cfg"]
-        .samples[wildcards.sample]
-        .min_length,
+        min_length=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].min_length,
     run:
         if params.skip_filter:
             Path(output.read).symlink_to(params.symlink_read)
@@ -79,9 +73,7 @@ rule downsample:
     params:
         symlink_read="../chopper/read.fastq.gz",
         seed=config["seed"],
-        downsample=lambda wildcards: config["asm_cfg"]
-        .samples[wildcards.sample]
-        .downsample,
+        downsample=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].downsample,
     run:
         if params.downsample == -1:
             Path(output.read).symlink_to(params.symlink_read)

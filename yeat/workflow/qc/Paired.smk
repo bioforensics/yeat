@@ -12,7 +12,9 @@ from yeat.workflow.qc.aux import copy_input
 
 rule copy_input:
     input:
-        reads=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].data["illumina"]
+        reads=lambda wildcards: config["asm_cfg"]
+        .samples[wildcards.sample]
+        .data["illumina"],
     output:
         r1="analysis/{sample}/qc/illumina/R1.fastq.gz",
         r2="analysis/{sample}/qc/illumina/R2.fastq.gz",
@@ -29,15 +31,15 @@ rule fastqc:
         r2=rules.copy_input.output.r2,
     output:
         r1_html="analysis/{sample}/qc/illumina/fastqc/R1_fastqc.html",
-        r2_html="analysis/{sample}/qc/illumina/fastqc/R2_fastqc.html"
+        r2_html="analysis/{sample}/qc/illumina/fastqc/R2_fastqc.html",
     threads: 128
     params:
-        outdir="analysis/{sample}/qc/illumina/fastqc"
+        outdir="analysis/{sample}/qc/illumina/fastqc",
     log:
-        "analysis/{sample}/qc/illumina/fastqc/fastqc.log"
+        "analysis/{sample}/qc/illumina/fastqc/fastqc.log",
     shell:
         """
-        fastqc {input.r1} {input.r2} -t {threads} -o {params.outdir} > {log} 2>&1
+        fastqc -t {threads} -o {params.outdir} {input.r1} {input.r2} > {log} 2>&1
         """
 
 
@@ -49,13 +51,17 @@ rule fastp:
         r1="analysis/{sample}/qc/illumina/fastp/R1.fastq.gz",
         r2="analysis/{sample}/qc/illumina/fastp/R2.fastq.gz",
     params:
-        skip_filter=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].skip_filter,
-        min_length=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].min_length,
         symlink_r1="../R1.fastq.gz",
         symlink_r2="../R2.fastq.gz",
         html_report="analysis/{sample}/qc/illumina/fastp/fastp.html",
         json_report="analysis/{sample}/qc/illumina/fastp/fastp.json",
-        txt_report="analysis/{sample}/qc/illumina/fastp/report.txt"
+        txt_report="analysis/{sample}/qc/illumina/fastp/report.txt",
+        skip_filter=lambda wildcards: config["asm_cfg"]
+        .samples[wildcards.sample]
+        .skip_filter,
+        min_length=lambda wildcards: config["asm_cfg"]
+        .samples[wildcards.sample]
+        .min_length,
     run:
         if params.skip_filter:
             Path(output.r1).symlink_to(params.symlink_r1)
@@ -65,13 +71,12 @@ rule fastp:
         shell(cmd)
 
 
-
 rule mash:
     input:
         r1=rules.copy_input.output.r1,
     output:
         sketch="analysis/{sample}/qc/illumina/mash/R1.fastq.gz.msh",
-        mash_report="analysis/{sample}/qc/illumina/mash/report.tsv"
+        mash_report="analysis/{sample}/qc/illumina/mash/report.tsv",
     shell:
         """
         mash sketch {input.r1} -o {output.sketch}
@@ -86,16 +91,22 @@ rule downsample:
         mash_report=rules.mash.output.mash_report,
     output:
         r1="analysis/{sample}/qc/illumina/downsample/R1.fastq.gz",
-        r2="analysis/{sample}/qc/illumina/downsample/R2.fastq.gz"
+        r2="analysis/{sample}/qc/illumina/downsample/R2.fastq.gz",
     params:
-        seed=config["seed"],
-        downsample=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].downsample,
-        genome_size=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].genome_size,
-        coverage_depth=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].coverage_depth,
         symlink_r1="../R1.fastq.gz",
         symlink_r2="../R2.fastq.gz",
-        fastp_report="seq/fastp/{sample}/paired/fastp.json",
-        outdir="analysis/{sample}/qc/illumina/downsample"
+        fastp_report="analysis/{sample}/qc/illumina/fastp/fastp.json",
+        outdir="analysis/{sample}/qc/illumina/downsample",
+        seed=config["seed"],
+        downsample=lambda wildcards: config["asm_cfg"]
+        .samples[wildcards.sample]
+        .downsample,
+        genome_size=lambda wildcards: config["asm_cfg"]
+        .samples[wildcards.sample]
+        .genome_size,
+        coverage_depth=lambda wildcards: config["asm_cfg"]
+        .samples[wildcards.sample]
+        .coverage_depth,
     run:
         if params.downsample == -1:
             Path(output.r1).symlink_to(params.symlink_r1)
@@ -103,7 +114,15 @@ rule downsample:
             return
         genome_size = get_genome_size(params.genome_size, input.mash_report)
         average_read_length = get_average_read_length(params.fastp_report)
-        down = get_down(params.downsample, genome_size, params.coverage_depth, average_read_length)
-        print_downsample_values(genome_size, average_read_length, params.coverage_depth, down, seed)
-        shell("seqtk sample -s {params.seed} {input.read1} {down} | gzip > {params.outdir}/R1.fastq.gz")
-        shell("seqtk sample -s {params.seed} {input.read2} {down} | gzip > {params.outdir}/R2.fastq.gz")
+        down = get_down(
+            params.downsample, genome_size, params.coverage_depth, average_read_length
+        )
+        print_downsample_values(
+            genome_size, average_read_length, params.coverage_depth, down, seed
+        )
+        shell(
+            "seqtk sample -s {params.seed} {input.read1} {down} | gzip > {params.outdir}/R1.fastq.gz"
+        )
+        shell(
+            "seqtk sample -s {params.seed} {input.read2} {down} | gzip > {params.outdir}/R2.fastq.gz"
+        )

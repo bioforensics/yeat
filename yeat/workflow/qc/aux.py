@@ -20,10 +20,10 @@ def copy_input(input, output, do_copy):
 
 
 def get_genome_size(genome_size, mash_report):
-    if genome_size == 0:
-        df = pd.read_csv(mash_report, sep="\t")
-        return df["Length"].iloc[0]
-    return genome_size
+    if genome_size:
+        return genome_size
+    df = pd.read_csv(mash_report, sep="\t")
+    return df["Length"].iloc[0]
 
 
 def get_average_read_length(fastp_report):
@@ -35,9 +35,9 @@ def get_average_read_length(fastp_report):
 
 
 def get_down(downsample, genome_size, coverage_depth, average_read_length):
-    if downsample == 0:
-        return int((genome_size * coverage_depth) / (2 * average_read_length))
-    return downsample
+    if downsample:
+        return downsample
+    return int((genome_size * coverage_depth) / (2 * average_read_length))
 
 
 def print_downsample_values(genome_size, average_read_length, coverage_depth, down, seed):

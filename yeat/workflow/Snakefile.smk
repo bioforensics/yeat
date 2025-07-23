@@ -19,25 +19,34 @@ include: "Assemblers.smk"
 
 rule all:
     input:
-        asm_cfg.targets
+        asm_cfg.targets,
 
 
 module qc_paired_workflow:
-    snakefile: "qc/Paired.smk"
-    config: config
+    snakefile:
+        "qc/Paired.smk"
+    config:
+        config
+
 
 use rule * from qc_paired_workflow as qc_paired_*
 
 
 module qc_single_workflow:
-    snakefile: "qc/Single.smk"
-    config: config
+    snakefile:
+        "qc/Single.smk"
+    config:
+        config
+
 
 use rule * from qc_single_workflow as qc_single_*
 
 
 module qc_long_workflow:
-    snakefile: "qc/Long.smk"
-    config: config
+    snakefile:
+        "qc/Long.smk"
+    config:
+        config
+
 
 use rule * from qc_long_workflow as qc_long_*

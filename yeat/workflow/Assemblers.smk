@@ -164,9 +164,11 @@ rule flye:
         extra_args=lambda wildcards: config["asm_cfg"]
         .assemblers[wildcards.label]
         .extra_args,
+    log:
+        "analysis/{sample}/yeat/flye/{label}/flye.log",
     shell:
         """
-        flye {params.input_args} -t {threads} -o {params.outdir} {params.extra_args}
+        flye {params.input_args} -t {threads} -o {params.outdir} {params.extra_args} > {log} 2>&1
         ln -s assembly.fasta {output.contigs}
         """
 
@@ -187,9 +189,11 @@ rule canu:
         extra_args=lambda wildcards: config["asm_cfg"]
         .assemblers[wildcards.label]
         .extra_args,
+    log:
+        "analysis/{sample}/yeat/canu/{label}/canu.log",
     shell:
         """
-        canu {params.input_args} maxThreads={threads} -p {wildcards.sample} -d {params.outdir} {params.extra_args} useGrid=false
+        canu {params.input_args} maxThreads={threads} -p {wildcards.sample} -d {params.outdir} {params.extra_args} useGrid=false > {log} 2>&1
         ln -s {wildcards.sample}.contigs.fasta {output.contigs}
         """
 

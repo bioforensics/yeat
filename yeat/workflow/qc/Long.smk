@@ -57,7 +57,7 @@ rule chopper:
         .samples[wildcards.sample]
         .skip_filter,
         quality=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].quality,
-        min_length=lambda wilcards: config["asm_cfg"]
+        min_length=lambda wildcards: config["asm_cfg"]
         .samples[wildcards.sample]
         .min_length,
     run:

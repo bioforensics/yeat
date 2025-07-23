@@ -26,7 +26,7 @@ class Assembler(BaseModel):
         keys = set(data.keys())
         cls._check_required_keys(keys)
         cls._check_optional_keys(keys)
-        arguments = data["argument"] if "argument" in data else None
+        arguments = data["arguments"] if "arguments" in data else None
         s = cls._select_samples(cls, data, samples)
         return cls(label=label, arguments=arguments, samples=s)
 

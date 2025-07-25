@@ -4,6 +4,7 @@ channels:
     - bioconda
     - defaults
 dependencies:
+    - bandage>=0.9
     - black=22.10
     - fastp>=0.23
     - fastqc>=0.11
@@ -32,4 +33,6 @@ dependencies:
     - samtools=1.20
     - bowtie2>=2.5
     - pilon>=1.24
-    - pulp=2.7.0
+    - pulp=2.7
+    - chopper>=0.9
+    - snakefmt>=0.11

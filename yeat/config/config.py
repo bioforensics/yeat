@@ -7,67 +7,81 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import READ_TYPES, DOWNSAMPLE_KEYS, AssemblyConfigError
-from .assembly import Assembly
+from . import OPTIONAL_KEYS
+from .assemblers import select
 from .sample import Sample
-from itertools import chain
+from collections import defaultdict
+from pydantic import BaseModel
+from typing import Dict
 
 
-CONFIG_KEYS = ("samples", "assemblies")
-SAMPLE_KEYS = READ_TYPES + DOWNSAMPLE_KEYS
-ASSEMBLY_KEYS = ("algorithm", "extra_args", "samples", "mode")
+REQUIRED_KEYS = {"samples", "assemblers"}
+CLI_KEYS = {"init", "config", "seed", "threads", "workdir", "dry_run", "copy_input"}
 
 
-class AssemblyConfig:
-    def __init__(self, config, threads=1, bandage=False):
-        self.config = config
-        self.validate_config_keys()
-        self.threads = threads
-        self.bandage = bandage
-        self.samples = self.create_sample_objects()
-        self.assemblies = self.create_assembly_objects()
-        self.target_files = self.get_target_files()
+class AssemblyConfiguration(BaseModel):
+    global_settings: Dict
+    samples: Dict
+    assemblers: Dict
 
-    def validate_config_keys(self):
-        self.check_required_keys(self.config.keys(), CONFIG_KEYS)
-        for sample in self.config["samples"].values():
-            self.check_valid_keys(sample.keys(), SAMPLE_KEYS)
-        for assembly in self.config["assemblies"].values():
-            self.check_required_keys(assembly.keys(), ASSEMBLY_KEYS)
+    @classmethod
+    def parse_snakemake_config(cls, config):
+        keys = config.keys()
+        cls._check_required_keys(keys)
+        cls._check_optional_keys(keys)
+        global_settings = cls._parse_global_settings(config)
+        samples = cls._parse_samples(config, global_settings)
+        assemblers = cls._parse_assemblers(config, samples)
+        return cls(global_settings=global_settings, samples=samples, assemblers=assemblers)
 
-    def check_required_keys(self, observed_keys, expected_keys):
-        missing_keys = set(expected_keys) - set(observed_keys)
-        if missing_keys:
-            key_str = ",".join(sorted(missing_keys))
-            message = f"Missing assembly configuration setting(s) '{key_str}'"
-            raise AssemblyConfigError(message)
-        self.check_valid_keys(observed_keys, expected_keys)
+    @staticmethod
+    def _check_required_keys(keys):
+        if not REQUIRED_KEYS.issubset(keys):
+            raise ConfigurationError(f"YEAT configuration must include {REQUIRED_KEYS}")
 
-    def check_valid_keys(self, observed_keys, expected_keys):
-        extra_keys = set(observed_keys) - set(expected_keys)
-        if extra_keys:
-            key_str = ",".join(sorted(extra_keys))
-            message = f"Found unsupported configuration key(s) '{key_str}'"
-            raise AssemblyConfigError(message)
+    @staticmethod
+    def _check_optional_keys(keys):
+        valid_keys = set(OPTIONAL_KEYS.keys()).union(REQUIRED_KEYS).union(CLI_KEYS)
+        invalid_keys = list(set(keys).difference(valid_keys))
+        if len(invalid_keys) > 0:
+            raise ConfigurationError(f"YEAT configuration has unrecongizable keys {invalid_keys}")
 
-    def create_sample_objects(self):
-        samples = {}
-        for label, sample in self.config["samples"].items():
-            samples[label] = Sample(label, sample)
+    @staticmethod
+    def _parse_global_settings(config):
+        global_settings = defaultdict(lambda: None)
+        for key, value in OPTIONAL_KEYS.items():
+            if key in config:
+                if type(config[key]) != type(value):
+                    raise ConfigurationError(f"wrong data type for [{key}]")
+                global_settings[key] = config[key]
+                continue
+            global_settings[key] = value
+        return global_settings
+
+    @staticmethod
+    def _parse_samples(config, global_settings):
+        samples = dict()
+        for label, data in config["samples"].items():
+            samples[label] = Sample.parse_data(label, data, global_settings)
         return samples
 
-    def create_assembly_objects(self):
-        assemblies = {}
-        for label, assembly in self.config["assemblies"].items():
-            assembly["samples"] = self.get_sample_objects(assembly["samples"])
-            assemblies[label] = Assembly(label, assembly, self.threads, self.bandage)
-        return assemblies
+    @staticmethod
+    def _parse_assemblers(config, samples):
+        assemblers = dict()
+        for label, data in config["assemblers"].items():
+            assembler_class = select(data["algorithm"])
+            assemblers[label] = assembler_class.parse_data(label, data, samples)
+        return assemblers
 
-    def get_sample_objects(self, samples):
-        return dict(((sample, self.samples[sample]) for sample in samples))
+    @property
+    def targets(self):
+        targets = list()
+        for sample in self.samples.values():
+            targets.extend(sample.targets)
+        for assembler in self.assemblers.values():
+            targets.extend(assembler.targets)
+        return targets
 
-    def get_target_files(self):
-        target_files = []
-        for element in chain(self.samples.values(), self.assemblies.values()):
-            target_files += element.target_files
-        return target_files
+
+class ConfigurationError(ValueError):
+    pass

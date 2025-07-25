@@ -1,0 +1,52 @@
+# -------------------------------------------------------------------------------------------------
+# Copyright (c) 2023, DHS. This file is part of YEAT: http://github.com/bioforensics/yeat
+#
+# This software was prepared for the Department of Homeland Security (DHS) by the Battelle National
+# Biodefense Institute, LLC (BNBI) as part of contract HSHQDC-15-C-00064 to manage and operate the
+# National Biodefense Analysis and Countermeasures Center (NBACC), a Federally Funded Research and
+# Development Center.
+# -------------------------------------------------------------------------------------------------
+
+from yeat.config.config import AssemblyConfiguration
+
+
+asm_cfg = AssemblyConfiguration.parse_snakemake_config(config)
+config["asm_cfg"] = asm_cfg
+
+
+include: "Assemblers.smk"
+
+
+rule all:
+    input:
+        asm_cfg.targets,
+
+
+module qc_paired_workflow:
+    snakefile:
+        "qc/Paired.smk"
+    config:
+        config
+
+
+use rule * from qc_paired_workflow as qc_paired_*
+
+
+module qc_single_workflow:
+    snakefile:
+        "qc/Single.smk"
+    config:
+        config
+
+
+use rule * from qc_single_workflow as qc_single_*
+
+
+module qc_long_workflow:
+    snakefile:
+        "qc/Long.smk"
+    config:
+        config
+
+
+use rule * from qc_long_workflow as qc_long_*

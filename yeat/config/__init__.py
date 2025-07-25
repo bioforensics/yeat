@@ -7,13 +7,11 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-ILLUMINA_READS = ("paired", "single")
-PACBIO_READS = ("pacbio-raw", "pacbio-corr", "pacbio-hifi")
-OXFORD_READS = ("nano-raw", "nano-corr", "nano-hq")
-LONG_READS = PACBIO_READS + OXFORD_READS
-READ_TYPES = ILLUMINA_READS + LONG_READS
-DOWNSAMPLE_KEYS = ("downsample", "coverage_depth", "genome_size")
-
-
-class AssemblyConfigError(ValueError):
-    pass
+OPTIONAL_KEYS = {
+    "coverage_depth": 150,
+    "downsample": -1,  # -1 disable, 0 auto
+    "genome_size": 0,  # 0 auto
+    "min_length": 100,
+    "quality": 10,
+    "skip_filter": False,
+}

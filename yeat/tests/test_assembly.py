@@ -11,7 +11,7 @@ import json
 import pytest
 from unittest.mock import patch
 from yeat.config import AssemblyConfigError
-from yeat.config.assembly import Assembly
+from yeat.config.assemblers.assembler import Assembly
 from yeat.config.sample import Sample
 from yeat.tests import data_file
 

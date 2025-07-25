@@ -16,8 +16,7 @@ import toml
 def run_workflow(args):
     snakefile = files("yeat") / "workflow" / "Snakefile.smk"
     config = vars(args)
-    config["config"] = get_config_data(config["config"])
-    # config["bandage"] = check_bandage()
+    config.update(get_config_data(config["config"]))
     success = snakemake_local(args, snakefile, config)
     if not success:
         raise RuntimeError("Snakemake Failed")  # pragma: no cover
@@ -29,20 +28,6 @@ def get_config_data(infile):
         for readtype, reads in sample_data.items():
             data["samples"][sample_label][readtype] = str(Path(reads).resolve())
     return data
-
-
-# def check_bandage():
-#     try:
-#         completed_process = subprocess.run(["Bandage", "--help"], capture_output=True, text=True)
-#     except Exception as exception:
-#         print(f"{type(exception).__name__}: {exception}")
-#         warnings.warn("Unable to run Bandage; skipping Bandage")
-#         return False
-#     if completed_process.returncode == 1:
-#         print(completed_process.stderr)
-#         warnings.warn("Unable to run Bandage; skipping Bandage")
-#         return False
-#     return True
 
 
 def snakemake_local(args, snakefile, config):

@@ -42,10 +42,12 @@ class UnicyclerAssembler(Assembler):
 
     def input_args(self, sample):
         reads = self.input_files(sample)
-        if len(reads) == 1:
+        if len(reads) == 1 and self.samples[sample].has_illumina:
             args = f"-s {reads[0]}"
-        elif len(reads) == 2:
+        elif len(reads) == 2 and self.samples[sample].has_illumina:
             args = f"-1 {reads[0]} -2 {reads[1]}"
+        elif len(reads) == 1 and self.samples[sample].has_long_reads:
+            args = f"-l {reads[0]}"
         elif len(reads) == 3:
             args = f"-1 {reads[0]} -2 {reads[1]} -l {reads[2]}"
         return args

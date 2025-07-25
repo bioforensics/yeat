@@ -182,9 +182,11 @@ rule hifiasm_meta:
         prefix="analysis/{sample}/hifi/{label}/hifiasm_meta/{sample}",
         input_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].input_args(wildcards.sample),
         extra_args=lambda wildcards: config["asm_cfg"].assemblers[wildcards.label].extra_args,
+    log:
+        "analysis/{sample}/yeat/hifiasm_meta/{label}/hifiasm_meta.log",
     shell:
         """
-        hifiasm_meta -o {params.prefix} -t {threads} {params.extra_args} {params.input_args}
+        hifiasm_meta -o {params.prefix} -t {threads} {params.extra_args} {params.input_args} > {log} 2>&1
         gfatools gfa2fa {params.prefix}.p_ctg.gfa > {params.prefix}.p_ctg.fa
         ln -s {wildcards.sample}.p_ctg.fa {output.contigs}
         """

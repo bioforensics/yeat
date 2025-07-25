@@ -7,6 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+from . import OPTIONAL_KEYS
 from pathlib import Path
 from pydantic import BaseModel
 from typing import Dict
@@ -14,14 +15,6 @@ from typing import Dict
 
 ONT_PLATFORMS = {"ont_simplex", "ont_duplex"}
 READ_TYPES = {"illumina", "pacbio_hifi"}.union(ONT_PLATFORMS)
-OPTIONAL_KEYS = {
-    "coverage_depth",
-    "downsample",
-    "genome_size",
-    "min_length",
-    "quality",
-    "skip_filter",
-}
 BEST_LR_ORDER = ("pacbio_hifi", "ont_duplex", "ont_simplex")
 
 

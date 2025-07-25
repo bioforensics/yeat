@@ -6,3 +6,12 @@
 # National Biodefense Analysis and Countermeasures Center (NBACC), a Federally Funded Research and
 # Development Center.
 # -------------------------------------------------------------------------------------------------
+
+OPTIONAL_KEYS = {
+    "coverage_depth": 150,
+    "downsample": -1,  # -1 disable, 0 auto
+    "genome_size": 0,  # 0 auto
+    "min_length": 100,
+    "quality": 10,
+    "skip_filter": False,
+}

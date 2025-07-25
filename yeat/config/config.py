@@ -7,6 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+from . import OPTIONAL_KEYS
 from .assemblers import select
 from .sample import Sample
 from collections import defaultdict
@@ -15,14 +16,7 @@ from typing import Dict
 
 
 REQUIRED_KEYS = {"samples", "assemblers"}
-OPTIONAL_KEYS = {
-    "coverage_depth": 150,
-    "downsample": -1,  # -1 disable, 0 auto
-    "genome_size": 0,  # 0 auto
-    "min_length": 100,
-    "quality": 10,
-    "skip_filter": False,
-}
+CLI_KEYS = {"init", "config", "seed", "threads", "workdir", "dry_run", "copy_input"}
 
 
 class AssemblyConfiguration(BaseModel):
@@ -32,23 +26,22 @@ class AssemblyConfiguration(BaseModel):
 
     @classmethod
     def parse_snakemake_config(cls, config):
-        keys = config["config"].keys()
+        keys = config.keys()
         cls._check_required_keys(keys)
         cls._check_optional_keys(keys)
-        global_settings = cls._parse_global_settings(config["config"])
-        samples = cls._parse_samples(config["config"], global_settings)
-        assemblers = cls._parse_assemblers(config["config"], samples)
+        global_settings = cls._parse_global_settings(config)
+        samples = cls._parse_samples(config, global_settings)
+        assemblers = cls._parse_assemblers(config, samples)
         return cls(global_settings=global_settings, samples=samples, assemblers=assemblers)
 
     @staticmethod
     def _check_required_keys(keys):
-        intersection = list(keys & REQUIRED_KEYS)
-        if not intersection:
+        if not REQUIRED_KEYS.issubset(keys):
             raise ConfigurationError(f"YEAT configuration must include {REQUIRED_KEYS}")
 
     @staticmethod
     def _check_optional_keys(keys):
-        valid_keys = set(OPTIONAL_KEYS.keys()).union(REQUIRED_KEYS)
+        valid_keys = set(OPTIONAL_KEYS.keys()).union(REQUIRED_KEYS).union(CLI_KEYS)
         invalid_keys = list(set(keys).difference(valid_keys))
         if len(invalid_keys) > 0:
             raise ConfigurationError(f"YEAT configuration has unrecongizable keys {invalid_keys}")
@@ -59,7 +52,7 @@ class AssemblyConfiguration(BaseModel):
         for key, value in OPTIONAL_KEYS.items():
             if key in config:
                 if type(config[key]) != type(value):
-                    raise ConfigurationError("wrong data type for [{key}]")
+                    raise ConfigurationError(f"wrong data type for [{key}]")
                 global_settings[key] = config[key]
                 continue
             global_settings[key] = value

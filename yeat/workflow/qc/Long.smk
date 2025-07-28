@@ -58,9 +58,7 @@ rule chopper:
         if params.skip_filter:
             Path(output.read).symlink_to(params.symlink_read)
             return
-        shell(
-            "chopper -t {threads} -q {params.quality} -l {params.min_length} -i {input.read} | gzip > {output.read}"
-        )
+        shell("chopper -t {threads} -q {params.quality} -l {params.min_length} -i {input.read} | gzip > {output.read}")
 
 
 rule downsample:
@@ -78,6 +76,4 @@ rule downsample:
         if params.downsample == -1:
             Path(output.read).symlink_to(params.symlink_read)
             return
-        shell(
-            "seqtk sample -s {params.seed} {input.read} {params.downsample} | gzip > {output.read}"
-        )
+        shell("seqtk sample -s {params.seed} {input.read} {params.downsample} | gzip > {output.read}")

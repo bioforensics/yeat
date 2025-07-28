@@ -232,9 +232,7 @@ rule bandage:
     params:
         outdir="analysis/{sample}/yeat/{algorithm}/{label}/bandage",
     run:
-        gfa_files = (
-            config["asm_cfg"].assemblers[wildcards.label].gfa_files(wildcards.sample)
-        )
+        gfa_files = config["asm_cfg"].assemblers[wildcards.label].gfa_files(wildcards.sample)
         for gfa in gfa_files:
             filename = Path(gfa).stem
             shell("Bandage image {gfa} {params.outdir}/{filename}.jpg")

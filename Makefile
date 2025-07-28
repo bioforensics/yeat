@@ -63,7 +63,7 @@ style:
 ## format:       autoformat Python code
 format:
 	black --line-length=99 $(PYFILES)
-# 	snakefmt yeat/workflow
+	snakefmt --line-length 9999 yeat/workflow
 
 ## hooks:        deploy Git pre-commit hooks for development
 hooks:

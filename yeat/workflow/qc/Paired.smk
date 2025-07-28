@@ -102,15 +102,7 @@ rule downsample:
             return
         genome_size = get_genome_size(params.genome_size, input.mash_report)
         average_read_length = get_average_read_length(params.fastp_report)
-        down = get_down(
-            params.downsample, genome_size, params.coverage_depth, average_read_length
-        )
-        print_downsample_values(
-            genome_size, average_read_length, params.coverage_depth, down, seed
-        )
-        shell(
-            "seqtk sample -s {params.seed} {input.read1} {down} | gzip > {params.outdir}/R1.fastq.gz"
-        )
-        shell(
-            "seqtk sample -s {params.seed} {input.read2} {down} | gzip > {params.outdir}/R2.fastq.gz"
-        )
+        down = get_down(params.downsample, genome_size, params.coverage_depth, average_read_length)
+        print_downsample_values(genome_size, average_read_length, params.coverage_depth, down, seed)
+        shell("seqtk sample -s {params.seed} {input.read1} {down} | gzip > {params.outdir}/R1.fastq.gz")
+        shell("seqtk sample -s {params.seed} {input.read2} {down} | gzip > {params.outdir}/R2.fastq.gz")

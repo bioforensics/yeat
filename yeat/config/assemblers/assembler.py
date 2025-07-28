@@ -12,10 +12,6 @@ from pydantic import BaseModel
 from typing import Dict, Optional
 
 
-REQUIRED_KEYS = {"algorithm"}
-OPTIONAL_KEYS = {"arguments", "samples"}
-
-
 class Assembler(BaseModel):
     label: str
     arguments: Optional[str] = None
@@ -24,11 +20,11 @@ class Assembler(BaseModel):
     @classmethod
     def parse_data(cls, label, data, samples):
         arguments = data["arguments"] if "arguments" in data else None
-        s = cls._select_samples(data, samples)
+        s = cls.select_samples(data, samples)
         return cls(label=label, arguments=arguments, samples=s)
 
     @classmethod
-    def _select_samples(cls, data, samples):
+    def select_samples(cls, data, samples):
         s = data.get("samples", samples)
         return {
             label: sample for label, sample in s.items() if cls._check_sample_compatibility(sample)

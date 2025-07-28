@@ -7,42 +7,25 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import OPTIONAL_KEYS
-from pathlib import Path
+from pathlib import Path, PosixPath
 from pydantic import BaseModel
-from typing import Dict
+from typing import Dict, Union
 
 
 ONT_PLATFORMS = {"ont_simplex", "ont_duplex"}
-READ_TYPES = {"illumina", "pacbio_hifi"}.union(ONT_PLATFORMS)
+READ_TYPES = ONT_PLATFORMS | {"illumina", "pacbio_hifi"}
 BEST_LR_ORDER = ("pacbio_hifi", "ont_duplex", "ont_simplex")
 
 
 class Sample(BaseModel):
     label: str
-    data: Dict
+    data: Dict[str, Union[list[PosixPath], int, bool]]
 
     @classmethod
     def parse_data(cls, label, data, global_settings):
-        keys = set(data.keys())
-        cls._check_required_keys(keys)
-        cls._check_optional_keys(keys)
         cls._expand_read_paths(data)
         cls._add_global_settings(data, global_settings)
         return cls(label=label, data=data)
-
-    @staticmethod
-    def _check_required_keys(keys):
-        intersection = list(keys & READ_TYPES)
-        if not intersection:
-            raise SampleConfigurationError(f"YEAT sample must include {READ_TYPES}")
-
-    @staticmethod
-    def _check_optional_keys(keys):
-        valid_keys = READ_TYPES.union(OPTIONAL_KEYS)
-        invalid_keys = list(keys.difference(valid_keys))
-        if invalid_keys:
-            raise SampleConfigurationError(f"YEAT sample has unrecognizable keys {invalid_keys}")
 
     @staticmethod
     def _expand_read_paths(data):
@@ -55,9 +38,9 @@ class Sample(BaseModel):
 
     @staticmethod
     def _add_global_settings(data, global_settings):
-        for key in OPTIONAL_KEYS:
+        for key, value in global_settings.dict().items():
             if key not in data:
-                data[key] = global_settings[key]
+                data[key] = value
 
     @property
     def has_illumina(self):
@@ -123,7 +106,3 @@ class Sample(BaseModel):
                 continue
             fastq_paths.append(f"{fastqc_dir}/read_fastqc.html")
         return fastq_paths
-
-
-class SampleConfigurationError(ValueError):
-    pass

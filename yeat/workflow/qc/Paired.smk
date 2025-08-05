@@ -12,7 +12,7 @@ from yeat.workflow.qc.aux import copy_input
 
 rule copy_input:
     input:
-        reads=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].data["illumina"],
+        reads=lambda wc: config["asm_cfg"].get_sample_input_files(wc.sample, "illumina"),
     output:
         r1="analysis/{sample}/qc/illumina/R1.fastq.gz",
         r2="analysis/{sample}/qc/illumina/R2.fastq.gz",
@@ -54,8 +54,8 @@ rule fastp:
         html_report="analysis/{sample}/qc/illumina/fastp/fastp.html",
         json_report="analysis/{sample}/qc/illumina/fastp/fastp.json",
         txt_report="analysis/{sample}/qc/illumina/fastp/report.txt",
-        skip_filter=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].skip_filter,
-        min_length=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].min_length,
+        skip_filter=lambda wc: config["asm_cfg"].get_sample_skip_filter(wc.sample),
+        min_length=lambda wc: config["asm_cfg"].get_sample_min_length(wc.sample),
     run:
         if params.skip_filter:
             Path(output.r1).symlink_to(params.symlink_r1)
@@ -92,9 +92,9 @@ rule downsample:
         fastp_report="analysis/{sample}/qc/illumina/fastp/fastp.json",
         outdir="analysis/{sample}/qc/illumina/downsample",
         seed=config["seed"],
-        downsample=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].downsample,
-        genome_size=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].genome_size,
-        coverage_depth=lambda wildcards: config["asm_cfg"].samples[wildcards.sample].coverage_depth,
+        downsample=lambda wc: config["asm_cfg"].get_sample_downsample(wc.sample),
+        genome_size=lambda wc: config["asm_cfg"].get_sample_genome_size(wc.sample),
+        coverage_depth=lambda wc: config["asm_cfg"].get_sample_coverage_depth(wc.sample),
     run:
         if params.downsample == -1:
             Path(output.r1).symlink_to(params.symlink_r1)

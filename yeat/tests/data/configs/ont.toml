@@ -1,0 +1,15 @@
+[samples.Ecoli_K12_MG1655_R10_3_HAC]
+ont_simplex = "yeat/tests/data/ecolk12mg1655_R10_3_guppy_345_HAC.fastq.gz"
+
+[assemblers.flye_default]
+algorithm = "flye"
+
+[assemblers.canu_default]
+algorithm = "canu"
+arguments = "genomeSize=4.8m"
+
+[assemblers.unicycler_default]
+algorithm = "unicycler"
+
+[assemblers.hifiasm_default]
+algorithm = "hifiasm"

@@ -1,0 +1,6 @@
+[samples.hybrid_Shigella_sonnei_53G]
+illumina = "yeat/tests/data/short_reads_?.fastq.gz"
+pacbio_hifi = "yeat/tests/data/long_reads_high_depth.fastq.gz"
+
+[assemblers.unicycler_default]
+algorithm = "unicycler"

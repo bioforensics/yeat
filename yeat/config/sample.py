@@ -31,6 +31,8 @@ class Sample(BaseModel):
     def _expand_read_paths(data):
         for read_type, read_path in data.items():
             data[read_type] = list(Sample._expand_glob_pattern(Path(read_path)))
+            if not data[read_type]:
+                assert 0
 
     @staticmethod
     def _expand_glob_pattern(read_path):
@@ -38,7 +40,7 @@ class Sample(BaseModel):
 
     @staticmethod
     def _add_global_settings(data, global_settings):
-        for key, value in global_settings.dict().items():
+        for key, value in global_settings.model_dump().items():
             if key not in data:
                 data[key] = value
 

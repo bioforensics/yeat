@@ -22,7 +22,11 @@ class AssemblyConfiguration(BaseModel):
 
     @classmethod
     def parse_snakemake_config(cls, config):
-        global_settings = GlobalSettings.parse_data(config["global_settings"])
+        global_settings = (
+            GlobalSettings.parse_data(config["global_settings"])
+            if "global_settings" in config
+            else GlobalSettings()
+        )
         samples = cls._parse_samples(config, global_settings)
         assemblers = cls._parse_assemblers(config, samples)
         return cls(global_settings=global_settings, samples=samples, assemblers=assemblers)
@@ -50,3 +54,36 @@ class AssemblyConfiguration(BaseModel):
         for assembler in self.assemblers.values():
             targets.extend(assembler.targets)
         return targets
+
+    def get_sample_input_files(self, sample, read_type):
+        return self.samples[sample].data[read_type]
+
+    def get_sample_skip_filter(self, sample):
+        return self.samples[sample].skip_filter
+
+    def get_sample_quality(self, sample):
+        return self.samples[sample].quality
+
+    def get_sample_min_length(self, sample):
+        return self.samples[sample].min_length
+
+    def get_sample_downsample(self, sample):
+        return self.samples[sample].downsample
+
+    def get_sample_genome_size(self, sample):
+        return self.samples[sample].genome_size
+
+    def get_sample_coverage_depth(self, sample):
+        return self.samples[sample].coverage_depth
+
+    def get_assembler_input_files(self, label, sample):
+        return self.assemblers[label].input_files(sample)
+
+    def get_assembler_input_args(self, label, sample):
+        return self.assemblers[label].input_args(sample)
+
+    def get_assembler_extra_args(self, label):
+        return self.assemblers[label].extra_args
+
+    def get_assembler_bowtie2_input_args(self, label, sample):
+        return self.assemblers[label].bowtie2_input_args(sample)

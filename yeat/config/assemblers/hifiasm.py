@@ -29,7 +29,10 @@ class HifiasmAssembler(Assembler):
         return [f"analysis/{sample}/qc/{best_read_type}/downsample/read.fastq.gz"]
 
     def input_args(self, sample):
+        best_read_type = self.samples[sample].best_long_read_type
         reads = self.input_files(sample)
+        if best_read_type in ["ont_simplex", "ont_duplex"]:
+            return f"--ont {reads[0]}"
         return f"{reads[0]}"
 
     def gfa_files(self, sample):

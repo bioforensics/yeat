@@ -32,7 +32,7 @@ class MetaMDBGAssembler(Assembler):
         best_read_type = self.samples[sample].best_long_read_type
         reads = self.input_files(sample)
         if best_read_type in ["ont_simplex", "ont_duplex"]:
-            args = f"--int-ont {reads[0]}"
+            args = f"--in-ont {reads[0]}"
         else:
             args = f"--in-hifi {reads[0]}"
         return args

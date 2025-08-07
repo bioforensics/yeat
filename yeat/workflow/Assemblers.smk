@@ -163,14 +163,16 @@ rule hifiasm:
         contigs="analysis/{sample}/yeat/hifiasm/{label}/contigs.fasta",
     threads: 128
     params:
-        prefix="analysis/{sample}/yeat/hifiasm/{label}",
+        prefix="analysis/{sample}/yeat/hifiasm/{label}/asm",
         input_args=lambda wc: config["asm_cfg"].get_assembler_input_args(wc.label, wc.sample),
         extra_args=lambda wc: config["asm_cfg"].get_assembler_extra_args(wc.label),
+    log:
+        "analysis/{sample}/yeat/hifiasm/{label}/hifiasm.log",
     shell:
         """
-        hifiasm -o {params.prefix} -t {threads} {params.extra_args} {params.input_args}
+        hifiasm -o {params.prefix} -t {threads} {params.extra_args} {params.input_args} > {log} 2>&1
         gfatools gfa2fa {params.prefix}.bp.p_ctg.gfa > {params.prefix}.bp.p_ctg.fa
-        ln -s {wildcards.sample}.bp.p_ctg.fa {output.contigs}
+        ln -s asm.bp.p_ctg.fa {output.contigs}
         """
 
 
@@ -190,7 +192,7 @@ rule hifiasm_meta:
         """
         hifiasm_meta -o {params.prefix} -t {threads} {params.extra_args} {params.input_args} > {log} 2>&1
         gfatools gfa2fa {params.prefix}.p_ctg.gfa > {params.prefix}.p_ctg.fa
-        ln -s {wildcards.sample}.p_ctg.fa {output.contigs}
+        ln -s asm.p_ctg.fa {output.contigs}
         """
 
 
@@ -235,12 +237,16 @@ rule bandage:
         status="analysis/{sample}/yeat/{algorithm}/{label}/bandage/.done",
     params:
         outdir="analysis/{sample}/yeat/{algorithm}/{label}/bandage",
+        label_dir="analysis/{sample}/yeat/{algorithm}/{label}",
     run:
         gfa_files = config["asm_cfg"].assemblers[wildcards.label].gfa_files(wildcards.sample)
         for gfa in gfa_files:
             file_path = Path(gfa)
             if file_path.stat().st_size == 0:
                 continue
-            file_name = file_path.stem
-            shell("Bandage image {gfa} {params.outdir}/{file_name}.jpg")
+            remaining_path = file_path.relative_to(params.label_dir)
+            new_path = remaining_path.with_suffix(".jpg")
+            output_file = Path(params.outdir) / new_path
+            output_file.parent.mkdir(parents=True, exist_ok=True)
+            shell(f"Bandage image {file_path} {output_file}")
         shell("touch {output.status}")

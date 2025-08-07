@@ -1,5 +1,5 @@
-[samples.Ecoli_K12_MG1655_R10_3_HAC]
-pacbio_hifi = "yeat/tests/data/ecolk12mg1655_R10_3_guppy_345_HAC.fastq.gz"
+[samples.Ecoli_K12_HiFi]
+pacbio_hifi = "yeat/tests/data/ecoli.fastq.gz"
 
 [assemblers.flye_default]
 algorithm = "flye"

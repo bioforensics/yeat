@@ -24,24 +24,21 @@ class PenguiNAssembler(Assembler):
 
     def input_files(self, sample):
         reads = self.samples[sample].data["illumina"]
+        downsample_dir = f"analysis/{sample}/qc/illumina/downsample"
         if len(reads) == 1:
-            return [f"analysis/{sample}/qc/illumina/downsample/read.fastq.gz"]
-        r1 = f"analysis/{sample}/qc/illumina/downsample/R1.fastq.gz"
-        r2 = f"analysis/{sample}/qc/illumina/downsample/R2.fastq.gz"
+            return [f"{downsample_dir}/read.fastq.gz"]
+        r1 = f"{downsample_dir}/R1.fastq.gz"
+        r2 = f"{downsample_dir}/R2.fastq.gz"
         return [r1, r2]
 
     def input_args(self, sample):
         reads = self.input_files(sample)
         if len(reads) == 1:
-            args = f"{reads[0]}"
-        else:
-            args = f"{reads[0]} {reads[1]}"
-        return args
+            return f"{reads[0]}"
+        return f"{reads[0]} {reads[1]}"
 
     def bowtie2_input_args(self, sample):
         reads = self.input_files(sample)
         if len(reads) == 1:
-            args = f"-U {reads[0]}"
-        else:
-            args = f"-1 {reads[0]} -2 {reads[1]}"
-        return args
+            return f"-U {reads[0]}"
+        return f"-1 {reads[0]} -2 {reads[1]}"

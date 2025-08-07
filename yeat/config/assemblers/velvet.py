@@ -20,25 +20,25 @@ class VelvetAssembler(Assembler):
     def targets(self):
         targets = list()
         for sample in self.samples.values():
-            targets.append(f"analysis/{sample.label}/yeat/velvet/{self.label}/quast/report.html")
-            targets.append(f"analysis/{sample.label}/yeat/velvet/{self.label}/bandage/.done")
+            label_dir = f"analysis/{sample.label}/yeat/velvet/{self.label}"
+            targets.append(f"{label_dir}/quast/report.html")
+            targets.append(f"{label_dir}/bandage/.done")
         return targets
 
     def input_files(self, sample):
         reads = self.samples[sample].data["illumina"]
+        downsample_dir = f"analysis/{sample}/qc/illumina/downsample"
         if len(reads) == 1:
-            return [f"analysis/{sample}/qc/illumina/downsample/read.fastq.gz"]
-        r1 = f"analysis/{sample}/qc/illumina/downsample/R1.fastq.gz"
-        r2 = f"analysis/{sample}/qc/illumina/downsample/R2.fastq.gz"
+            return [f"{downsample_dir}/read.fastq.gz"]
+        r1 = f"{downsample_dir}/R1.fastq.gz"
+        r2 = f"{downsample_dir}/R2.fastq.gz"
         return [r1, r2]
 
     def input_args(self, sample):
         reads = self.input_files(sample)
         if len(reads) == 1:
-            args = f"'-fastq.gz {reads[0]}'"
-        else:
-            args = f"'-fastq.gz -shortPaired {reads[0]} -shortPaired2 {reads[1]}'"
-        return args
+            return f"'-fastq.gz {reads[0]}'"
+        return f"'-fastq.gz -shortPaired {reads[0]} -shortPaired2 {reads[1]}'"
 
     def gfa_files(self, sample):
         return glob(f"analysis/{sample}/yeat/velvet/{self.label}/Graph*")

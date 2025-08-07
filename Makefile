@@ -16,30 +16,6 @@ test:
 testlong:
 	pytest --cov=yeat -m long
 
-## testillumina: run Illumina short-read automated tests
-testillumina:
-	pytest --cov=yeat -m illumina
-
-## testhifi:     run PacBio HiFi-read automated tests
-testhifi:
-	pytest --cov=yeat -m hifi
-
-## testnano:     run Oxford Nanopore-read automated tests
-testnano:
-	pytest --cov=yeat -m nano
-
-## testhybrid:   run hybrid automated tests
-testhybrid:
-	pytest --cov=yeat -m hybrid
-
-## testbandage:  run Bandage-specific automated tests
-testbandage:
-	pytest --cov=yeat -m bandage
-
-## testlinux:    run Linux-specific automated tests
-testlinux:
-	pytest --cov=yeat -m linux
-
 ## testgrid:     run grid-specific automated tests
 testgrid:
 	pytest --cov=yeat -m grid --basetemp=tmp

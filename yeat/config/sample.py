@@ -30,9 +30,12 @@ class Sample(BaseModel):
     @staticmethod
     def _expand_read_paths(data):
         for read_type, read_path in data.items():
-            data[read_type] = list(Sample._expand_glob_pattern(Path(read_path)))
-            if not data[read_type]:
-                assert 0
+            reads = list(Sample._expand_glob_pattern(Path(read_path)))
+            if not reads:
+                raise SampleConfigurationError("Unable to find fastq files")
+            if len(reads) > 2:
+                raise SampleConfigurationError("Found too many fastq files")
+            data[read_type] = reads
 
     @staticmethod
     def _expand_glob_pattern(read_path):
@@ -108,3 +111,7 @@ class Sample(BaseModel):
                 continue
             fastq_paths.append(f"{fastqc_dir}/read_fastqc.html")
         return fastq_paths
+
+
+class SampleConfigurationError(ValueError):
+    pass

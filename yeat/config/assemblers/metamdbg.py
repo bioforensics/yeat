@@ -20,8 +20,9 @@ class MetaMDBGAssembler(Assembler):
     def targets(self):
         targets = list()
         for sample in self.samples.values():
-            targets.append(f"analysis/{sample.label}/yeat/metamdbg/{self.label}/quast/report.html")
-            targets.append(f"analysis/{sample.label}/yeat/metamdbg/{self.label}/bandage/.done")
+            label_dir = f"analysis/{sample.label}/yeat/metamdbg/{self.label}"
+            targets.append(f"{label_dir}/quast/report.html")
+            targets.append(f"{label_dir}/bandage/.done")
         return targets
 
     def input_files(self, sample):
@@ -32,10 +33,8 @@ class MetaMDBGAssembler(Assembler):
         best_read_type = self.samples[sample].best_long_read_type
         reads = self.input_files(sample)
         if best_read_type in ["ont_simplex", "ont_duplex"]:
-            args = f"--in-ont {reads[0]}"
-        else:
-            args = f"--in-hifi {reads[0]}"
-        return args
+            return f"--in-ont {reads[0]}"
+        return f"--in-hifi {reads[0]}"
 
     def gfa_files(self, sample):
-        return glob(f"analysis/{sample}/yeat/metamdbg/{self.label}/*.gfa")
+        return glob(f"analysis/{sample}/yeat/metamdbg/{self.label}/tmp/*/*.gfa")

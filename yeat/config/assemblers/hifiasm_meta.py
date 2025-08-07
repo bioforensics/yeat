@@ -20,10 +20,9 @@ class HifiasmMetaAssembler(Assembler):
     def targets(self):
         targets = list()
         for sample in self.samples.values():
-            targets.append(
-                f"analysis/{sample.label}/yeat/hifiasm_meta/{self.label}/quast/report.html"
-            )
-            targets.append(f"analysis/{sample.label}/yeat/hifiasm_meta/{self.label}/bandage/.done")
+            label_dir = f"analysis/{sample.label}/yeat/hifiasm_meta/{self.label}"
+            targets.append(f"{label_dir}/quast/report.html")
+            targets.append(f"{label_dir}/bandage/.done")
         return targets
 
     def input_files(self, sample):

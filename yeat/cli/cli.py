@@ -10,6 +10,8 @@
 from argparse import ArgumentParser, Action
 from pathlib import Path
 from random import randint
+import sys
+import toml
 from yeat import __version__
 
 
@@ -92,8 +94,19 @@ def workflow_configuration(parser):
 
 
 class InitAction(Action):
-    config_template = """blah"""
+    config_template = {
+        "global_settings": {
+            "coverage_depth": 150,
+            "downsample": -1,
+            "genome_size": 0,
+            "min_length": 100,
+            "quality": 10,
+            "skip_filter": False,
+        },
+        "samples": {"sample1": {"illumina": "short_reads_?.fastq.gz"}},
+        "assemblers": {"spades_default": {"algorithm": "spades"}},
+    }
 
     def __call__(self, parser, namespace, values, option_string=None):
-        print(self.config_template)
+        toml.dump(self.config_template, sys.stdout)
         raise SystemExit()

@@ -27,7 +27,7 @@ dependencies:
     - pulp=2.7
     - pytest>=7.1
     - pytest-cov>=3.0
-    - python>=3.10
+    - python>=3.12
     - quast>=5.0
     - samtools=1.20
     - seqtk>=1.3

@@ -25,10 +25,15 @@ class Assembler(BaseModel):
 
     @classmethod
     def select_samples(cls, data, samples):
-        s = data.get("samples", samples)
-        return {
-            label: sample for label, sample in s.items() if cls._check_sample_compatibility(sample)
-        }
+        compatible_samples = dict()
+        requested_samples = data.get("samples", samples)
+        for sample_name in requested_samples:
+            if sample_name not in samples:
+                raise ValueError(f"Sample '{sample_name}' not found in provided samples.")
+            sample = samples[sample_name]
+            if cls._check_sample_compatibility(sample):
+                compatible_samples[sample_name] = sample
+        return compatible_samples
 
     @property
     def extra_args(self):

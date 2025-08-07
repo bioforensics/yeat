@@ -20,8 +20,9 @@ class FlyeAssembler(Assembler):
     def targets(self):
         targets = list()
         for sample in self.samples.values():
-            targets.append(f"analysis/{sample.label}/yeat/flye/{self.label}/quast/report.html")
-            targets.append(f"analysis/{sample.label}/yeat/flye/{self.label}/bandage/.done")
+            label_dir = f"analysis/{sample.label}/yeat/flye/{self.label}"
+            targets.append(f"{label_dir}/quast/report.html")
+            targets.append(f"{label_dir}/bandage/.done")
         return targets
 
     def input_files(self, sample):
@@ -32,14 +33,9 @@ class FlyeAssembler(Assembler):
         best_read_type = self.samples[sample].best_long_read_type
         reads = self.input_files(sample)
         if best_read_type in ["ont_simplex", "ont_duplex"]:
-            args = f"--nano-hq {reads[0]}"
-        else:
-            args = f"--pacbio-hifi {reads[0]}"
-        return args
+            return f"--nano-hq {reads[0]}"
+        return f"--pacbio-hifi {reads[0]}"
 
     def gfa_files(self, sample):
-        return (
-            glob(f"analysis/{sample}/yeat/flye/{self.label}/30-contigger/*.gfa")
-            + glob(f"analysis/{sample}/yeat/flye/{self.label}/40-polishing/*.gfa")
-            + glob(f"analysis/{sample}/yeat/flye/{self.label}/*.gfa")
-        )
+        label_dir = f"analysis/{sample}/yeat/flye/{self.label}"
+        return glob(f"{label_dir}/*/*.gfa") + glob(f"{label_dir}/*.gfa")

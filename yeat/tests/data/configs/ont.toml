@@ -6,7 +6,7 @@ algorithm = "flye"
 
 [assemblers.canu_default]
 algorithm = "canu"
-arguments = "genomeSize=4.8m"
+arguments = "genomeSize=4.8m maxInputCoverage=100"
 
 [assemblers.unicycler_default]
 algorithm = "unicycler"

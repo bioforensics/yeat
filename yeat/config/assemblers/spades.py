@@ -20,27 +20,26 @@ class SPAdesAssembler(Assembler):
     def targets(self):
         targets = list()
         for sample in self.samples.values():
-            targets.append(f"analysis/{sample.label}/yeat/spades/{self.label}/quast/report.html")
-            targets.append(f"analysis/{sample.label}/yeat/spades/{self.label}/bandage/.done")
+            label_dir = f"analysis/{sample.label}/yeat/spades/{self.label}"
+            targets.append(f"{label_dir}/quast/report.html")
+            targets.append(f"{label_dir}/bandage/.done")
         return targets
 
     def input_files(self, sample):
         reads = self.samples[sample].data["illumina"]
+        downsample_dir = f"analysis/{sample}/qc/illumina/downsample"
         if len(reads) == 1:
-            return [f"analysis/{sample}/qc/illumina/downsample/read.fastq.gz"]
-        r1 = f"analysis/{sample}/qc/illumina/downsample/R1.fastq.gz"
-        r2 = f"analysis/{sample}/qc/illumina/downsample/R2.fastq.gz"
+            return [f"{downsample_dir}/read.fastq.gz"]
+        r1 = f"{downsample_dir}/R1.fastq.gz"
+        r2 = f"{downsample_dir}/R2.fastq.gz"
         return [r1, r2]
 
     def input_args(self, sample):
         reads = self.input_files(sample)
         if len(reads) == 1:
-            args = f"-s {reads[0]}"
-        else:
-            args = f"-1 {reads[0]} -2 {reads[1]}"
-        return args
+            return f"-s {reads[0]}"
+        return f"-1 {reads[0]} -2 {reads[1]}"
 
     def gfa_files(self, sample):
-        return glob(f"analysis/{sample}/yeat/spades/{self.label}/*.gfa") + glob(
-            f"analysis/{sample}/yeat/spades/{self.label}/*.fastg"
-        )
+        label_dir = f"analysis/{sample}/yeat/spades/{self.label}"
+        return glob(f"{label_dir}/*.gfa") + glob(f"{label_dir}/*.fastg")

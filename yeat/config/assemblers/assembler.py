@@ -39,7 +39,7 @@ class Assembler(BaseModel):
     @property
     def extra_args(self):
         return self.arguments or ""
-    
+
 
 class AssemblerConfigurationError(ValueError):
     pass

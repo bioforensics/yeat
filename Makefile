@@ -20,9 +20,9 @@ testlong:
 testgrid:
 	pytest --cov=yeat -m grid --basetemp=tmp
 
-## testall:      run all tests, excluding Bandage, Linux, and grid-specific tests
+## testall:      run all tests, excluding grid-specific tests
 testall:
-	pytest --cov=yeat -m 'not bandage and not linux and not grid'
+	pytest --cov=yeat -m 'not grid'
 
 ## testdata:     download test data for test suite
 testdata:

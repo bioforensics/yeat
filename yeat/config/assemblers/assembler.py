@@ -29,7 +29,8 @@ class Assembler(BaseModel):
         requested_samples = data.get("samples", samples)
         for sample_name in requested_samples:
             if sample_name not in samples:
-                raise ValueError(f"Sample '{sample_name}' not found in provided samples.")
+                message = f"Sample '{sample_name}' not found in provided samples"
+                raise AssemblerConfigurationError(message)
             sample = samples[sample_name]
             if cls._check_sample_compatibility(sample):
                 compatible_samples[sample_name] = sample
@@ -38,3 +39,7 @@ class Assembler(BaseModel):
     @property
     def extra_args(self):
         return self.arguments or ""
+    
+
+class AssemblerConfigurationError(ValueError):
+    pass

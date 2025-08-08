@@ -88,7 +88,7 @@ rule penguin:
         """
         penguin guided_nuclassemble {params.input_args} {params.outdir}/unpolished_contigs.fasta {params.outdir} --threads {threads} {params.extra_args} > {log} 2>&1
         bowtie2-build {params.outdir}/unpolished_contigs.fasta {params.outdir}/unpolished_contigs.fasta >> {log} 2>&1
-        bowtie2 -p {threads} -x {params.outdir}/unpolished_contigs.fasta {params.bowtie2_input_args} 2> {params.outdir}/unpolished_contigs.bowtie.log | samtools view -b -@ {threads} | samtools sort -@ {threads} -o {params.outdir}/unpolished_contigs.sorted.bam
+        bowtie2 -p {threads} -x {params.outdir}/unpolished_contigs.fasta {params.bowtie2_input_args} 2> {params.outdir}/unpolished_contigs.bowtie.log | samtools view -b -@ {threads} | samtools sort -@ {threads} -o {params.outdir}/unpolished_contigs.sorted.bam >> {log} 2>&1
         samtools index {params.outdir}/unpolished_contigs.sorted.bam
         pilon --genome {params.outdir}/unpolished_contigs.fasta --bam {params.outdir}/unpolished_contigs.sorted.bam --output {params.outdir}/contigs >> {log} 2>&1
         """

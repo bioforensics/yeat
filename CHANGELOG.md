@@ -8,7 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Changed
-- blah
+- JSON to TOML config file format (#91)
+- Overhauled internal class structure (#91)
+- New directory output structure (#91)
+- Snakemake workflows consolidated (#91)
+- Simplified unit tests (#91)
 
 
 ## [0.7] 2024-12-10

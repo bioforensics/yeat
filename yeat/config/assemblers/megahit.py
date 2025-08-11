@@ -8,7 +8,6 @@
 # -------------------------------------------------------------------------------------------------
 
 from .assembler import Assembler
-from glob import glob
 from pathlib import Path
 import re
 import subprocess

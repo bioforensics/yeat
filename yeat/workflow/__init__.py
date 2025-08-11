@@ -11,6 +11,7 @@ from importlib.resources import files
 from pathlib import Path
 from snakemake import snakemake
 import toml
+from yeat.config.sample import READ_TYPES
 
 
 def run_workflow(args):
@@ -26,6 +27,8 @@ def get_config_data(infile):
     data = toml.load(open(infile))
     for sample_label, sample_data in data["samples"].items():
         for readtype, reads in sample_data.items():
+            if readtype not in READ_TYPES:
+                continue
             data["samples"][sample_label][readtype] = str(Path(reads).resolve())
     return data
 

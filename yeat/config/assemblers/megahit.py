@@ -64,12 +64,3 @@ class MEGAHITAssembler(Assembler):
                 )
             gfa_files.append(str(fastg))
         return gfa_files
-
-    def get_and_filter_contig_files(self, sample):
-        pattern = (
-            rf"analysis/{sample}/yeat/megahit/{self.label}/intermediate_contigs/k\d+.contigs.fa"
-        )
-        contigs = glob(
-            f"analysis/{sample}/yeat/megahit/{self.label}/intermediate_contigs/k*.contigs.fa"
-        )
-        return filter(re.compile(pattern).match, contigs)

@@ -93,20 +93,21 @@ def workflow_configuration(parser):
     )
 
 
-class InitAction(Action):
-    config_template = {
-        "global_settings": {
-            "coverage_depth": 150,
-            "downsample": -1,
-            "genome_size": 0,
-            "min_length": 100,
-            "quality": 10,
-            "skip_filter": False,
-        },
-        "samples": {"sample1": {"illumina": "short_reads_?.fastq.gz"}},
-        "assemblers": {"spades_default": {"algorithm": "spades"}},
-    }
+CONFIG_TEMPLATE = {
+    "global_settings": {
+        "coverage_depth": 150,
+        "downsample": -1,
+        "genome_size": 0,
+        "min_length": 100,
+        "quality": 10,
+        "skip_filter": False,
+    },
+    "samples": {"sample1": {"illumina": "short_reads_?.fastq.gz"}},
+    "assemblers": {"spades_default": {"algorithm": "spades"}},
+}
 
+
+class InitAction(Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        toml.dump(self.config_template, sys.stdout)
+        toml.dump(CONFIG_TEMPLATE, sys.stdout)
         raise SystemExit()

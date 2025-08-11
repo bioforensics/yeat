@@ -238,9 +238,9 @@ rule bandage:
     params:
         outdir="analysis/{sample}/yeat/{algorithm}/{label}/bandage",
         label_dir="analysis/{sample}/yeat/{algorithm}/{label}",
+        gfa_files=lambda wc: config["asm_cfg"].assemblers[wc.label].gfa_files(wc.sample),
     run:
-        gfa_files = config["asm_cfg"].assemblers[wildcards.label].gfa_files(wildcards.sample)
-        for gfa in gfa_files:
+        for gfa in params.gfa_files:
             file_path = Path(gfa)
             if file_path.stat().st_size == 0:
                 continue

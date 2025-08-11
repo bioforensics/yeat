@@ -9,7 +9,7 @@
 
 from pathlib import Path, PosixPath
 from pydantic import BaseModel
-from typing import Dict, Union
+from typing import Dict, Union, Optional
 
 
 ONT_PLATFORMS = {"ont_simplex", "ont_duplex"}
@@ -30,6 +30,8 @@ class Sample(BaseModel):
     @staticmethod
     def _expand_read_paths(data):
         for read_type, read_path in data.items():
+            if read_type not in READ_TYPES:
+                continue
             reads = list(Sample._expand_glob_pattern(Path(read_path)))
             if not reads:
                 raise SampleConfigurationError("Unable to find fastq files")
@@ -62,10 +64,6 @@ class Sample(BaseModel):
     @property
     def has_long_reads(self):
         return self.has_ont or self.has_pacbio
-
-    @property
-    def has_both_short_and_long_reads(self):
-        return self.has_illumina and self.has_long_reads
 
     @property
     def coverage_depth(self):

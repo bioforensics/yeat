@@ -6,3 +6,13 @@
 # National Biodefense Analysis and Countermeasures Center (NBACC), a Federally Funded Research and
 # Development Center.
 # -------------------------------------------------------------------------------------------------
+
+import pytest
+from yeat.config.config import ConfigurationError, AssemblyConfiguration
+from yeat.config.global_settings import GlobalSettings
+
+
+def test_algorithm_not_supported():
+    message = "unknown assembly algorithm algorithm_DNE"
+    with pytest.raises(ConfigurationError, match=message):
+        AssemblyConfiguration.select("algorithm_DNE")

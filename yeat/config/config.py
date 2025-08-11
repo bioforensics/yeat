@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from .assemblers import select
+from .assemblers import ALGORITHM_CONFIGS
 from .assemblers.assembler import Assembler
 from .global_settings import GlobalSettings
 from .sample import Sample
@@ -22,14 +22,15 @@ class AssemblyConfiguration(BaseModel):
 
     @classmethod
     def parse_snakemake_config(cls, config):
-        global_settings = (
-            GlobalSettings.parse_data(config["global_settings"])
-            if "global_settings" in config
-            else GlobalSettings()
-        )
+        global_settings = cls._parse_global_settings(config)
         samples = cls._parse_samples(config, global_settings)
         assemblers = cls._parse_assemblers(config, samples)
         return cls(global_settings=global_settings, samples=samples, assemblers=assemblers)
+
+    @staticmethod
+    def _parse_global_settings(config):
+        data = config.get("global_settings", {})
+        return GlobalSettings.parse_data(data)
 
     @staticmethod
     def _parse_samples(config, global_settings):
@@ -42,9 +43,15 @@ class AssemblyConfiguration(BaseModel):
     def _parse_assemblers(config, samples):
         assemblers = dict()
         for label, data in config["assemblers"].items():
-            assembler_class = select(data["algorithm"])
+            assembler_class = AssemblyConfiguration.select(data["algorithm"])
             assemblers[label] = assembler_class.parse_data(label, data, samples)
         return assemblers
+
+    @classmethod
+    def select(self, algorithm):
+        if algorithm not in ALGORITHM_CONFIGS:
+            raise ConfigurationError(f"unknown assembly algorithm {algorithm}")
+        return ALGORITHM_CONFIGS[algorithm]
 
     @property
     def targets(self):
@@ -87,3 +94,7 @@ class AssemblyConfiguration(BaseModel):
 
     def get_assembler_bowtie2_input_args(self, label, sample):
         return self.assemblers[label].bowtie2_input_args(sample)
+
+
+class ConfigurationError(ValueError):
+    pass

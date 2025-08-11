@@ -49,6 +49,8 @@ class UnicyclerAssembler(Assembler):
             args = f"-l {reads[0]}"
         elif len(reads) == 3:
             args = f"-1 {reads[0]} -2 {reads[1]} -l {reads[2]}"
+        else:
+            assert 0  # pragma: no cover
         return args
 
     def gfa_files(self, sample):

@@ -11,7 +11,6 @@ import pytest
 from yeat.tests import data_file, run_yeat, get_core_count
 
 
-@pytest.mark.short
 @pytest.mark.parametrize(
     "config",
     [

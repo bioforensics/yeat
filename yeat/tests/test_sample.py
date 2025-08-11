@@ -6,3 +6,44 @@
 # National Biodefense Analysis and Countermeasures Center (NBACC), a Federally Funded Research and
 # Development Center.
 # -------------------------------------------------------------------------------------------------
+
+from shutil import copy
+import pytest
+from yeat.config.sample import SampleConfigurationError, Sample
+from yeat.tests import data_file
+
+
+def test_expand_read_paths_unable_to_find():
+    data = {"illumina": "DNE"}
+    message = "Unable to find fastq files"
+    with pytest.raises(SampleConfigurationError, match=message):
+        Sample._expand_read_paths(data)
+
+
+def test_expand_read_paths_found_too_many(tmp_path):
+    wd = tmp_path
+    read1 = data_file("short_reads_1.fastq.gz")
+    read2 = data_file("short_reads_2.fastq.gz")
+    copy(read1, wd / "short_reads_1.fastq.gz")
+    copy(read2, wd / "short_reads_2.fastq.gz")
+    (wd / "short_reads_3.fastq.gz").touch()
+    data = {"illumina": str(wd / "short_reads_*.fastq.gz")}
+    message = "Found too many fastq files"
+    with pytest.raises(SampleConfigurationError, match=message):
+        Sample._expand_read_paths(data)
+
+
+@pytest.mark.parametrize(
+    "data,read_type",
+    [
+        ({"illumina": ["DNE"]}, None),
+        ({"ont_simplex": ["DNE"]}, "ont_simplex"),
+        ({"illumina": ["DNE"], "ont_simplex": ["DNE"]}, "ont_simplex"),
+        ({"ont_simplex": ["DNE"], "ont_duplex": ["DNE"]}, "ont_duplex"),
+        ({"ont_simplex": ["DNE"], "ont_duplex": ["DNE"]}, "ont_duplex"),
+        ({"ont_simplex": ["DNE"], "ont_duplex": ["DNE"], "pacbio_hifi": ["DNE"]}, "pacbio_hifi"),
+    ],
+)
+def test_best_long_read_type(data, read_type):
+    sample = Sample(label="testing", data=data)
+    assert sample.best_long_read_type == read_type

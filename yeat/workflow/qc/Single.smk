@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from yeat.workflow.qc.aux import copy_input
+from yeat.workflow.qc.aux import copy_input, get_genome_size, get_average_read_length, get_down, print_downsample_values
 
 
 rule copy_input:

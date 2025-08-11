@@ -7,9 +7,14 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+import pytest
+import toml
+from yeat.cli.cli import InitAction, CONFIG_TEMPLATE
 
-# def test_display_config_template(capsys):
-#     with pytest.raises(SystemExit):
-#         InitAction.__call__(None, None, None, None)
-#     out, err = capsys.readouterr()
-#     assert json.loads(out) == cli.CONFIG_TEMPLATE
+
+def test_display_config_template(capsys):
+    with pytest.raises(SystemExit):
+        InitAction.__call__(None, None, None, None)
+    out, err = capsys.readouterr()
+    data = toml.loads(out)
+    assert data == CONFIG_TEMPLATE

@@ -31,9 +31,3 @@ ALGORITHM_CONFIGS = {
     "hifiasm_meta": HifiasmMetaAssembler,
     "metamdbg": MetaMDBGAssembler,
 }
-
-
-def select(algorithm):
-    if algorithm not in ALGORITHM_CONFIGS:
-        raise KeyError(f"unknown assembly algorithm {algorithm}")
-    return ALGORITHM_CONFIGS[algorithm]

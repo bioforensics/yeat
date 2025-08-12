@@ -20,14 +20,14 @@ from .velvet import VelvetAssembler
 
 
 ALGORITHM_CONFIGS = {
-    "spades": SPAdesAssembler,
-    "megahit": MEGAHITAssembler,
-    "unicycler": UnicyclerAssembler,
-    "penguin": PenguiNAssembler,
-    "velvet": VelvetAssembler,
     "canu": CanuAssembler,
     "flye": FlyeAssembler,
     "hifiasm": HifiasmAssembler,
     "hifiasm_meta": HifiasmMetaAssembler,
+    "megahit": MEGAHITAssembler,
     "metamdbg": MetaMDBGAssembler,
+    "penguin": PenguiNAssembler,
+    "spades": SPAdesAssembler,
+    "unicycler": UnicyclerAssembler,
+    "velvet": VelvetAssembler,
 }

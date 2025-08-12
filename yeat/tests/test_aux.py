@@ -23,7 +23,7 @@ from yeat.workflow.qc.aux import (
 def test_copy_input(tmp_path, do_copy, expected_symlink):
     src_file = data_file("short_reads_1.fastq.gz")
     dest_file = tmp_path / "short_reads_1.fastq.gz"
-    copy_input(src_file, tmp_path, do_copy)
+    copy_input(src_file, dest_file, do_copy)
     assert dest_file.exists()
     assert dest_file.is_symlink() == expected_symlink
 

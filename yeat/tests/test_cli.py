@@ -9,12 +9,13 @@
 
 import pytest
 import toml
-from yeat.cli.cli import InitAction, CONFIG_TEMPLATE
+from yeat.cli.cli import InitAction
 
 
 def test_display_config_template(capsys):
+    action = InitAction(option_strings=[], dest="init")
     with pytest.raises(SystemExit):
-        InitAction.__call__(None, None, None, None)
+        action(None, None, None, None)
     out, err = capsys.readouterr()
     data = toml.loads(out)
-    assert data == CONFIG_TEMPLATE
+    assert data == InitAction.config_template

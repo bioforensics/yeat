@@ -7,28 +7,48 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from pathlib import Path
+from pydantic import ValidationError
 import pytest
 from yeat.config.assemblers.assembler import AssemblerConfigurationError
 from yeat.config.assemblers.flye import FlyeAssembler
-from yeat.config.assemblers.spades import SPAdesAssembler
 from yeat.config.sample import Sample
 
 
-def test_requested_sample_not_avaliable():
-    data = {"algorithm": "spades", "samples": ["sample_DNE"]}
-    samples = {"sample1": Sample(label="sample1", data={"illumina": ["read_?.fastq.gz"]})}
-    message = "Sample 'sample_DNE' not found in provided samples"
-    with pytest.raises(AssemblerConfigurationError, match=message):
-        SPAdesAssembler.select_samples(data, samples)
+def test_has_one_sample():
+    message = "FlyeAssembler has no samples to work with"
+    with pytest.raises(ValidationError, match=message):
+        FlyeAssembler(label="flye_default", arguments="", samples={})
 
 
-def test_find_all_avaliable_samples():
-    data = {"algorithm": "flye"}
+@pytest.mark.parametrize(
+    "data,expected",
+    [
+        (
+            {"algorithm": "flye"},
+            {
+                "sample2": Sample(label="sample2", data={"ont_simplex": ["read.fastq.gz"]}),
+                "sample3": Sample(label="sample3", data={"pacbio_hifi": ["read.fastq.gz"]}),
+            },
+        ),
+        (
+            {"algorithm": "flye", "samples": ["sample2"]},
+            {"sample2": Sample(label="sample2", data={"ont_simplex": ["read.fastq.gz"]})},
+        ),
+    ],
+)
+def test_select_samples(data, expected):
     samples = {
-        "sample1": Sample(label="sample1", data={"illumina": ["read_?.fastq.gz"]}),
+        "sample1": Sample(label="sample1", data={"illumina": ["read.fastq.gz"]}),
         "sample2": Sample(label="sample2", data={"ont_simplex": ["read.fastq.gz"]}),
+        "sample3": Sample(label="sample3", data={"pacbio_hifi": ["read.fastq.gz"]}),
     }
     compatible_samples = FlyeAssembler.select_samples(data, samples)
-    expected = {"ont_simplex": [Path("read.fastq.gz")]}
-    assert compatible_samples["sample2"].data == expected
+    assert compatible_samples == expected
+
+
+def test_select_samples_manual_selection_not_avaliable():
+    data = {"algorithm": "flye", "samples": ["sample2"]}
+    samples = {"sample1": Sample(label="sample1", data={"illumina": ["read.fastq.gz"]})}
+    message = "Sample 'sample2' not found in provided samples"
+    with pytest.raises(AssemblerConfigurationError, match=message):
+        FlyeAssembler.select_samples(data, samples)

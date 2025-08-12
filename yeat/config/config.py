@@ -11,7 +11,7 @@ from .assemblers import ALGORITHM_CONFIGS
 from .assemblers.assembler import Assembler
 from .global_settings import GlobalSettings
 from .sample import Sample
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Dict
 
 
@@ -19,6 +19,20 @@ class AssemblyConfiguration(BaseModel):
     global_settings: GlobalSettings
     samples: Dict[str, Sample]
     assemblers: Dict[str, Assembler]
+
+    @field_validator("samples")
+    @classmethod
+    def has_one_sample(cls, samples):
+        if not samples:
+            raise ConfigurationError("Config has no samples")
+        return samples
+
+    @field_validator("assemblers")
+    @classmethod
+    def has_one_assembler(cls, assemblers):
+        if not assemblers:
+            raise ConfigurationError("Config has no assemblers")
+        return assemblers
 
     @classmethod
     def parse_snakemake_config(cls, config):
@@ -50,7 +64,7 @@ class AssemblyConfiguration(BaseModel):
     @classmethod
     def select(self, algorithm):
         if algorithm not in ALGORITHM_CONFIGS:
-            raise ConfigurationError(f"unknown assembly algorithm {algorithm}")
+            raise ConfigurationError(f"Unknown assembly algorithm {algorithm}")
         return ALGORITHM_CONFIGS[algorithm]
 
     @property

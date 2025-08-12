@@ -7,9 +7,9 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from pathlib import Path, PosixPath
-from pydantic import BaseModel
-from typing import Dict, Union, Optional
+from pathlib import PosixPath, Path
+from pydantic import BaseModel, field_validator
+from typing import Dict, Union
 
 
 ONT_PLATFORMS = {"ont_simplex", "ont_duplex"}
@@ -21,14 +21,21 @@ class Sample(BaseModel):
     label: str
     data: Dict[str, Union[list[PosixPath], int, bool]]
 
+    @field_validator("data")
+    @classmethod
+    def has_one_read_type(cls, data):
+        if not data.keys() & READ_TYPES:
+            raise SampleConfigurationError("Sample must have at least one read type")
+        return data
+
     @classmethod
     def parse_data(cls, label, data, global_settings):
-        cls._expand_read_paths(data)
+        cls._expand_read_path(data)
         cls._add_global_settings(data, global_settings)
         return cls(label=label, data=data)
 
     @staticmethod
-    def _expand_read_paths(data):
+    def _expand_read_path(data):
         for read_type, read_path in data.items():
             if read_type not in READ_TYPES:
                 continue

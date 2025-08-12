@@ -8,20 +8,27 @@
 # -------------------------------------------------------------------------------------------------
 
 from ..sample import Sample
-from pydantic import BaseModel
-from typing import Dict, Optional
+from pydantic import BaseModel, field_validator
+from typing import Optional, Dict
 
 
 class Assembler(BaseModel):
     label: str
-    arguments: Optional[str] = None
+    arguments: Optional[str]
     samples: Dict[str, Sample]
+
+    @field_validator("samples")
+    @classmethod
+    def has_one_sample(cls, samples):
+        if not samples:
+            raise AssemblerConfigurationError(f"{cls.__name__} has no samples to work with")
+        return samples
 
     @classmethod
     def parse_data(cls, label, data, samples):
-        arguments = data["arguments"] if "arguments" in data else None
-        s = cls.select_samples(data, samples)
-        return cls(label=label, arguments=arguments, samples=s)
+        arguments = data.get("arguments")
+        selected_samples = cls.select_samples(data, samples)
+        return cls(label=label, arguments=arguments, samples=selected_samples)
 
     @classmethod
     def select_samples(cls, data, samples):

@@ -9,14 +9,15 @@
 
 import json
 import pandas as pd
-import subprocess
+from pathlib import Path
+from shutil import copy
 
 
 def copy_input(input, output, do_copy):
     if do_copy:
-        subprocess.run(["cp", input, output])
+        copy(input, output)
         return
-    subprocess.run(["ln", "-sf", input, output])
+    Path(output).symlink_to(input)
 
 
 def get_genome_size(genome_size, mash_report):
@@ -28,9 +29,9 @@ def get_genome_size(genome_size, mash_report):
 
 def get_average_read_length(fastp_report):
     with open(fastp_report, "r") as fh:
-        qcdata = json.load(fh)
-    base_count = qcdata["summary"]["after_filtering"]["total_bases"]
-    read_count = qcdata["summary"]["after_filtering"]["total_reads"]
+        data = json.load(fh)
+    base_count = data["summary"]["after_filtering"]["total_bases"]
+    read_count = data["summary"]["after_filtering"]["total_reads"]
     return base_count / read_count
 
 

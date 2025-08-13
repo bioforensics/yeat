@@ -58,12 +58,19 @@ def test_expand_read_path_found_too_many(tmp_path):
 @pytest.mark.parametrize(
     "data,read_type",
     [
-        ({"illumina": ["DNE"]}, None),
-        ({"ont_simplex": ["DNE"]}, "ont_simplex"),
-        ({"illumina": ["DNE"], "ont_simplex": ["DNE"]}, "ont_simplex"),
-        ({"ont_simplex": ["DNE"], "ont_duplex": ["DNE"]}, "ont_duplex"),
-        ({"ont_simplex": ["DNE"], "ont_duplex": ["DNE"]}, "ont_duplex"),
-        ({"ont_simplex": ["DNE"], "ont_duplex": ["DNE"], "pacbio_hifi": ["DNE"]}, "pacbio_hifi"),
+        ({"illumina": ["READ.fastq.gz"]}, None),
+        ({"ont_simplex": ["READ.fastq.gz"]}, "ont_simplex"),
+        ({"illumina": ["READ.fastq.gz"], "ont_simplex": ["READ.fastq.gz"]}, "ont_simplex"),
+        ({"ont_simplex": ["READ.fastq.gz"], "ont_duplex": ["READ.fastq.gz"]}, "ont_duplex"),
+        ({"ont_simplex": ["READ.fastq.gz"], "ont_duplex": ["READ.fastq.gz"]}, "ont_duplex"),
+        (
+            {
+                "ont_simplex": ["READ.fastq.gz"],
+                "ont_duplex": ["READ.fastq.gz"],
+                "pacbio_hifi": ["READ.fastq.gz"],
+            },
+            "pacbio_hifi",
+        ),
     ],
 )
 def test_best_long_read_type(data, read_type):

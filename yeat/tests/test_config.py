@@ -7,7 +7,6 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from pathlib import Path
 from pydantic import ValidationError
 import pytest
 from yeat.config.config import ConfigurationError, AssemblyConfiguration
@@ -22,7 +21,7 @@ def test_has_one_sample():
 
 
 def test_has_one_assembler():
-    samples = {"sample1": Sample(label="sample1", data={"ont_simplex": [Path("DNE")]})}
+    samples = {"sample1": Sample(label="sample1", data={"ont_simplex": ["READ.fastq.gz"]})}
     message = "Config has no assemblers"
     with pytest.raises(ValidationError, match=message):
         AssemblyConfiguration(global_settings=GlobalSettings, samples=samples, assemblers={})

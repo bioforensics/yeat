@@ -21,7 +21,8 @@ class Assembler(BaseModel):
     @classmethod
     def has_one_sample(cls, samples):
         if not samples:
-            raise AssemblerConfigurationError(f"{cls.__name__} has no samples to work with")
+            message = f"{cls.__name__} has no samples to work with"
+            raise AssemblerConfigurationError(message)
         return samples
 
     @classmethod

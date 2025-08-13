@@ -26,21 +26,23 @@ def test_has_one_sample():
         (
             {"algorithm": "flye"},
             {
-                "sample2": Sample(label="sample2", data={"ont_simplex": ["read.fastq.gz"]}),
-                "sample3": Sample(label="sample3", data={"pacbio_hifi": ["read.fastq.gz"]}),
+                "sample2": Sample(label="sample2", data={"ont_simplex": ["READ.fastq.gz"]}),
+                "sample3": Sample(label="sample3", data={"pacbio_hifi": ["READ.fastq.gz"]}),
             },
         ),
         (
             {"algorithm": "flye", "samples": ["sample2"]},
-            {"sample2": Sample(label="sample2", data={"ont_simplex": ["read.fastq.gz"]})},
+            {"sample2": Sample(label="sample2", data={"ont_simplex": ["READ.fastq.gz"]})},
         ),
     ],
 )
 def test_select_samples(data, expected):
     samples = {
-        "sample1": Sample(label="sample1", data={"illumina": ["read.fastq.gz"]}),
-        "sample2": Sample(label="sample2", data={"ont_simplex": ["read.fastq.gz"]}),
-        "sample3": Sample(label="sample3", data={"pacbio_hifi": ["read.fastq.gz"]}),
+        "sample1": Sample(
+            label="sample1", data={"illumina": ["READ1.fastq.gz", "READ2.fastq.gz"]}
+        ),
+        "sample2": Sample(label="sample2", data={"ont_simplex": ["READ.fastq.gz"]}),
+        "sample3": Sample(label="sample3", data={"pacbio_hifi": ["READ.fastq.gz"]}),
     }
     compatible_samples = FlyeAssembler.select_samples(data, samples)
     assert compatible_samples == expected
@@ -48,7 +50,9 @@ def test_select_samples(data, expected):
 
 def test_select_samples_manual_selection_not_avaliable():
     data = {"algorithm": "flye", "samples": ["sample2"]}
-    samples = {"sample1": Sample(label="sample1", data={"illumina": ["read.fastq.gz"]})}
+    samples = {
+        "sample1": Sample(label="sample1", data={"illumina": ["READ1.fastq.gz", "READ2.fastq.gz"]})
+    }
     message = "Sample 'sample2' not found in provided samples"
     with pytest.raises(AssemblerConfigurationError, match=message):
         FlyeAssembler.select_samples(data, samples)

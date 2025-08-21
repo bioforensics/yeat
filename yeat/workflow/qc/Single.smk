@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from yeat.workflow.qc.aux import copy_input, get_genome_size, get_average_read_length, get_down, print_downsample_values
+from yeat.workflow.qc.aux import copy_input
 
 
 rule copy_input:
@@ -88,8 +88,6 @@ rule downsample:
         if params.downsample == -1:
             Path(output.read).symlink_to(params.symlink_read)
             return
-        genome_size = get_genome_size(params.genome_size, input.mash_report)
-        average_read_length = get_average_read_length(params.fastp_report)
-        down = get_down(params.downsample, genome_size, params.coverage_depth, average_read_length)
-        print_downsample_values(genome_size, average_read_length, params.coverage_depth, down, seed)
-        shell("seqtk sample -s {params.seed} {input.read1} {down} | gzip > {params.outdir}/read.fastq.gz")
+        downsample = Downsample.parse_data(params.genome_size, input.mash_report, params.fastp_report, params.coverage_depth, params.downsample)
+        down = downsample.get_down()
+        shell("seqtk sample -s {params.seed} {input.read} {down} | gzip > {params.outdir}/read.fastq.gz")

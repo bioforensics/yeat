@@ -23,14 +23,14 @@ class AssemblyConfiguration(BaseModel):
     @field_validator("samples")
     @classmethod
     def has_one_sample(cls, samples):
-        if not samples:
+        if len(samples) == 0:
             raise ConfigurationError("Config has no samples")
         return samples
 
     @field_validator("assemblers")
     @classmethod
     def has_one_assembler(cls, assemblers):
-        if not assemblers:
+        if len(assemblers) == 0:
             raise ConfigurationError("Config has no assemblers")
         return assemblers
 

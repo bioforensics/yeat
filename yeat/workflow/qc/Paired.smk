@@ -7,7 +7,8 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from yeat.workflow.qc.aux import copy_input, get_genome_size, get_average_read_length, get_down, print_downsample_values
+from yeat.workflow.qc.aux import copy_input
+from yeat.workflow.qc.downsample import Downsample
 
 
 rule copy_input:
@@ -100,9 +101,7 @@ rule downsample:
             Path(output.r1).symlink_to(params.symlink_r1)
             Path(output.r2).symlink_to(params.symlink_r2)
             return
-        genome_size = get_genome_size(params.genome_size, input.mash_report)
-        average_read_length = get_average_read_length(params.fastp_report)
-        down = get_down(params.downsample, genome_size, params.coverage_depth, average_read_length)
-        print_downsample_values(genome_size, average_read_length, params.coverage_depth, down, seed)
-        shell("seqtk sample -s {params.seed} {input.read1} {down} | gzip > {params.outdir}/R1.fastq.gz")
-        shell("seqtk sample -s {params.seed} {input.read2} {down} | gzip > {params.outdir}/R2.fastq.gz")
+        downsample = Downsample.parse_data(params.genome_size, input.mash_report, params.fastp_report, params.coverage_depth, params.downsample)
+        down = downsample.get_down()
+        shell("seqtk sample -s {params.seed} {input.r1} {down} | gzip > {params.outdir}/R1.fastq.gz")
+        shell("seqtk sample -s {params.seed} {input.r2} {down} | gzip > {params.outdir}/R2.fastq.gz")

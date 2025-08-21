@@ -9,16 +9,25 @@
 
 from importlib.resources import files
 from pathlib import Path
+from random import randint
 from snakemake import snakemake
 import toml
 from yeat.config.sample import READ_TYPES
 
 
-def run_workflow(args):
-    snakefile = files("yeat") / "workflow" / "Snakefile.smk"
-    config = vars(args)
-    config.update(get_config_data(config["config"]))
-    success = snakemake_local(args, snakefile, config)
+def run_workflow(
+    config, seed=randint(1, 2**16 - 1), threads=1, workdir=".", dry_run=False, copy_input=False
+):
+    snakefile = files("yeat") / "workflow" / "yeat.smk"
+    snakemake_config = {
+        "config": get_config_data(config),
+        "seed": seed,
+        "threads": threads,
+        "workdir": workdir,
+        "dry_run": dry_run,
+        "copy_input": copy_input,
+    }
+    success = snakemake_local(snakefile, snakemake_config)
     if not success:
         raise RuntimeError("Snakemake Failed")  # pragma: no cover
 
@@ -33,14 +42,14 @@ def get_config_data(infile):
     return data
 
 
-def snakemake_local(args, snakefile, config):
+def snakemake_local(snakefile, snakemake_config):
     success = snakemake(
         snakefile,
-        config=config,
-        cores=args.threads,
-        dryrun=args.dry_run,
+        config=snakemake_config,
+        cores=snakemake_config["threads"],
+        dryrun=snakemake_config["dry_run"],
         printshellcmds=True,
-        workdir=args.workdir,
+        workdir=snakemake_config["workdir"],
         use_conda=True,
     )
     return success

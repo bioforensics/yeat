@@ -1,6 +1,6 @@
 SHELL = bash
 TEST_DATA_PATH ?= yeat/tests/data
-PYFILES = $(shell ls yeat/*.py yeat/*/*.py yeat/*/*/*.py)
+PYFILES = $(shell find yeat/ -type f -name "*.py")
 
 ## #===== development tasks =====#
 

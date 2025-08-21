@@ -10,11 +10,11 @@
 from yeat.config.config import AssemblyConfiguration
 
 
-asm_cfg = AssemblyConfiguration.parse_snakemake_config(config)
+asm_cfg = AssemblyConfiguration.parse_snakemake_config(config["config"])
 config["asm_cfg"] = asm_cfg
 
 
-include: "Assemblers.smk"
+include: "assemblers.smk"
 
 
 rule all:
@@ -24,7 +24,7 @@ rule all:
 
 module qc_paired_workflow:
     snakefile:
-        "qc/Paired.smk"
+        "qc/paired.smk"
     config:
         config
 
@@ -34,7 +34,7 @@ use rule * from qc_paired_workflow as qc_paired_*
 
 module qc_single_workflow:
     snakefile:
-        "qc/Single.smk"
+        "qc/single.smk"
     config:
         config
 
@@ -44,7 +44,7 @@ use rule * from qc_single_workflow as qc_single_*
 
 module qc_long_workflow:
     snakefile:
-        "qc/Long.smk"
+        "qc/long.smk"
     config:
         config
 

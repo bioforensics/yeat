@@ -22,5 +22,6 @@ def get_core_count():
 
 
 def run_yeat(arglist):
+    arglist = map(str, arglist)
     args = cli.get_parser().parse_args(arglist)
     main(args)

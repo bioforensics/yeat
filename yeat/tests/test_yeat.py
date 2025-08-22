@@ -8,7 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 import pytest
-from yeat.tests import data_file, run_yeat, get_core_count
+from yeat.tests import data_file, run_yeat, get_core_count, final_contig_files_exist
 
 
 @pytest.mark.parametrize(
@@ -45,3 +45,4 @@ def test_assemblers(capsys, tmp_path, config):
     cores = str(get_core_count())
     arglist = ["-w", wd, "-t", cores, config]
     run_yeat(arglist)
+    final_contig_files_exist(wd, config)

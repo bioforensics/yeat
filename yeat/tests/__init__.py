@@ -9,7 +9,25 @@
 
 from importlib.resources import files
 import multiprocessing
+from pathlib import Path
+import toml
 from yeat.cli import main, cli
+from yeat.config.assemblers import ALGORITHM_CONFIGS
+from yeat.config.config import AssemblyConfiguration
+
+
+FINAL_FILES = {
+    "spades": "contigs.fasta",
+    "megahit": "final.contigs.fa",
+    "unicycler": "assembly.fasta",
+    "penguin": "contigs.fasta",
+    "velvet": "contigs.fa",
+    "flye": "assembly.fasta",
+    "canu": "*.contigs.fasta",
+    "hifiasm": "asm.bp.p_ctg.fa",
+    "hifiasm_meta": "asm.p_ctg.fa",
+    "metamdbg": "contigs.fasta",
+}
 
 
 def data_file(path):
@@ -22,5 +40,20 @@ def get_core_count():
 
 
 def run_yeat(arglist):
+    arglist = map(str, arglist)
     args = cli.get_parser().parse_args(arglist)
     main(args)
+
+
+def final_contig_files_exist(wd, config_path):
+    cfg_data = toml.load(config_path)
+    config = AssemblyConfiguration.parse_snakemake_config(cfg_data)
+    reversed_dict = {v: k for k, v in ALGORITHM_CONFIGS.items()}
+    for assembler_label, assembler in config.assemblers.items():
+        assembler_type = type(assembler)
+        algo_key = reversed_dict[assembler_type]
+        contig_file = FINAL_FILES[algo_key]
+        for sample_label in assembler.samples:
+            search_dir = Path(f"{wd}/analysis/{sample_label}/yeat/{algo_key}/{assembler_label}")
+            matches = list(search_dir.glob(contig_file))
+            assert len(matches) == 1

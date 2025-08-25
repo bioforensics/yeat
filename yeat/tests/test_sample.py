@@ -15,9 +15,16 @@ from yeat.config.sample import SampleConfigurationError, Sample
 from yeat.tests import data_file
 
 
-@pytest.mark.parametrize("data", [{}, {"downsample": -1}])
+@pytest.mark.parametrize("data", [{}, {"target_num_reads": -1}])
 def test_has_one_read_type(data):
     message = "Sample must have at least one read type"
+    with pytest.raises(ValidationError, match=message):
+        Sample(label="sample1", data=data)
+
+
+def test_has_valid_keys():
+    data = {"illumina": [data_file("short_reads_1.fastq.gz")], "INVALID": 0}
+    message = r"Sample has unexpected key\(s\): \{'INVALID'\}"
     with pytest.raises(ValidationError, match=message):
         Sample(label="sample1", data=data)
 
@@ -30,16 +37,18 @@ def test_has_one_read_type(data):
     ],
 )
 def test_expand_read_path(read_path, expected):
+    label = "sample1"
     data = {"illumina": data_file(read_path)}
-    Sample._expand_read_path(data)
+    Sample._expand_read_path(label, data)
     assert data["illumina"] == [Path(data_file(read)) for read in expected]
 
 
 def test_expand_read_path_unable_to_find():
+    label = "sample1"
     data = {"illumina": "DNE"}
-    message = "Unable to find fastq files"
+    message = f"Unable to find FASTQ files for sample '{label}' at path:"
     with pytest.raises(SampleConfigurationError, match=message):
-        Sample._expand_read_path(data)
+        Sample._expand_read_path(label, data)
 
 
 def test_expand_read_path_found_too_many(tmp_path):
@@ -49,10 +58,11 @@ def test_expand_read_path_found_too_many(tmp_path):
     copy(read1, wd / "short_reads_1.fastq.gz")
     copy(read2, wd / "short_reads_2.fastq.gz")
     (wd / "short_reads_3.fastq.gz").touch()
+    label = "sample1"
     data = {"illumina": str(wd / "short_reads_*.fastq.gz")}
-    message = "Found too many fastq files"
+    message = f"Found too many FASTQ files for sample '{label}' at path:"
     with pytest.raises(SampleConfigurationError, match=message):
-        Sample._expand_read_path(data)
+        Sample._expand_read_path(label, data)
 
 
 @pytest.mark.parametrize(

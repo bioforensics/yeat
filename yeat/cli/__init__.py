@@ -14,4 +14,11 @@ from yeat.workflow import run_workflow
 def main(args=None):
     if args is None:
         args = get_parser().parse_args()  # pragma: no cover
-    run_workflow(args)
+    run_workflow(
+        config=args.config,
+        seed=args.seed,
+        threads=args.threads,
+        workdir=args.workdir,
+        dry_run=args.dry_run,
+        copy_input=args.copy_input,
+    )

@@ -7,7 +7,8 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from pathlib import PosixPath, Path
+from .global_settings import GlobalSettings
+from pathlib import Path
 from pydantic import BaseModel, field_validator
 from typing import Dict, Union
 
@@ -19,7 +20,7 @@ BEST_LR_ORDER = ("pacbio_hifi", "ont_duplex", "ont_simplex")
 
 class Sample(BaseModel):
     label: str
-    data: Dict[str, Union[list[PosixPath], int, bool]]
+    data: Dict[str, Union[list[Path], int, bool]]
 
     @field_validator("data")
     @classmethod
@@ -28,22 +29,37 @@ class Sample(BaseModel):
             raise SampleConfigurationError("Sample must have at least one read type")
         return data
 
+    @field_validator("data")
+    @classmethod
+    def has_valid_keys(cls, data):
+        field_names = set(GlobalSettings.model_fields.keys())
+        valid_keys = field_names | READ_TYPES
+        extra_keys = set(data.keys()) - valid_keys
+        if extra_keys:
+            raise SampleConfigurationError(f"Sample has unexpected key(s): {extra_keys}")
+        return data
+
     @classmethod
     def parse_data(cls, label, data, global_settings):
-        cls._expand_read_path(data)
+        cls._expand_read_path(label, data)
         cls._add_global_settings(data, global_settings)
         return cls(label=label, data=data)
 
     @staticmethod
-    def _expand_read_path(data):
+    def _expand_read_path(label, data):
         for read_type, read_path in data.items():
             if read_type not in READ_TYPES:
                 continue
-            reads = list(Sample._expand_glob_pattern(Path(read_path)))
+            reads = sorted(Sample._expand_glob_pattern(Path(read_path)))
             if not reads:
-                raise SampleConfigurationError("Unable to find fastq files")
+                message = f"Unable to find FASTQ files for sample '{label}' at path: {read_path}"
+                raise SampleConfigurationError(message)
             if len(reads) > 2:
-                raise SampleConfigurationError("Found too many fastq files")
+                message = (
+                    f"Found too many FASTQ files for sample '{label}' at path: {read_path}. "
+                    f"Expected at most 2, found {len(reads)}."
+                )
+                raise SampleConfigurationError(message)
             data[read_type] = reads
 
     @staticmethod
@@ -73,12 +89,12 @@ class Sample(BaseModel):
         return self.has_ont or self.has_pacbio
 
     @property
-    def coverage_depth(self):
-        return self.data.get("coverage_depth", 150)
+    def target_coverage_depth(self):
+        return self.data.get("target_coverage_depth", 150)
 
     @property
-    def downsample(self):
-        return self.data.get("downsample", -1)
+    def target_num_reads(self):
+        return self.data.get("target_num_reads", -1)
 
     @property
     def genome_size(self):

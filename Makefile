@@ -1,6 +1,6 @@
 SHELL = bash
 TEST_DATA_PATH ?= yeat/tests/data
-PYFILES = $(shell ls yeat/*.py yeat/*/*.py yeat/*/*/*.py)
+PYFILES = $(shell find yeat/ -type f -name "*.py")
 
 ## #===== development tasks =====#
 
@@ -31,11 +31,12 @@ testdata:
 ## style:        check code style against Black
 style:
 	black --line-length=99 --check $(PYFILES)
+	snakefmt --line-length=9999 --check yeat/workflow
 
 ## format:       autoformat Python code
 format:
 	black --line-length=99 $(PYFILES)
-	snakefmt --line-length 9999 yeat/workflow
+	snakefmt --line-length=9999 yeat/workflow
 
 ## hooks:        deploy Git pre-commit hooks for development
 hooks:

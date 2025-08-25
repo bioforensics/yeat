@@ -7,164 +7,132 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import (
-    ILLUMINA_READS,
-    PACBIO_READS,
-    OXFORD_READS,
-    LONG_READS,
-    READ_TYPES,
-    DOWNSAMPLE_KEYS,
-    AssemblyConfigError,
-)
+from .global_settings import GlobalSettings
 from pathlib import Path
-from warnings import warn
+from pydantic import BaseModel, field_validator
+from typing import Dict, Union
 
 
-class Sample:
-    def __init__(self, label, sample):
-        self.label = label
-        self.sample = sample
-        self.cast_downsample_values_to_int()
-        self.all_reads = []
-        self.validate_sample_configuration()
-        self.short_readtype = self.get_short_readtype()
-        self.long_readtype = self.get_long_readtype()
-        self.target_files = self.get_target_files()
-        self.downsample = self.sample["downsample"]
-        self.genome_size = self.sample["genome_size"]
-        self.coverage_depth = self.sample["coverage_depth"]
-        if not self.short_readtype and self.long_readtype:
-            self.warn_downsample_configuration_on_long_reads()
+ONT_PLATFORMS = {"ont_simplex", "ont_duplex"}
+READ_TYPES = ONT_PLATFORMS | {"illumina", "pacbio_hifi"}
+BEST_LR_ORDER = ("pacbio_hifi", "ont_duplex", "ont_simplex")
 
-    def cast_downsample_values_to_int(self):
-        for key in DOWNSAMPLE_KEYS:
-            try:
-                self.sample[key] = int(self.sample[key])
-            except ValueError:
-                message = f"Input {key} is not an int '{self.sample[key]}' for '{self.label}'"
-                raise ValueError(message)
 
-    def validate_sample_configuration(self):
-        self.check_enough_readtypes()
-        self.check_input_reads()
-        self.check_input_downsample_values()
+class Sample(BaseModel):
+    label: str
+    data: Dict[str, Union[list[Path], int, bool]]
 
-    def check_enough_readtypes(self):
-        sample_keys = self.sample.keys()
-        sample_read_types = set(sample_keys).intersection(set(READ_TYPES))
-        if len(sample_read_types) == 0:
-            message = f"Missing sample reads for '{self.label}'"
-            raise AssemblyConfigError(message)
-        if len(sample_read_types) > 2:
-            message = f"Max of 2 readtypes per sample for '{self.label}'"
-            raise AssemblyConfigError(message)
+    @field_validator("data")
+    @classmethod
+    def has_one_read_type(cls, data):
+        if not data.keys() & READ_TYPES:
+            raise SampleConfigurationError("Sample must have at least one read type")
+        return data
 
-    def check_input_reads(self):
-        for readtype, reads in self.sample.items():
-            if readtype not in READ_TYPES:
+    @field_validator("data")
+    @classmethod
+    def has_valid_keys(cls, data):
+        field_names = set(GlobalSettings.model_fields.keys())
+        valid_keys = field_names | READ_TYPES
+        extra_keys = set(data.keys()) - valid_keys
+        if extra_keys:
+            raise SampleConfigurationError(f"Sample has unexpected key(s): {extra_keys}")
+        return data
+
+    @classmethod
+    def parse_data(cls, label, data, global_settings):
+        cls._expand_read_path(label, data)
+        cls._add_global_settings(data, global_settings)
+        return cls(label=label, data=data)
+
+    @staticmethod
+    def _expand_read_path(label, data):
+        for read_type, read_path in data.items():
+            if read_type not in READ_TYPES:
                 continue
-            if len(reads) == 0:
-                message = f"Missing input reads for '{self.label}'"
-                raise AssemblyConfigError(message)
-            if readtype == "paired":
-                for pair in reads:
-                    self.check_paired_reads(pair)
-                    self.check_reads(pair)
-            else:
-                self.check_reads(reads)
+            reads = sorted(Sample._expand_glob_pattern(Path(read_path)))
+            if not reads:
+                message = f"Unable to find FASTQ files for sample '{label}' at path: {read_path}"
+                raise SampleConfigurationError(message)
+            if len(reads) > 2:
+                message = (
+                    f"Found too many FASTQ files for sample '{label}' at path: {read_path}. "
+                    f"Expected at most 2, found {len(reads)}."
+                )
+                raise SampleConfigurationError(message)
+            data[read_type] = reads
 
-    def check_paired_reads(self, pair):
-        if not isinstance(pair, list):
-            message = f"Input read is not a list '{pair}' for '{self.label}'"
-            raise AssemblyConfigError(message)
-        observed = len(pair)
-        expected = 2
-        if observed == 0:
-            message = f"Missing 2 reads in 'paired' entry for '{self.label}'"
-            raise AssemblyConfigError(message)
-        if observed < expected:
-            message = f"Missing 1 read in 'paired' entry for '{self.label}'"
-            raise AssemblyConfigError(message)
-        if observed > expected:
-            message = f"Found more than 2 reads in 'paired' entry for '{self.label}'"
-            raise AssemblyConfigError(message)
+    @staticmethod
+    def _expand_glob_pattern(read_path):
+        yield from read_path.parent.glob(read_path.name)
 
-    def check_reads(self, reads):
-        for read in reads:
-            if not isinstance(read, str):
-                message = f"Input read is not a string '{read}' for '{self.label}'"
-                raise AssemblyConfigError(message)
-            if not Path(read).is_file():
-                message = f"No such file '{read}' for '{self.label}'"
-                raise FileNotFoundError(message)
-            if read in self.all_reads:
-                message = f"Found duplicate read sample '{read}' for '{self.label}'"
-                raise AssemblyConfigError(message)
-            self.all_reads.append(read)
+    @staticmethod
+    def _add_global_settings(data, global_settings):
+        for key, value in global_settings.model_dump().items():
+            if key not in data:
+                data[key] = value
 
-    def check_input_downsample_values(self):
-        if self.sample["downsample"] < -1:
-            message = f"Invalid input '{self.sample['downsample']}' for '{self.label}'"
-            raise AssemblyConfigError(message)
-        if self.sample["genome_size"] < 0:
-            message = f"Invalid input '{self.sample['genome_size']}' for '{self.label}'"
-            raise AssemblyConfigError(message)
-        if self.sample["coverage_depth"] < 1:
-            message = f"Invalid input '{self.sample['coverage_depth']}' for '{self.label}'"
-            raise AssemblyConfigError(message)
+    @property
+    def has_illumina(self):
+        return "illumina" in self.data
 
-    def get_short_readtype(self):
-        short_readtypes = set.intersection(set(self.sample.keys()), set(ILLUMINA_READS))
-        if len(short_readtypes) > 1:
-            message = f"Max of 1 Illumina readtype per sample for '{self.label}'"
-            raise AssemblyConfigError(message)
-        elif len(short_readtypes) == 0:
-            return None
-        else:
-            return next(iter(short_readtypes))
+    @property
+    def has_ont(self):
+        return any(key in ONT_PLATFORMS for key in self.data)
 
-    def get_long_readtype(self):
-        long_readtypes = set.intersection(set(self.sample.keys()), set(LONG_READS))
-        if len(long_readtypes) > 1:
-            message = f"Max of 1 long readtype per sample for '{self.label}'"
-            raise AssemblyConfigError(message)
-        elif len(long_readtypes) == 0:
-            return None
-        else:
-            return next(iter(long_readtypes))
+    @property
+    def has_pacbio(self):
+        return "pacbio_hifi" in self.data
 
-    def get_target_files(self):
-        target_files = []
-        for readtype in self.sample.keys():
-            if readtype not in READ_TYPES:
+    @property
+    def has_long_reads(self):
+        return self.has_ont or self.has_pacbio
+
+    @property
+    def target_coverage_depth(self):
+        return self.data.get("target_coverage_depth", 150)
+
+    @property
+    def target_num_reads(self):
+        return self.data.get("target_num_reads", -1)
+
+    @property
+    def genome_size(self):
+        return self.data.get("genome_size", 0)
+
+    @property
+    def min_length(self):
+        return self.data.get("min_length", 100)
+
+    @property
+    def quality(self):
+        return self.data.get("quality", 10)
+
+    @property
+    def skip_filter(self):
+        return self.data.get("skip_filter", False)
+
+    @property
+    def best_long_read_type(self):
+        for read_type in BEST_LR_ORDER:
+            if read_type in self.data:
+                return read_type
+
+    @property
+    def targets(self):
+        fastq_paths = list()
+        for read_type in READ_TYPES:
+            if read_type not in self.data:
                 continue
-            target_files += self.get_qc_files(readtype)
-        return target_files
+            fastqs = self.data[read_type]
+            fastqc_dir = f"analysis/{self.label}/qc/{read_type}/fastqc"
+            if len(fastqs) == 2:
+                fastq_paths.append(f"{fastqc_dir}/R1_fastqc.html")
+                fastq_paths.append(f"{fastqc_dir}/R2_fastqc.html")
+                continue
+            fastq_paths.append(f"{fastqc_dir}/read_fastqc.html")
+        return fastq_paths
 
-    def get_qc_files(self, readtype):
-        if readtype == "paired":
-            return [
-                f"seq/fastqc/{self.label}/paired/{direction}_combined-reads_fastqc.html"
-                for direction in ["r1", "r2"]
-            ]
-        elif readtype in ("single",) + PACBIO_READS:
-            return [f"seq/fastqc/{self.label}/{readtype}/combined-reads_fastqc.html"]
-        elif readtype in OXFORD_READS:
-            return [
-                f"seq/nanoplot/{self.label}/{readtype}/{quality}_LengthvsQualityScatterPlot_dot.pdf"
-                for quality in ["raw", "filtered"]
-            ]
-        else:  # pragma: no cover
-            message = f"Invalid readtype '{readtype}'"
-            raise AssemblyConfigError(message)
 
-    def warn_downsample_configuration_on_long_reads(self):
-        if self.downsample > 0:
-            message = f"Configuration value 'downsample' cannot be applied to '{self.long_readtype}' reads"
-            warn(message)
-        if self.genome_size > 0:
-            message = f"Configuration value 'genome_size' cannot be applied to '{self.long_readtype}' reads"
-            warn(message)
-        if self.coverage_depth != 150:
-            message = f"Configuration value 'coverage_depth' cannot be applied to '{self.long_readtype}' reads"
-            warn(message)
+class SampleConfigurationError(ValueError):
+    pass

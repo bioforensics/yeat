@@ -7,35 +7,15 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from argparse import ArgumentTypeError
-import json
 import pytest
-from yeat.cli import cli
-from yeat.cli.cli import InitAction, illumina
-
-pytestmark = pytest.mark.short
+import toml
+from yeat.cli.cli import InitAction
 
 
 def test_display_config_template(capsys):
+    action = InitAction(option_strings=[], dest="init")
     with pytest.raises(SystemExit):
-        InitAction.__call__(None, None, None, None)
+        action(None, None, None, None)
     out, err = capsys.readouterr()
-    assert json.loads(out) == cli.CONFIG_TEMPLATE
-
-
-@pytest.mark.parametrize("value", [1, 10, 100])
-def test_check_positive_valid_values(value):
-    illumina.check_positive(value) == value
-
-
-@pytest.mark.parametrize("value", [-1, 0])
-def test_check_positive_not_positive_integer(value):
-    message = f"{value} is not a positive integer"
-    with pytest.raises(ArgumentTypeError, match=message):
-        illumina.check_positive(value)
-
-
-def test_check_positive_not_integer():
-    message = f"BAD is not an integer"
-    with pytest.raises(ArgumentTypeError, match=message):
-        illumina.check_positive("BAD")
+    data = toml.loads(out)
+    assert data == InitAction.config_template

@@ -7,67 +7,109 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from . import READ_TYPES, DOWNSAMPLE_KEYS, AssemblyConfigError
-from .assembly import Assembly
+from .assemblers import ALGORITHM_CONFIGS
+from .assemblers.assembler import Assembler
+from .global_settings import GlobalSettings
 from .sample import Sample
-from itertools import chain
+from pydantic import BaseModel, ConfigDict, field_validator
+from typing import Dict
 
 
-CONFIG_KEYS = ("samples", "assemblies")
-SAMPLE_KEYS = READ_TYPES + DOWNSAMPLE_KEYS
-ASSEMBLY_KEYS = ("algorithm", "extra_args", "samples", "mode")
+class AssemblyConfiguration(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    global_settings: GlobalSettings
+    samples: Dict[str, Sample]
+    assemblers: Dict[str, Assembler]
 
-
-class AssemblyConfig:
-    def __init__(self, config, threads=1, bandage=False):
-        self.config = config
-        self.validate_config_keys()
-        self.threads = threads
-        self.bandage = bandage
-        self.samples = self.create_sample_objects()
-        self.assemblies = self.create_assembly_objects()
-        self.target_files = self.get_target_files()
-
-    def validate_config_keys(self):
-        self.check_required_keys(self.config.keys(), CONFIG_KEYS)
-        for sample in self.config["samples"].values():
-            self.check_valid_keys(sample.keys(), SAMPLE_KEYS)
-        for assembly in self.config["assemblies"].values():
-            self.check_required_keys(assembly.keys(), ASSEMBLY_KEYS)
-
-    def check_required_keys(self, observed_keys, expected_keys):
-        missing_keys = set(expected_keys) - set(observed_keys)
-        if missing_keys:
-            key_str = ",".join(sorted(missing_keys))
-            message = f"Missing assembly configuration setting(s) '{key_str}'"
-            raise AssemblyConfigError(message)
-        self.check_valid_keys(observed_keys, expected_keys)
-
-    def check_valid_keys(self, observed_keys, expected_keys):
-        extra_keys = set(observed_keys) - set(expected_keys)
-        if extra_keys:
-            key_str = ",".join(sorted(extra_keys))
-            message = f"Found unsupported configuration key(s) '{key_str}'"
-            raise AssemblyConfigError(message)
-
-    def create_sample_objects(self):
-        samples = {}
-        for label, sample in self.config["samples"].items():
-            samples[label] = Sample(label, sample)
+    @field_validator("samples")
+    @classmethod
+    def has_one_sample(cls, samples):
+        if len(samples) == 0:
+            raise ConfigurationError("Config has no samples")
         return samples
 
-    def create_assembly_objects(self):
-        assemblies = {}
-        for label, assembly in self.config["assemblies"].items():
-            assembly["samples"] = self.get_sample_objects(assembly["samples"])
-            assemblies[label] = Assembly(label, assembly, self.threads, self.bandage)
-        return assemblies
+    @field_validator("assemblers")
+    @classmethod
+    def has_one_assembler(cls, assemblers):
+        if len(assemblers) == 0:
+            raise ConfigurationError("Config has no assemblers")
+        return assemblers
 
-    def get_sample_objects(self, samples):
-        return dict(((sample, self.samples[sample]) for sample in samples))
+    @classmethod
+    def parse_snakemake_config(cls, config):
+        global_settings = cls._parse_global_settings(config)
+        samples = cls._parse_samples(config, global_settings)
+        assemblers = cls._parse_assemblers(config, samples)
+        return cls(global_settings=global_settings, samples=samples, assemblers=assemblers)
 
-    def get_target_files(self):
-        target_files = []
-        for element in chain(self.samples.values(), self.assemblies.values()):
-            target_files += element.target_files
-        return target_files
+    @staticmethod
+    def _parse_global_settings(config):
+        data = config.get("global_settings", {})
+        return GlobalSettings.parse_data(data)
+
+    @staticmethod
+    def _parse_samples(config, global_settings):
+        samples = dict()
+        for label, data in config["samples"].items():
+            samples[label] = Sample.parse_data(label, data, global_settings)
+        return samples
+
+    @staticmethod
+    def _parse_assemblers(config, samples):
+        assemblers = dict()
+        for label, data in config["assemblers"].items():
+            assembler_class = AssemblyConfiguration.select(data["algorithm"])
+            assemblers[label] = assembler_class.parse_data(label, data, samples)
+        return assemblers
+
+    @classmethod
+    def select(self, algorithm):
+        if algorithm not in ALGORITHM_CONFIGS:
+            raise ConfigurationError(f"Unknown assembly algorithm {algorithm}")
+        return ALGORITHM_CONFIGS[algorithm]
+
+    @property
+    def targets(self):
+        targets = list()
+        for sample in self.samples.values():
+            targets.extend(sample.targets)
+        for assembler in self.assemblers.values():
+            targets.extend(assembler.targets)
+        return targets
+
+    def get_sample_input_files(self, sample, read_type):
+        return self.samples[sample].data[read_type]
+
+    def get_sample_skip_filter(self, sample):
+        return self.samples[sample].skip_filter
+
+    def get_sample_quality(self, sample):
+        return self.samples[sample].quality
+
+    def get_sample_min_length(self, sample):
+        return self.samples[sample].min_length
+
+    def get_sample_target_num_reads(self, sample):
+        return self.samples[sample].target_num_reads
+
+    def get_sample_genome_size(self, sample):
+        return self.samples[sample].genome_size
+
+    def get_sample_target_coverage_depth(self, sample):
+        return self.samples[sample].target_coverage_depth
+
+    def get_assembler_input_files(self, label, sample):
+        return self.assemblers[label].input_files(sample)
+
+    def get_assembler_input_args(self, label, sample):
+        return self.assemblers[label].input_args(sample)
+
+    def get_assembler_extra_args(self, label):
+        return self.assemblers[label].extra_args
+
+    def get_assembler_bowtie2_input_args(self, label, sample):
+        return self.assemblers[label].bowtie2_input_args(sample)
+
+
+class ConfigurationError(ValueError):
+    pass

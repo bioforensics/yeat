@@ -1,6 +1,6 @@
 SHELL = bash
 TEST_DATA_PATH ?= yeat/tests/data
-PYFILES = $(shell ls yeat/*.py yeat/*/*.py)
+PYFILES = $(shell find yeat/ -type f -name "*.py")
 
 ## #===== development tasks =====#
 
@@ -10,43 +10,15 @@ help: Makefile
 
 ## test:         run short-running automated tests
 test:
-	pytest --cov=yeat -m short
-
-## testlong:     run long-running automated tests
-testlong:
-	pytest --cov=yeat -m long
-
-## testillumina: run Illumina short-read automated tests
-testillumina:
-	pytest --cov=yeat -m illumina
-
-## testhifi:     run PacBio HiFi-read automated tests
-testhifi:
-	pytest --cov=yeat -m hifi
-
-## testnano:     run Oxford Nanopore-read automated tests
-testnano:
-	pytest --cov=yeat -m nano
-
-## testhybrid:   run hybrid automated tests
-testhybrid:
-	pytest --cov=yeat -m hybrid
-
-## testbandage:  run Bandage-specific automated tests
-testbandage:
-	pytest --cov=yeat -m bandage
-
-## testlinux:    run Linux-specific automated tests
-testlinux:
-	pytest --cov=yeat -m linux
+	pytest --cov=yeat -m "not long"
 
 ## testgrid:     run grid-specific automated tests
 testgrid:
 	pytest --cov=yeat -m grid --basetemp=tmp
 
-## testall:      run all tests, excluding Bandage, Linux, and grid-specific tests
+## testall:      run all tests, excluding grid-specific tests
 testall:
-	pytest --cov=yeat -m 'not bandage and not linux and not grid'
+	pytest --cov=yeat -m 'not grid'
 
 ## testdata:     download test data for test suite
 testdata:
@@ -59,10 +31,12 @@ testdata:
 ## style:        check code style against Black
 style:
 	black --line-length=99 --check $(PYFILES)
+	snakefmt --line-length=9999 --check yeat/workflow
 
 ## format:       autoformat Python code
 format:
 	black --line-length=99 $(PYFILES)
+	snakefmt --line-length=9999 yeat/workflow
 
 ## hooks:        deploy Git pre-commit hooks for development
 hooks:

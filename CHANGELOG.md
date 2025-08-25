@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+- Input config file format from JSON to TOML (#91)
+- Overhauled internal class structure (#91)
+- New directory output structure (#91)
+- Snakemake workflows consolidated (#91)
+- Simplified unit tests (#91)
+
+
 ## [0.7] 2024-12-10
 
 ### Added

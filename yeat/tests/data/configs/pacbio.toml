@@ -1,0 +1,15 @@
+[samples.Ecoli_K12_HiFi]
+pacbio_hifi = "yeat/tests/data/ecoli.fastq.gz"
+
+[assemblers.flye_default]
+algorithm = "flye"
+
+[assemblers.canu_default]
+algorithm = "canu"
+arguments = "genomeSize=4.8m"
+
+[assemblers.unicycler_default]
+algorithm = "unicycler"
+
+[assemblers.hifiasm_default]
+algorithm = "hifiasm"

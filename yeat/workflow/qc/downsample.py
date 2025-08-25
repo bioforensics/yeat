@@ -15,16 +15,18 @@ from pydantic import BaseModel
 class Downsample(BaseModel):
     genome_size: int
     average_read_length: int
-    coverage_depth: int
-    downsample: int
+    target_coverage_depth: int
+    target_num_reads: int
 
     @classmethod
-    def parse_data(cls, genome_size, mash_report, fastp_report, coverage_depth, downsample):
+    def parse_data(
+        cls, genome_size, mash_report, fastp_report, target_coverage_depth, target_num_reads
+    ):
         return cls(
             genome_size=cls._get_genome_size(genome_size, mash_report),
             average_read_length=cls._get_average_read_length(fastp_report),
-            coverage_depth=coverage_depth,
-            downsample=downsample,
+            target_coverage_depth=target_coverage_depth,
+            target_num_reads=target_num_reads,
         )
 
     @staticmethod
@@ -42,7 +44,8 @@ class Downsample(BaseModel):
         read_count = data["summary"]["after_filtering"]["total_reads"]
         return base_count / read_count
 
-    def get_down(self):
-        if self.downsample != 0:
-            return self.downsample
-        return int((self.genome_size * self.coverage_depth) / (2 * self.average_read_length))
+    def get_num_reads(self, paired=True):
+        if self.target_num_reads != 0:
+            return self.target_num_reads
+        avl = 2 * self.average_read_length if paired else self.average_read_length
+        return int((self.genome_size * self.target_coverage_depth) / avl)

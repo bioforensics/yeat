@@ -71,9 +71,9 @@ rule downsample:
     params:
         symlink_read="../chopper/read.fastq.gz",
         seed=config["seed"],
-        downsample=lambda wc: config["asm_cfg"].get_sample_downsample(wc.sample),
+        target_num_reads=lambda wc: config["asm_cfg"].get_sample_target_num_reads(wc.sample),
     run:
-        if params.downsample == -1:
+        if params.target_num_reads == -1:
             Path(output.read).symlink_to(params.symlink_read)
             return
-        shell("seqtk sample -s {params.seed} {input.read} {params.downsample} | gzip > {output.read}")
+        shell("seqtk sample -s {params.seed} {input.read} {params.target_num_reads} | gzip > {output.read}")

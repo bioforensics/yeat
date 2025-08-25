@@ -11,11 +11,12 @@ from .assemblers import ALGORITHM_CONFIGS
 from .assemblers.assembler import Assembler
 from .global_settings import GlobalSettings
 from .sample import Sample
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator
 from typing import Dict
 
 
 class AssemblyConfiguration(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     global_settings: GlobalSettings
     samples: Dict[str, Sample]
     assemblers: Dict[str, Assembler]
@@ -88,14 +89,14 @@ class AssemblyConfiguration(BaseModel):
     def get_sample_min_length(self, sample):
         return self.samples[sample].min_length
 
-    def get_sample_downsample(self, sample):
-        return self.samples[sample].downsample
+    def get_sample_target_num_reads(self, sample):
+        return self.samples[sample].target_num_reads
 
     def get_sample_genome_size(self, sample):
         return self.samples[sample].genome_size
 
-    def get_sample_coverage_depth(self, sample):
-        return self.samples[sample].coverage_depth
+    def get_sample_target_coverage_depth(self, sample):
+        return self.samples[sample].target_coverage_depth
 
     def get_assembler_input_files(self, label, sample):
         return self.assemblers[label].input_files(sample)

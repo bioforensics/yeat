@@ -81,13 +81,13 @@ rule downsample:
         fastp_report="analysis/{sample}/qc/illumina/fastp/fastp.json",
         outdir="analysis/{sample}/qc/illumina/downsample",
         seed=config["seed"],
-        downsample=lambda wc: config["asm_cfg"].get_sample_downsample(wc.sample),
+        target_num_reads=lambda wc: config["asm_cfg"].get_sample_target_num_reads(wc.sample),
         genome_size=lambda wc: config["asm_cfg"].get_sample_genome_size(wc.sample),
-        coverage_depth=lambda wc: config["asm_cfg"].get_sample_coverage_depth(wc.sample),
+        target_coverage_depth=lambda wc: config["asm_cfg"].get_sample_target_coverage_depth(wc.sample),
     run:
-        if params.downsample == -1:
+        if params.target_num_reads == -1:
             Path(output.read).symlink_to(params.symlink_read)
             return
-        downsample = Downsample.parse_data(params.genome_size, input.mash_report, params.fastp_report, params.coverage_depth, params.downsample)
-        down = downsample.get_down()
-        shell("seqtk sample -s {params.seed} {input.read} {down} | gzip > {params.outdir}/read.fastq.gz")
+        downsample = Downsample.parse_data(params.genome_size, input.mash_report, params.fastp_report, params.target_coverage_depth, params.target_num_reads)
+        num_reads = downsample.get_num_reads(paired=False)
+        shell("seqtk sample -s {params.seed} {input.read} {num_reads} | gzip > {params.outdir}/read.fastq.gz")

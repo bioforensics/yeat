@@ -96,8 +96,8 @@ def workflow_configuration(parser):
 class InitAction(Action):
     config_template = {
         "global_settings": {
-            "coverage_depth": 150,
-            "downsample": -1,
+            "target_coverage_depth": 150,
+            "target_num_reads": -1,
             "genome_size": 0,
             "min_length": 100,
             "quality": 10,

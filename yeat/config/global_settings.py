@@ -7,13 +7,14 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
 
 class GlobalSettings(BaseModel):
-    coverage_depth: Optional[int] = 150
-    downsample: Optional[int] = -1  # -1 disable, 0 auto
+    model_config = ConfigDict(extra="forbid")
+    target_coverage_depth: Optional[int] = 150
+    target_num_reads: Optional[int] = -1  # -1 disable, 0 auto
     genome_size: Optional[int] = 0  # 0 auto
     min_length: Optional[int] = 100
     quality: Optional[int] = 10

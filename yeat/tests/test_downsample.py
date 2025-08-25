@@ -17,8 +17,8 @@ def test_downsample():
         genome_size=6275000,
         mash_report=data_file("report.tsv"),
         fastp_report=data_file("fastp.json"),
-        coverage_depth=150,
-        downsample=0,
+        target_coverage_depth=150,
+        target_num_reads=0,
     )
 
 
@@ -35,12 +35,12 @@ def test_get_average_read_length():
 
 
 @pytest.mark.parametrize("input_down", [0, 3765000])
-def test_get_down(input_down):
+def test_get_num_reads(input_down):
     downsample = Downsample(
         genome_size=6275000,
         average_read_length=125.0,
-        coverage_depth=150,
-        downsample=input_down,
+        target_coverage_depth=150,
+        target_num_reads=input_down,
     )
-    down = downsample.get_down()
+    down = downsample.get_num_reads()
     assert down == 3765000

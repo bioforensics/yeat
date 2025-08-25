@@ -15,9 +15,16 @@ from yeat.config.sample import SampleConfigurationError, Sample
 from yeat.tests import data_file
 
 
-@pytest.mark.parametrize("data", [{}, {"downsample": -1}])
+@pytest.mark.parametrize("data", [{}, {"target_num_reads": -1}])
 def test_has_one_read_type(data):
     message = "Sample must have at least one read type"
+    with pytest.raises(ValidationError, match=message):
+        Sample(label="sample1", data=data)
+
+
+def test_has_valid_keys():
+    data = {"illumina": [data_file("short_reads_1.fastq.gz")], "INVALID": 0}
+    message = r"Sample has unexpected key\(s\): \{'INVALID'\}"
     with pytest.raises(ValidationError, match=message):
         Sample(label="sample1", data=data)
 

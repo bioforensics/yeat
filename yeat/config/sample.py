@@ -7,6 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+from .global_settings import GlobalSettings
 from pathlib import Path
 from pydantic import BaseModel, field_validator
 from typing import Dict, Union
@@ -26,6 +27,16 @@ class Sample(BaseModel):
     def has_one_read_type(cls, data):
         if not data.keys() & READ_TYPES:
             raise SampleConfigurationError("Sample must have at least one read type")
+        return data
+
+    @field_validator("data")
+    @classmethod
+    def has_valid_keys(cls, data):
+        field_names = set(GlobalSettings.model_fields.keys())
+        valid_keys = field_names | READ_TYPES
+        extra_keys = set(data.keys()) - valid_keys
+        if extra_keys:
+            raise SampleConfigurationError(f"Sample has unexpected key(s): {extra_keys}")
         return data
 
     @classmethod
@@ -78,12 +89,12 @@ class Sample(BaseModel):
         return self.has_ont or self.has_pacbio
 
     @property
-    def coverage_depth(self):
-        return self.data.get("coverage_depth", 150)
+    def target_coverage_depth(self):
+        return self.data.get("target_coverage_depth", 150)
 
     @property
-    def downsample(self):
-        return self.data.get("downsample", -1)
+    def target_num_reads(self):
+        return self.data.get("target_num_reads", -1)
 
     @property
     def genome_size(self):

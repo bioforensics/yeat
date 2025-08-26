@@ -17,7 +17,7 @@ from yeat import __version__
 
 def main(args=None):
     if args is None:
-        args = get_parser().parse_args()
+        args = get_parser().parse_args()  # pragma: no cover
     create_config(args)
     add_config(args)
     run_workflow(

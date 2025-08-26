@@ -1,91 +1,80 @@
-# # -------------------------------------------------------------------------------------------------
-# # Copyright (c) 2024, DHS. This file is part of YEAT: http://github.com/bioforensics/yeat
-# #
-# # This software was prepared for the Department of Homeland Security (DHS) by the Battelle National
-# # Biodefense Institute, LLC (BNBI) as part of contract HSHQDC-15-C-00064 to manage and operate the
-# # National Biodefense Analysis and Countermeasures Center (NBACC), a Federally Funded Research and
-# # Development Center.
-# # -------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------------
+# Copyright (c) 2024, DHS. This file is part of YEAT: http://github.com/bioforensics/yeat
+#
+# This software was prepared for the Department of Homeland Security (DHS) by the Battelle National
+# Biodefense Institute, LLC (BNBI) as part of contract HSHQDC-15-C-00064 to manage and operate the
+# National Biodefense Analysis and Countermeasures Center (NBACC), a Federally Funded Research and
+# Development Center.
+# -------------------------------------------------------------------------------------------------
 
-# from argparse import ArgumentError
-# from pathlib import Path
-# import pytest
-# from yeat.cli.just_yeat_it import get_parser, main
-# from yeat.tests import data_file, target_files_exist
-
-
-# def run_yeat(arglist):
-#     args = get_parser().parse_args(arglist)
-#     main(args)
+from argparse import ArgumentError
+from pathlib import Path
+import pytest
+from yeat.cli.just_yeat_it import get_parser, main, check_positive
+from yeat.tests import data_file, final_contig_files_exist
 
 
-# @pytest.mark.short
-# def test_paired_end_assemblers_dry_run(tmp_path):
-#     wd = str(tmp_path)
-#     arglist = [
-#         "-o",
-#         wd,
-#         "-n",
-#         data_file("short_reads_1.fastq.gz"),
-#         data_file("short_reads_2.fastq.gz"),
-#     ]
-#     run_yeat(arglist)
+def run_yeat(arglist):
+    args = get_parser().parse_args(arglist)
+    main(args)
 
 
-# @pytest.mark.long
-# @pytest.mark.illumina
-# @pytest.mark.parametrize("algorithm", ["spades", "megahit", "unicycler"])
-# def test_paired_end_assemblers(algorithm, capsys, tmp_path):
-#     wd = str(tmp_path)
-#     arglist = [
-#         "-o",
-#         wd,
-#         "--algorithm",
-#         algorithm,
-#         data_file("short_reads_1.fastq.gz"),
-#         data_file("short_reads_2.fastq.gz"),
-#     ]
-#     run_yeat(arglist)
-#     config = str((Path(wd) / "config.cfg").resolve())
-#     target_files_exist(wd, config)
+def test_paired_end_assemblers_dry_run(tmp_path):
+    wd = str(tmp_path)
+    arglist = [
+        "-w",
+        wd,
+        "-n",
+        data_file("short_reads_?.fastq.gz"),
+    ]
+    run_yeat(arglist)
 
 
-# @pytest.mark.short
-# def test_missing_second_input_read(capsys, tmp_path):
-#     wd = str(tmp_path)
-#     arglist = ["-o", wd, data_file("short_reads_1.fastq.gz")]
-#     with pytest.raises(SystemExit):
-#         get_parser().parse_args(arglist)
-#     out, err = capsys.readouterr()
-#     assert "error: the following arguments are required: reads" in err
+@pytest.mark.long
+@pytest.mark.parametrize("algorithm", ["spades", "megahit", "unicycler", "penguin", "velvet"])
+def test_paired_end_assemblers(algorithm, capsys, tmp_path):
+    wd = str(tmp_path)
+    arglist = [
+        "-w",
+        wd,
+        "--algorithm",
+        algorithm,
+        data_file("short_reads_?.fastq.gz"),
+    ]
+    run_yeat(arglist)
+    config = str((Path(wd) / "config.toml").resolve())
+    final_contig_files_exist(wd, config)
 
 
-# @pytest.mark.short
-# def test_invalid_input_algorithm(capsys, tmp_path):
-#     wd = str(tmp_path)
-#     arglist = [
-#         "-o",
-#         wd,
-#         "--algorithm",
-#         "INVALID",
-#         data_file("short_reads_1.fastq.gz"),
-#         data_file("short_reads_2.fastq.gz"),
-#     ]
-#     with pytest.raises(RuntimeError, match="Snakemake Failed"):
-#         run_yeat(arglist)
-#     out, err = capsys.readouterr()
-#     assert "Invalid assembly algorithm 'INVALID' for 'assembly1'" in err
+def test_invalid_input_algorithm(capsys, tmp_path):
+    wd = str(tmp_path)
+    arglist = [
+        "-w",
+        wd,
+        "--algorithm",
+        "DNE",
+        data_file("short_reads_?.fastq.gz"),
+    ]
+    with pytest.raises(RuntimeError, match="Snakemake Failed"):
+        run_yeat(arglist)
+    out, err = capsys.readouterr()
+    assert "Unknown assembly algorithm DNE" in err
 
 
-# @pytest.mark.parametrize("coverage_depth", [("-1"), ("0")])
-# def test_invalid_custom_coverage_negative(coverage_depth):
-#     arglist = ["-c", coverage_depth, data_file("paired.cfg")]
-#     with pytest.raises(ArgumentError, match=rf"{coverage_depth} is not a positive integer"):
-#         get_parser(exit_on_error=False).parse_args(arglist)
+@pytest.mark.parametrize("value", [1, 10, 100])
+def test_check_positive_valid_values(value):
+    check_positive(value) == value
 
 
-# @pytest.mark.parametrize("coverage_depth", [("string"), ("3.14")])
-# def test_invalid_custom_coverage_noninteger(coverage_depth):
-#     arglist = ["-c", coverage_depth, data_file("paired.cfg")]
-#     with pytest.raises(ArgumentError, match=rf"{coverage_depth} is not an integer"):
-#         get_parser(exit_on_error=False).parse_args(arglist)
+@pytest.mark.parametrize("target_coverage_depth", [("-1"), ("0")])
+def test_invalid_target_coverage_depth_negative(target_coverage_depth):
+    arglist = ["-c", target_coverage_depth, data_file("paired.toml")]
+    with pytest.raises(ArgumentError, match=rf"{target_coverage_depth} is not a positive integer"):
+        get_parser(exit_on_error=False).parse_args(arglist)
+
+
+@pytest.mark.parametrize("target_coverage_depth", [("string"), ("3.14")])
+def test_invalid_target_coverage_depth_noninteger(target_coverage_depth):
+    arglist = ["-c", target_coverage_depth, data_file("paired.toml")]
+    with pytest.raises(ArgumentError, match=rf"{target_coverage_depth} is not an integer"):
+        get_parser(exit_on_error=False).parse_args(arglist)

@@ -12,6 +12,3 @@ algorithm = "unicycler"
 
 [assemblers.penguin_default]
 algorithm = "penguin"
-
-[assemblers.velvet_default]
-algorithm = "velvet"

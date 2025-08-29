@@ -13,6 +13,7 @@ dependencies:
     - fastqc>=0.11
     - flye>=2.9
     - gfatools>=0.5
+    - git-lfs>=3.6
     - gzip>=1.7
     - hifiasm>=0.19
     - hifiasm_meta>=hamtv0.3

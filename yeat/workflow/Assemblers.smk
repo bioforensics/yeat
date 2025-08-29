@@ -94,30 +94,6 @@ rule penguin:
         """
 
 
-rule velvet:
-    input:
-        reads=lambda wc: config["asm_cfg"].get_assembler_input_files(wc.label, wc.sample),
-    output:
-        contigs="analysis/{sample}/yeat/velvet/{label}/contigs.fasta",
-    conda:
-        "yeat-velvet"
-    threads: 128
-    params:
-        temp_outdir="analysis/{sample}/yeat/velvet/{label}/velvet-temp",
-        outdir="analysis/{sample}/yeat/velvet/{label}",
-        input_args=lambda wc: config["asm_cfg"].get_assembler_input_args(wc.label, wc.sample),
-        extra_args=lambda wc: config["asm_cfg"].get_assembler_extra_args(wc.label),
-    log:
-        "analysis/{sample}/yeat/velvet/{label}/velvet.log",
-    shell:
-        """
-        VelvetOptimiser.pl -f {params.input_args} -t {threads} -p {params.outdir}/auto -d {params.temp_outdir} {params.extra_args} > {log} 2>&1
-        mv {params.temp_outdir}/* {params.outdir}
-        rm -r {params.temp_outdir}
-        ln -s contigs.fa {output.contigs}
-        """
-
-
 rule flye:
     input:
         reads=lambda wc: config["asm_cfg"].get_assembler_input_files(wc.label, wc.sample),

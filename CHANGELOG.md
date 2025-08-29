@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Snakemake workflows consolidated (#91)
 - Simplified unit tests (#91)
 
+### Removed
+- Support for Velvet (#95)
+
 
 ## [0.7] 2024-12-10
 

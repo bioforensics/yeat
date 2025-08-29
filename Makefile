@@ -20,14 +20,6 @@ testgrid:
 testall:
 	pytest --cov=yeat -m 'not grid'
 
-## testdata:     download test data for test suite
-testdata:
-	pushd $(TEST_DATA_PATH) && \
-	curl -L -o osfstorage-archive.zip https://files.osf.io/v1/resources/b8x5q/providers/osfstorage/?zip= && \
-	unzip -o osfstorage-archive.zip && \
-	rm osfstorage-archive.zip && \
-	popd
-
 ## style:        check code style against Black
 style:
 	black --line-length=99 --check $(PYFILES)

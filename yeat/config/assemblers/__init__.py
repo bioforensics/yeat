@@ -16,7 +16,6 @@ from .metamdbg import MetaMDBGAssembler
 from .penguin import PenguiNAssembler
 from .spades import SPAdesAssembler
 from .unicycler import UnicyclerAssembler
-from .velvet import VelvetAssembler
 
 
 ALGORITHM_CONFIGS = {
@@ -29,5 +28,4 @@ ALGORITHM_CONFIGS = {
     "penguin": PenguiNAssembler,
     "spades": SPAdesAssembler,
     "unicycler": UnicyclerAssembler,
-    "velvet": VelvetAssembler,
 }

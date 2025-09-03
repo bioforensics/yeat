@@ -1,1 +1,8 @@
 yeat/_version.py export-subst
+yeat/tests/data/long_reads_high_depth.fastq.gz filter=lfs diff=lfs merge=lfs -text
+yeat/tests/data/short_reads_1.fastq.gz filter=lfs diff=lfs merge=lfs -text
+yeat/tests/data/short_reads_2.fastq.gz filter=lfs diff=lfs merge=lfs -text
+yeat/tests/data/SRR23926885.fastq.gz filter=lfs diff=lfs merge=lfs -text
+yeat/tests/data/ecoli.fastq.gz filter=lfs diff=lfs merge=lfs -text
+yeat/tests/data/ecolk12mg1655_R10_3_guppy_345_HAC.fastq.gz filter=lfs diff=lfs merge=lfs -text
+yeat/tests/data/zymoD6331std-ecoli-ten-percent.fq.gz filter=lfs diff=lfs merge=lfs -text

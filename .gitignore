@@ -4,4 +4,3 @@ __pycache__/
 .snakemake
 sandbox/
 build/*
-yeat/tests/data/*.gz

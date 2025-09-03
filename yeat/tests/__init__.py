@@ -21,7 +21,6 @@ FINAL_FILES = {
     "megahit": "final.contigs.fa",
     "unicycler": "assembly.fasta",
     "penguin": "contigs.fasta",
-    "velvet": "contigs.fa",
     "flye": "assembly.fasta",
     "canu": "*.contigs.fasta",
     "hifiasm": "asm.bp.p_ctg.fa",

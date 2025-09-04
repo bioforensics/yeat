@@ -1,0 +1,8 @@
+[samples.Animal_289]
+illumina = "yeat/tests/data/Animal_289_R*.fq.gz"
+
+[samples.short_reads]
+illumina = "yeat/tests/data/short_reads_*.fastq.gz"
+
+[assemblers.spades_default]
+algorithm = "spades"

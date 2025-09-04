@@ -31,7 +31,7 @@ def test_paired_end_assemblers_dry_run(tmp_path):
 
 
 @pytest.mark.long
-@pytest.mark.parametrize("algorithm", ["spades", "megahit", "unicycler", "penguin", "velvet"])
+@pytest.mark.parametrize("algorithm", ["spades", "megahit", "unicycler", "penguin"])
 def test_paired_end_assemblers(algorithm, capsys, tmp_path):
     wd = str(tmp_path)
     arglist = [

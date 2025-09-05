@@ -50,7 +50,7 @@ class Sample(BaseModel):
         for read_type, read_path in data.items():
             if read_type not in READ_TYPES:
                 continue
-            reads = sorted(Sample._expand_glob_pattern(Path(read_path)))
+            reads = sorted(read_path)
             if not reads:
                 message = f"Unable to find FASTQ files for sample '{label}' at path: {read_path}"
                 raise SampleConfigurationError(message)
@@ -61,10 +61,6 @@ class Sample(BaseModel):
                 )
                 raise SampleConfigurationError(message)
             data[read_type] = reads
-
-    @staticmethod
-    def _expand_glob_pattern(read_path):
-        yield from read_path.parent.glob(read_path.name)
 
     @staticmethod
     def _add_global_settings(data, global_settings):

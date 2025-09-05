@@ -44,7 +44,7 @@ def get_parser(exit_on_error=True):
 
 def positional_args(parser):
     parser._positionals.title = "required arguments"
-    parser.add_argument("read", type=str, help="regex paired-end read path")
+    parser.add_argument("read", nargs="+", type=str, help="regex paired-end read path")
 
 
 def options(parser):

@@ -25,7 +25,8 @@ def test_paired_end_assemblers_dry_run(tmp_path):
         "-w",
         wd,
         "-n",
-        data_file("short_reads_?.fastq.gz"),
+        data_file("short_reads_1.fastq.gz"),
+        data_file("short_reads_2.fastq.gz"),
     ]
     run_yeat(arglist)
 
@@ -39,7 +40,8 @@ def test_paired_end_assemblers(algorithm, capsys, tmp_path):
         wd,
         "--algorithm",
         algorithm,
-        data_file("short_reads_?.fastq.gz"),
+        data_file("short_reads_1.fastq.gz"),
+        data_file("short_reads_2.fastq.gz"),
     ]
     run_yeat(arglist)
     config = str((Path(wd) / "config.toml").resolve())
@@ -53,7 +55,8 @@ def test_invalid_input_algorithm(capsys, tmp_path):
         wd,
         "--algorithm",
         "DNE",
-        data_file("short_reads_?.fastq.gz"),
+        data_file("short_reads_1.fastq.gz"),
+        data_file("short_reads_2.fastq.gz"),
     ]
     with pytest.raises(RuntimeError, match="Snakemake Failed"):
         run_yeat(arglist)

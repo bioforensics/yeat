@@ -1,5 +1,14 @@
 [samples.Shigella_sonnei_53G]
 illumina = "yeat/tests/data/short_reads_?.fastq.gz"
 
+[assemblers.spades_default]
+algorithm = "spades"
+
 [assemblers.megahit_default]
 algorithm = "megahit"
+
+[assemblers.unicycler_default]
+algorithm = "unicycler"
+
+[assemblers.penguin_default]
+algorithm = "penguin"

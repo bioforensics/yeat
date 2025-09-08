@@ -33,11 +33,11 @@ def test_assemblers_dry_run(tmp_path, config):
     "config",
     [
         data_file("configs/paired.toml"),
-        # data_file("configs/single.toml"),
-        # data_file("configs/ont.toml"),
-        # data_file("configs/pacbio.toml"),
-        # data_file("configs/hybrid.toml"),
-        # data_file("configs/metagenomics.toml"),
+        data_file("configs/single.toml"),
+        data_file("configs/ont.toml"),
+        data_file("configs/pacbio.toml"),
+        data_file("configs/hybrid.toml"),
+        data_file("configs/metagenomics.toml"),
     ],
 )
 def test_assemblers(capsys, tmp_path, config):

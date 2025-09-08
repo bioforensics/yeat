@@ -41,12 +41,12 @@ class Sample(BaseModel):
 
     @classmethod
     def parse_data(cls, label, data, global_settings):
-        cls._expand_read_path(label, data)
+        cls._check_read_path(label, data)
         cls._add_global_settings(data, global_settings)
         return cls(label=label, data=data)
 
     @staticmethod
-    def _expand_read_path(label, data):
+    def _check_read_path(label, data):
         for read_type, read_path in data.items():
             if read_type not in READ_TYPES:
                 continue

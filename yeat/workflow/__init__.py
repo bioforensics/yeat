@@ -38,10 +38,8 @@ def get_config_data(infile):
         for readtype, reads in sample_data.items():
             if readtype not in READ_TYPES:
                 continue
-            if isinstance(reads, list):
-                reads = [Path(read).resolve() for read in reads]
-            else:
-                reads = reads.resolve()
+            if isinstance(reads, str):
+                reads = Path(reads).resolve()
                 reads = reads.parent.glob(reads.name)
             data["samples"][sample_label][readtype] = [str(read) for read in reads]
     return data

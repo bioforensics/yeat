@@ -44,7 +44,16 @@ def get_parser(exit_on_error=True):
 
 def positional_args(parser):
     parser._positionals.title = "required arguments"
-    parser.add_argument("read", nargs="+", type=str, help="regex paired-end read path")
+    parser.add_argument(
+        "read",
+        nargs="+",
+        type=absolute_path,
+        help="reads in FASTQ format; provide 2 for paired; provide 1 for single",
+    )
+
+
+def absolute_path(path_str):
+    return str(Path(path_str).resolve())
 
 
 def options(parser):
@@ -73,8 +82,8 @@ def downsample_configuration(parser):
     illumina.add_argument(
         "-d",
         "--target-num-reads",
-        default=0,
-        help="randomly sample D reads from the input rather than assembling the full set; set D=0 to perform auto-downsampling to a desired level of coverage (see --target-coverage-depth); set D=-1 to disable downsampling; by default, D=0",
+        default=-1,
+        help="randomly sample D reads from the input rather than assembling the full set; set D=0 to perform auto-downsampling to a desired level of coverage (see --target-coverage-depth); set D=-1 to disable downsampling; by default, D=-1",
         metavar="D",
         type=int,
     )

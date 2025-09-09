@@ -1,0 +1,5 @@
+[samples.short_reads]
+illumina = "yeat/tests/data/short_reads_*.fastq.gz"
+
+[assemblers.spades_default]
+algorithm = "spades"

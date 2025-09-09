@@ -8,7 +8,6 @@
 # -------------------------------------------------------------------------------------------------
 
 from shutil import copy
-from pathlib import Path
 from pydantic import ValidationError
 import pytest
 from yeat.config.sample import SampleConfigurationError, Sample
@@ -30,28 +29,27 @@ def test_has_valid_keys():
 
 
 @pytest.mark.parametrize(
-    "read_path,expected",
+    "read_path",
     [
-        ("short_reads_?.fastq.gz", ["short_reads_1.fastq.gz", "short_reads_2.fastq.gz"]),
-        ("short_reads_1.fastq.gz", ["short_reads_1.fastq.gz"]),
+        [data_file("short_reads_1.fastq.gz"), data_file("short_reads_2.fastq.gz")],
+        [data_file("short_reads_1.fastq.gz")],
     ],
 )
-def test_expand_read_path(read_path, expected):
+def test_check_read_paths(read_path):
     label = "sample1"
-    data = {"illumina": data_file(read_path)}
-    Sample._expand_read_path(label, data)
-    assert data["illumina"] == [Path(data_file(read)) for read in expected]
+    data = {"illumina": read_path}
+    Sample._check_read_paths(label, data)
 
 
-def test_expand_read_path_unable_to_find():
+def test_check_read_paths_unable_to_find():
     label = "sample1"
-    data = {"illumina": "DNE"}
+    data = {"illumina": []}
     message = f"Unable to find FASTQ files for sample '{label}' at path:"
     with pytest.raises(SampleConfigurationError, match=message):
-        Sample._expand_read_path(label, data)
+        Sample._check_read_paths(label, data)
 
 
-def test_expand_read_path_found_too_many(tmp_path):
+def test_check_read_paths_found_too_many(tmp_path):
     wd = tmp_path
     read1 = data_file("short_reads_1.fastq.gz")
     read2 = data_file("short_reads_2.fastq.gz")
@@ -62,7 +60,7 @@ def test_expand_read_path_found_too_many(tmp_path):
     data = {"illumina": str(wd / "short_reads_*.fastq.gz")}
     message = f"Found too many FASTQ files for sample '{label}' at path:"
     with pytest.raises(SampleConfigurationError, match=message):
-        Sample._expand_read_path(label, data)
+        Sample._check_read_paths(label, data)
 
 
 @pytest.mark.parametrize(

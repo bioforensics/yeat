@@ -8,6 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 from yeat.workflow.qc.aux import copy_input
+from yeat.workflow.qc.downsample import Downsample
 
 
 rule copy_input:

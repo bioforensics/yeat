@@ -41,30 +41,26 @@ class Sample(BaseModel):
 
     @classmethod
     def parse_data(cls, label, data, global_settings):
-        cls._expand_read_path(label, data)
+        cls._check_read_paths(label, data)
         cls._add_global_settings(data, global_settings)
         return cls(label=label, data=data)
 
     @staticmethod
-    def _expand_read_path(label, data):
-        for read_type, read_path in data.items():
+    def _check_read_paths(label, data):
+        for read_type, read_paths in data.items():
             if read_type not in READ_TYPES:
                 continue
-            reads = sorted(Sample._expand_glob_pattern(Path(read_path)))
+            reads = sorted(read_paths)
             if not reads:
-                message = f"Unable to find FASTQ files for sample '{label}' at path: {read_path}"
+                message = f"Unable to find FASTQ files for sample '{label}' at path: {read_paths}"
                 raise SampleConfigurationError(message)
             if len(reads) > 2:
                 message = (
-                    f"Found too many FASTQ files for sample '{label}' at path: {read_path}. "
+                    f"Found too many FASTQ files for sample '{label}' at path: {read_paths}. "
                     f"Expected at most 2, found {len(reads)}."
                 )
                 raise SampleConfigurationError(message)
             data[read_type] = reads
-
-    @staticmethod
-    def _expand_glob_pattern(read_path):
-        yield from read_path.parent.glob(read_path.name)
 
     @staticmethod
     def _add_global_settings(data, global_settings):

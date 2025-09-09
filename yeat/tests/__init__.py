@@ -10,10 +10,10 @@
 from importlib.resources import files
 import multiprocessing
 from pathlib import Path
-import toml
 from yeat.cli import main, cli
 from yeat.config.assemblers import ALGORITHM_CONFIGS
 from yeat.config.config import AssemblyConfiguration
+from yeat.workflow import get_config_data
 
 
 FINAL_FILES = {
@@ -45,7 +45,7 @@ def run_yeat(arglist):
 
 
 def final_contig_files_exist(wd, config_path):
-    cfg_data = toml.load(config_path)
+    cfg_data = get_config_data(config_path)
     config = AssemblyConfiguration.parse_snakemake_config(cfg_data)
     reversed_dict = {v: k for k, v in ALGORITHM_CONFIGS.items()}
     for assembler_label, assembler in config.assemblers.items():

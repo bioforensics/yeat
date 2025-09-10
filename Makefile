@@ -10,7 +10,7 @@ help: Makefile
 
 ## test:         run short-running automated tests
 test:
-	pytest --cov=yeat -m "not long"
+	pytest --cov=yeat -m "not long and not grid"
 
 ## testgrid:     run grid-specific automated tests
 testgrid:

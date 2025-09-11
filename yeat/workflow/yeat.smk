@@ -14,7 +14,7 @@ asm_cfg = AssemblyConfiguration.parse_snakemake_config(config["config"])
 config["asm_cfg"] = asm_cfg
 
 
-include: "assemblers.smk"
+include: "Assemblers.smk"
 
 
 rule all:
@@ -24,7 +24,7 @@ rule all:
 
 module qc_paired_workflow:
     snakefile:
-        "qc/paired.smk"
+        "qc/Paired.smk"
     config:
         config
 
@@ -34,7 +34,7 @@ use rule * from qc_paired_workflow as qc_paired_*
 
 module qc_single_workflow:
     snakefile:
-        "qc/single.smk"
+        "qc/Single.smk"
     config:
         config
 
@@ -44,7 +44,7 @@ use rule * from qc_single_workflow as qc_single_*
 
 module qc_long_workflow:
     snakefile:
-        "qc/long.smk"
+        "qc/Long.smk"
     config:
         config
 

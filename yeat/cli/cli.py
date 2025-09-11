@@ -20,6 +20,7 @@ def get_parser(exit_on_error=True):
     workflow_inputs(parser)
     options(parser)
     workflow_configuration(parser)
+    grid_configuration(parser)
     return parser
 
 
@@ -90,6 +91,23 @@ def workflow_configuration(parser):
         "--copy_input",
         action="store_true",
         help="copy input Fastq files to the working directory to ensure complete data provenance; by default, input Fastq files are symbolically linked to the working directory",
+    )
+
+
+def grid_configuration(parser):
+    grid = parser.add_argument_group("Grid Configurations:")
+    grid.add_argument(
+        "--slurm",
+        action="store_true",
+        help="distribute workflow execution on the grid using the SLURM scheduler",
+    )
+    grid.add_argument(
+        "-j",
+        "--jobs",
+        metavar="J",
+        type=int,
+        default=1024,
+        help="maximum number of jobs to submit to the job scheduler at once; `J=1024` by default; ignored if --slurm mode not enabled",
     )
 
 

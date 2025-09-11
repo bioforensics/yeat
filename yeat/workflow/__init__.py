@@ -26,7 +26,7 @@ def run_workflow(
     slurm=False,
     max_jobs=1024,
 ):
-    snakefile = files("yeat") / "workflow" / "yeat.smk"
+    snakefile = files("yeat") / "workflow" / "Yeat.smk"
     snakemake_config = write_snakemake_config(config, seed, threads, workdir, dry_run, copy_input)
     command = [
         "snakemake",

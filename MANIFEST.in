@@ -1,4 +1,2 @@
-include versioneer.py
-include yeat/_version.py
 include yeat/Snakefile
 recursive-include yeat/test/data/ *

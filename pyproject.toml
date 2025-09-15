@@ -17,5 +17,5 @@ requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 
-[tools.setuptools]
+[tool.setuptools_scm]
 include-package-data = true

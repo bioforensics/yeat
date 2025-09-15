@@ -36,4 +36,3 @@ dependencies:
     - snakemake>=9.3
     - spades>=3.15
     - unicycler>=0.4
-    - versioneer>=0.21

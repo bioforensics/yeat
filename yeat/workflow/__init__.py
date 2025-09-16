@@ -12,6 +12,7 @@ import json
 from pathlib import Path
 from random import randint
 import subprocess
+import sys
 import toml
 from yeat.config.sample import READ_TYPES
 
@@ -40,14 +41,15 @@ def run_workflow(
         "--use-conda",
     ]
     if slurm:
-        command.extend(("--executor", "slurm", "--local-cores", threads, "--jobs", max_jobs))
+        command.extend(("--executor", "slurm", "--jobs", max_jobs))
     else:
         command.extend(("--cores", threads))
     if dry_run:
         command.append("--dryrun")
     command = list(map(str, command))
-    process = subprocess.run(command)
+    process = subprocess.run(command, capture_output=True, text=True)
     if process.returncode != 0:
+        print(process.stderr, file=sys.stderr, flush=True)
         raise RuntimeError("Snakemake Failed")
 
 

@@ -60,6 +60,8 @@ def test_invalid_input_algorithm(capsys, tmp_path):
     ]
     with pytest.raises(RuntimeError, match="Snakemake Failed"):
         run_yeat(arglist)
+    out, err = capsys.readouterr()
+    assert "Unknown assembly algorithm DNE" in err
 
 
 @pytest.mark.parametrize("value", [1, 10, 100])

@@ -40,7 +40,7 @@ def run_workflow(
         "--use-conda",
     ]
     if slurm:
-        command.extend("--local-cores", threads, "--jobs", max_jobs)
+        command.extend(("--executor", "slurm", "--local-cores", threads, "--jobs", max_jobs))
     else:
         command.extend(("--cores", threads))
     if dry_run:

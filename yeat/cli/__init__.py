@@ -21,6 +21,6 @@ def main(args=None):
         workdir=args.workdir,
         dry_run=args.dry_run,
         copy_input=args.copy_input,
-        slurm=False,
-        max_jobs=1024,
+        slurm=args.slurm,
+        max_jobs=args.jobs,
     )

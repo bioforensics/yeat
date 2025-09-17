@@ -15,7 +15,3 @@ yeat-auto = "yeat.cli.yeat_auto:main"
 [build-system]
 requires = ["setuptools>=80", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
-
-
-[tool.setuptools_scm]
-version_file = "yeat/_version.py"

@@ -8,11 +8,11 @@
 # -------------------------------------------------------------------------------------------------
 
 from argparse import ArgumentParser, Action
+from importlib.metadata import version
 from pathlib import Path
 from random import randint
 import sys
 import toml
-from yeat import __version__
 
 
 def get_parser(exit_on_error=True):
@@ -45,7 +45,7 @@ def options(parser):
         "-v",
         "--version",
         action="version",
-        version=f"YEAT v{__version__}",
+        version=f"YEAT v{version('yeat')}",
     )
     parser.add_argument(
         "--init",

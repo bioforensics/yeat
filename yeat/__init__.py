@@ -6,9 +6,3 @@
 # National Biodefense Analysis and Countermeasures Center (NBACC), a Federally Funded Research and
 # Development Center.
 # -------------------------------------------------------------------------------------------------
-
-from ._version import get_versions
-
-
-__version__ = get_versions()["version"]
-del get_versions

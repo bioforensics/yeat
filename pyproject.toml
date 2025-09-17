@@ -1,0 +1,17 @@
+[project]
+name = "yeat"
+version = "0.8.0-dev"
+description = "YEAT: Your Everday Assembly Tool"
+readme = "README.md"
+requires-python = ">=3.12"
+
+
+[project.scripts]
+yeat = "yeat.cli:main"
+just-yeat-it = "yeat.cli.just_yeat_it:main"
+yeat-auto = "yeat.cli.yeat_auto:main"
+
+
+[build-system]
+requires = ["setuptools>=80", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"

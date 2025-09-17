@@ -8,17 +8,52 @@
 # -------------------------------------------------------------------------------------------------
 
 from importlib.resources import files
+import json
 from pathlib import Path
 from random import randint
-from snakemake import snakemake
+import subprocess
+import sys
 import toml
 from yeat.config.sample import READ_TYPES
 
 
 def run_workflow(
-    config, seed=randint(1, 2**16 - 1), threads=1, workdir=".", dry_run=False, copy_input=False
+    config,
+    seed=randint(1, 2**16 - 1),
+    threads=1,
+    workdir=".",
+    dry_run=False,
+    copy_input=False,
+    slurm=False,
+    max_jobs=1024,
 ):
-    snakefile = files("yeat") / "workflow" / "yeat.smk"
+    snakefile = files("yeat") / "workflow" / "Yeat.smk"
+    snakemake_config = write_snakemake_config(config, seed, threads, workdir, dry_run, copy_input)
+    command = [
+        "snakemake",
+        "--snakefile",
+        snakefile,
+        "--directory",
+        workdir,
+        "--configfile",
+        snakemake_config,
+        "--printshellcmds",
+        "--use-conda",
+    ]
+    if slurm:
+        command.extend(("--executor", "slurm", "--jobs", max_jobs))
+    else:
+        command.extend(("--cores", threads))
+    if dry_run:
+        command.append("--dryrun")
+    command = list(map(str, command))
+    process = subprocess.run(command, capture_output=True, text=True)
+    if process.returncode != 0:
+        print(process.stderr, file=sys.stderr, flush=True)
+        raise RuntimeError("Snakemake Failed")
+
+
+def write_snakemake_config(config, seed, threads, workdir, dry_run, copy_input):
     snakemake_config = {
         "config": get_config_data(config),
         "seed": seed,
@@ -27,9 +62,11 @@ def run_workflow(
         "dry_run": dry_run,
         "copy_input": copy_input,
     }
-    success = snakemake_local(snakefile, snakemake_config)
-    if not success:
-        raise RuntimeError("Snakemake Failed")  # pragma: no cover
+    Path(workdir).mkdir(parents=True, exist_ok=True)
+    config_file = f"{workdir}/snakemake.cfg"
+    with open(config_file, "w") as f:
+        json.dump(snakemake_config, f, indent=4)
+    return config_file
 
 
 def get_config_data(infile):
@@ -43,16 +80,3 @@ def get_config_data(infile):
                 reads = list(reads.parent.glob(reads.name))
             data["samples"][sample_label][readtype] = [str(read) for read in reads]
     return data
-
-
-def snakemake_local(snakefile, snakemake_config):
-    success = snakemake(
-        snakefile,
-        config=snakemake_config,
-        cores=snakemake_config["threads"],
-        dryrun=snakemake_config["dry_run"],
-        printshellcmds=True,
-        workdir=snakemake_config["workdir"],
-        use_conda=True,
-    )
-    return success

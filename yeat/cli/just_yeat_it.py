@@ -8,11 +8,11 @@
 # -------------------------------------------------------------------------------------------------
 
 from argparse import ArgumentParser, ArgumentTypeError
+from importlib.metadata import version
 from pathlib import Path
 import toml
 from yeat.workflow import run_workflow
 from yeat.cli.cli import workflow_configuration
-from yeat import __version__
 
 
 def main(args=None):
@@ -61,7 +61,7 @@ def options(parser):
         "-v",
         "--version",
         action="version",
-        version=f"YEAT v{__version__}",
+        version=f"YEAT v{version('yeat')}",
     )
 
 

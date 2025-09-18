@@ -1,6 +1,6 @@
 [project]
 name = "yeat"
-version = "0.8.0-dev"
+version = "0.8.0"
 description = "YEAT: Your Everday Assembly Tool"
 readme = "README.md"
 requires-python = ">=3.12"

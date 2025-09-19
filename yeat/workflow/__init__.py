@@ -38,7 +38,6 @@ def run_workflow(
         "--configfile",
         snakemake_config,
         "--printshellcmds",
-        "--use-conda",
     ]
     if slurm:
         command.extend(("--executor", "slurm", "--jobs", max_jobs))
@@ -47,9 +46,8 @@ def run_workflow(
     if dry_run:
         command.append("--dryrun")
     command = list(map(str, command))
-    process = subprocess.run(command, capture_output=True, text=True)
+    process = subprocess.run(command)
     if process.returncode != 0:
-        print(process.stderr, file=sys.stderr, flush=True)
         raise RuntimeError("Snakemake Failed")
 
 

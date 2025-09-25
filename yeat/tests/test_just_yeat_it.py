@@ -48,7 +48,7 @@ def test_paired_end_assemblers(algorithm, capsys, tmp_path):
     final_contig_files_exist(wd, config)
 
 
-def test_invalid_input_algorithm(capsys, tmp_path):
+def test_invalid_input_algorithm(capfd, tmp_path):
     wd = str(tmp_path)
     arglist = [
         "-w",
@@ -60,6 +60,8 @@ def test_invalid_input_algorithm(capsys, tmp_path):
     ]
     with pytest.raises(RuntimeError, match="Snakemake Failed"):
         run_yeat(arglist)
+    out, err = capfd.readouterr()
+    assert "Unknown assembly algorithm DNE" in err
 
 
 @pytest.mark.parametrize("value", [1, 10, 100])

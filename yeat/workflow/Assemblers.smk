@@ -189,6 +189,27 @@ rule metamdbg:
         """
 
 
+rule verkko:
+    input:
+        reads=lambda wc: config["asm_cfg"].get_assembler_input_files(wc.label, wc.sample),
+    output:
+        contigs="analysis/{sample}/yeat/verkko/{label}/contigs.fasta",
+    conda:
+        "yeat-verkko"
+    threads: 128
+    params:
+        outdir="analysis/{sample}/yeat/verkko/{label}",
+        input_args=lambda wc: config["asm_cfg"].get_assembler_input_args(wc.label, wc.sample),
+        extra_args=lambda wc: config["asm_cfg"].get_assembler_extra_args(wc.label),
+    log:
+        "analysis/{sample}/yeat/verkko/{label}/verkko.log",
+    shell:
+        """
+        verkko -d {params.outdir} {params.input_args} > {log} 2>&1
+        ln -s assembly.fasta {output.contigs}
+        """
+
+
 rule quast:
     input:
         contigs="analysis/{sample}/yeat/{algorithm}/{label}/contigs.fasta",

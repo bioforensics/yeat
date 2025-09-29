@@ -12,7 +12,6 @@ import json
 from pathlib import Path
 from random import randint
 import subprocess
-import sys
 import toml
 from yeat.config.sample import READ_TYPES
 

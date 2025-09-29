@@ -13,9 +13,9 @@ from pydantic import BaseModel, field_validator
 from typing import Dict, Union
 
 
-ONT_PLATFORMS = {"ont_simplex", "ont_duplex"}
+ONT_PLATFORMS = {"ont_simplex", "ont_duplex", "ont_ultralong"}
 READ_TYPES = ONT_PLATFORMS | {"illumina", "pacbio_hifi"}
-BEST_LR_ORDER = ("pacbio_hifi", "ont_duplex", "ont_simplex")
+BEST_LR_ORDER = ("pacbio_hifi", "ont_duplex", "ont_simplex", "ont_ultralong")
 
 
 class Sample(BaseModel):
@@ -106,13 +106,14 @@ class Sample(BaseModel):
 
     @property
     def skip_filter(self):
-        return self.data.get("skip_filter", False)
+        return self.data.get("skip_filter", True)
 
     @property
     def best_long_read_type(self):
         for read_type in BEST_LR_ORDER:
             if read_type in self.data:
                 return read_type
+        return None
 
     @property
     def targets(self):

@@ -48,7 +48,7 @@ class SPAdesAssembler(Assembler):
 
     def input_args(self, sample):
         reads = self.input_files(sample)
-        args = []
+        args = list()
         args.extend(self.get_illumina_args(reads))
         args.extend(self.get_long_args(sample, reads))
         return " ".join(args)

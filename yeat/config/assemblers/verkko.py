@@ -43,9 +43,6 @@ class VerkkoAssembler(Assembler):
         for read_type in ["pacbio_hifi", "ont_duplex"]:
             if read_type in reads:
                 args.append(reads[read_type][0])
-        if len(args) == 1:
-            # print("ultralong for --nano")
-            assert 0
         if "ont_ultralong" in reads:
             args.extend(["--nano", reads["ont_ultralong"][0]])
         return args

@@ -9,6 +9,7 @@
 
 from .assembler import Assembler
 from glob import glob
+from yeat.config.sample import ONT_PLATFORMS
 
 
 class CanuAssembler(Assembler):
@@ -26,15 +27,25 @@ class CanuAssembler(Assembler):
         return targets
 
     def input_files(self, sample):
+        infiles = dict()
         best_read_type = self.samples[sample].best_long_read_type
-        return [f"analysis/{sample}/qc/{best_read_type}/downsample/read.fastq.gz"]
+        infiles[best_read_type] = [
+            f"analysis/{sample}/qc/{best_read_type}/downsample/read.fastq.gz"
+        ]
+        return infiles
 
     def input_args(self, sample):
-        best_read_type = self.samples[sample].best_long_read_type
         reads = self.input_files(sample)
-        if best_read_type in ["ont_simplex", "ont_duplex"]:
-            return f"-nanopore {reads[0]}"
-        return f"-pacbio-hifi {reads[0]}"
+        args = list()
+        args.extend(self.get_long_args(sample, reads))
+        return " ".join(args)
+
+    def get_long_args(self, sample, reads):
+        long_read_type = self.samples[sample].best_long_read_type
+        long_reads = reads.get(long_read_type)
+        if long_read_type in ONT_PLATFORMS:
+            return ["-nanopore", long_reads[0]]
+        return ["-pacbio-hifi", long_reads[0]]
 
     def gfa_files(self, sample):
         return glob(f"analysis/{sample}/yeat/canu/{self.label}/unitigging/4-unitigger/*.gfa")

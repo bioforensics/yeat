@@ -26,12 +26,18 @@ class HifiasmMetaAssembler(Assembler):
         return targets
 
     def input_files(self, sample):
+        infiles = dict()
         best_read_type = self.samples[sample].best_long_read_type
-        return [f"analysis/{sample}/qc/{best_read_type}/downsample/read.fastq.gz"]
+        infiles[best_read_type] = [
+            f"analysis/{sample}/qc/{best_read_type}/downsample/read.fastq.gz"
+        ]
+        return infiles
 
     def input_args(self, sample):
         reads = self.input_files(sample)
-        return f"{reads[0]}"
+        long_read_type = self.samples[sample].best_long_read_type
+        long_reads = reads.get(long_read_type)
+        return f"{long_reads[0]}"
 
     def gfa_files(self, sample):
         return glob(f"analysis/{sample}/yeat/hifiasm_meta/{self.label}/*.gfa")

@@ -10,6 +10,10 @@ ont_ultralong = "yeat/tests/data/ecoli_ont_subset50x.fastq.gz"
 algorithm = "unicycler"
 samples = ["hybrid_Shigella_sonnei_53G"]
 
+[assemblers.hifiasm_default]
+algorithm = "hifiasm"
+samples = ["ecoli_k12"]
+
 [assemblers.verkko_default]
 algorithm = "verkko"
 samples = ["ecoli_k12"]

@@ -8,6 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 import pytest
+import sys
 from yeat.tests import data_file, run_yeat, get_core_count, final_contig_files_exist
 
 
@@ -34,15 +35,49 @@ def test_assemblers_dry_run(tmp_path, config):
     [
         data_file("configs/paired.toml"),
         data_file("configs/single.toml"),
-        data_file("configs/ont.toml"),
-        data_file("configs/pacbio.toml"),
-        data_file("configs/hybrid.toml"),
-        data_file("configs/metagenomics.toml"),
     ],
 )
-def test_assemblers(capsys, tmp_path, config):
+def test_short_assemblers(capsys, tmp_path, config):
     wd = str(tmp_path)
     cores = str(get_core_count())
+    if sys.platform == "darwin":
+        cores = "1"
+    arglist = ["-w", wd, "-t", cores, config]
+    run_yeat(arglist)
+    final_contig_files_exist(wd, config)
+
+
+@pytest.mark.long
+@pytest.mark.parametrize(
+    "config",
+    [
+        data_file("configs/ont.toml"),
+        data_file("configs/pacbio.toml"),
+    ],
+)
+def test_long_assemblers(capsys, tmp_path, config):
+    wd = str(tmp_path)
+    cores = str(get_core_count())
+    arglist = ["-w", wd, "-t", cores, config]
+    run_yeat(arglist)
+    final_contig_files_exist(wd, config)
+
+
+@pytest.mark.long
+def test_hybrid_assemblers(capsys, tmp_path):
+    wd = str(tmp_path)
+    cores = str(get_core_count())
+    config = data_file("configs/hybrid.toml")
+    arglist = ["-w", wd, "-t", cores, config]
+    run_yeat(arglist)
+    final_contig_files_exist(wd, config)
+
+
+@pytest.mark.long
+def test_metagenomics_assemblers(capsys, tmp_path):
+    wd = str(tmp_path)
+    cores = str(get_core_count())
+    config = data_file("configs/metagenomics.toml")
     arglist = ["-w", wd, "-t", cores, config]
     run_yeat(arglist)
     final_contig_files_exist(wd, config)

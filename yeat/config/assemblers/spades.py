@@ -9,6 +9,7 @@
 
 from .assembler import Assembler
 from glob import glob
+from yeat.config.sample import ONT_PLATFORMS
 
 
 class SPAdesAssembler(Assembler):
@@ -44,7 +45,7 @@ class SPAdesAssembler(Assembler):
         long_read_type = sample_obj.best_long_read_type
         if long_read_type:
             return {long_read_type: [f"{sample_path}/{long_read_type}/downsample/read.fastq.gz"]}
-        return {}
+        return dict()
 
     def input_args(self, sample):
         reads = self.input_files(sample)
@@ -62,12 +63,12 @@ class SPAdesAssembler(Assembler):
     def get_long_args(self, sample, reads):
         long_read_type = self.samples[sample].best_long_read_type
         if long_read_type:
-            long_reads = reads.get(long_read_type)
+            long_reads = reads[long_read_type]
             if long_read_type == "pacbio_hifi":
                 return ["--pacbio", long_reads[0]]
-            elif long_read_type.startswith("ont_"):
+            elif long_read_type in ONT_PLATFORMS:
                 return ["--nanopore", long_reads[0]]
-        return []
+        return list()
 
     def gfa_files(self, sample):
         label_dir = f"analysis/{sample}/yeat/spades/{self.label}"

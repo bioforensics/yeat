@@ -42,7 +42,7 @@ class CanuAssembler(Assembler):
 
     def get_long_args(self, sample, reads):
         long_read_type = self.samples[sample].best_long_read_type
-        long_reads = reads.get(long_read_type)
+        long_reads = reads[long_read_type]
         if long_read_type in ONT_PLATFORMS:
             return ["-nanopore", long_reads[0]]
         return ["-pacbio-hifi", long_reads[0]]

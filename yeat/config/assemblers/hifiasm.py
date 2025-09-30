@@ -36,17 +36,17 @@ class HifiasmAssembler(Assembler):
     def input_args(self, sample):
         reads = self.input_files(sample)
         args = list()
+        if "ont_ultralong" in reads:
+            args.extend(["--ul", reads["ont_ultralong"][0]])
         args.extend(self.get_long_args(sample, reads))
         return " ".join(args)
 
     def get_long_args(self, sample, reads):
         long_read_type = self.samples[sample].best_long_read_type
-        long_reads = reads.get(long_read_type)
+        long_reads = reads[long_read_type]
         if long_read_type in ["ont_simplex", "ont_duplex"]:
             return ["--ont", long_reads[0]]
-        if long_read_type in ["ont_ultralong"]:
-            return ["--ul", long_reads[0]]
-        return ["-pacbio-hifi", long_reads[0]]
+        return [long_reads[0]]
 
     def gfa_files(self, sample):
         return glob(f"analysis/{sample}/yeat/hifiasm/{self.label}/*.gfa")

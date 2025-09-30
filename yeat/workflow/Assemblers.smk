@@ -205,7 +205,7 @@ rule verkko:
         "analysis/{sample}/yeat/verkko/{label}/verkko.log",
     shell:
         """
-        verkko -d {params.outdir} {params.input_args} > {log} 2>&1
+        verkko -d {params.outdir} {params.input_args} {params.extra_args} > {log} 2>&1
         ln -s assembly.fasta {output.contigs}
         """
 

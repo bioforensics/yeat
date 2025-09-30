@@ -40,13 +40,13 @@ class UnicyclerAssembler(Assembler):
             return {"illumina": [f"{downsample_dir}/read.fastq.gz"]}
         if len(reads) == 2:
             return {"illumina": [f"{downsample_dir}/R1.fastq.gz", f"{downsample_dir}/R2.fastq.gz"]}
-        return {}
+        return dict()
 
     def get_long_file(self, sample_path, sample_obj):
         long_read_type = sample_obj.best_long_read_type
         if long_read_type:
             return {long_read_type: [f"{sample_path}/{long_read_type}/downsample/read.fastq.gz"]}
-        return {}
+        return dict()
 
     def input_args(self, sample):
         reads = self.input_files(sample)
@@ -61,14 +61,14 @@ class UnicyclerAssembler(Assembler):
             return ["-s", illumina_reads[0]]
         if len(illumina_reads) == 2:
             return ["-1", illumina_reads[0], "-2", illumina_reads[1]]
-        return []
+        return list()
 
     def get_long_args(self, sample, reads):
         long_read_type = self.samples[sample].best_long_read_type
         if long_read_type:
-            long_reads = reads.get(long_read_type)
+            long_reads = reads[long_read_type]
             return ["-l", long_reads[0]]
-        return []
+        return list()
 
     def gfa_files(self, sample):
         return glob(f"analysis/{sample}/yeat/unicycler/{self.label}/*.gfa")

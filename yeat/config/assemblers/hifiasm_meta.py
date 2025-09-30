@@ -36,7 +36,7 @@ class HifiasmMetaAssembler(Assembler):
     def input_args(self, sample):
         reads = self.input_files(sample)
         long_read_type = self.samples[sample].best_long_read_type
-        long_reads = reads.get(long_read_type)
+        long_reads = reads[long_read_type]
         return f"{long_reads[0]}"
 
     def gfa_files(self, sample):

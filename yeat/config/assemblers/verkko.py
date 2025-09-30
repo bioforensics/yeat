@@ -27,31 +27,28 @@ class VerkkoAssembler(Assembler):
 
     def input_files(self, sample):
         infiles = dict()
-        if "pacbio_hifi" in self.samples[sample].data:
-            infiles["pacbio_hifi"] = f"analysis/{sample}/qc/pacbio_hifi/downsample/read.fastq.gz"
-        if "ont_duplex" in self.samples[sample].data:
-            infiles["ont_duplex"] = f"analysis/{sample}/qc/ont_duplex/downsample/read.fastq.gz"
-        if "ont_ultralong" in self.samples[sample].data:
-            infiles["ont_ultralong"] = (
-                f"analysis/{sample}/qc/ont_ultralong/downsample/read.fastq.gz"
-            )
+        for read_type in ["pacbio_hifi", "ont_duplex", "ont_ultralong"]:
+            if read_type in self.samples[sample].data:
+                infiles[read_type] = [f"analysis/{sample}/qc/{read_type}/downsample/read.fastq.gz"]
         return infiles
 
     def input_args(self, sample):
         reads = self.input_files(sample)
-        print(reads)
-        assert 0
-        # if len(reads) == 1 and self.samples[sample].has_illumina:
-        #     args = f"-s {reads[0]}"
-        # elif len(reads) == 2 and self.samples[sample].has_illumina:
-        #     args = f"-1 {reads[0]} -2 {reads[1]}"
-        # elif len(reads) == 1 and self.samples[sample].has_long_reads:
-        #     args = f"-l {reads[0]}"
-        # elif len(reads) == 3:
-        #     args = f"-1 {reads[0]} -2 {reads[1]} -l {reads[2]}"
-        # else:
-        #     assert 0  # pragma: no cover
-        # return args
+        args = []
+        args.extend(self.get_long_args(reads))
+        return " ".join(args)
+
+    def get_long_args(self, reads):
+        args = ["--hifi"]
+        for read_type in ["pacbio_hifi", "ont_duplex"]:
+            if read_type in reads:
+                args.append(reads[read_type][0])
+        if len(args) == 1:
+            # print("ultralong for --nano")
+            assert 0
+        if "ont_ultralong" in reads:
+            args.extend(["--nano", reads["ont_ultralong"][0]])
+        return args
 
     def gfa_files(self, sample):
         return glob(f"analysis/{sample}/yeat/verkko/{self.label}/*.gfa")

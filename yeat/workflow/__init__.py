@@ -37,6 +37,7 @@ def run_workflow(
         "--configfile",
         snakemake_config,
         "--printshellcmds",
+        "--use-conda",
     ]
     if slurm:
         command.extend(("--executor", "slurm", "--jobs", max_jobs))

@@ -35,7 +35,7 @@ def get_parser(exit_on_error=True):
     positional_args(parser)
     options(parser)
     workflow_configuration(parser)
-    fastp_configuration(parser)
+    filter_configuration(parser)
     downsample_configuration(parser)
     sample_configuration(parser)
     algorithm_configuration(parser)
@@ -65,8 +65,21 @@ def options(parser):
     )
 
 
-def fastp_configuration(parser):
-    illumina = parser.add_argument_group("fastp configuration")
+def filter_configuration(parser):
+    illumina = parser.add_argument_group("filter configuration")
+    filter_group = illumina.add_mutually_exclusive_group()
+    filter_group.add_argument(
+        "--skip-filter",
+        dest="skip_filter",
+        action="store_true",
+        help="Skip the filtering step (default)",
+    )
+    filter_group.add_argument(
+        "--no-skip-filter",
+        dest="skip_filter",
+        action="store_false",
+        help="Do not skip the filtering step",
+    )
     illumina.add_argument(
         "-l",
         "--length-required",
@@ -78,7 +91,7 @@ def fastp_configuration(parser):
 
 
 def downsample_configuration(parser):
-    illumina = parser.add_argument_group("downsampling configuration")
+    illumina = parser.add_argument_group("downsample configuration")
     illumina.add_argument(
         "-d",
         "--target-num-reads",
@@ -160,6 +173,8 @@ def get_config_data(args):
         "samples": {
             args.sample_label: {
                 "illumina": args.read,
+                "skip_filter": args.skip_filter,
+                "min_length": args.length_required,
                 "target_num_reads": args.target_num_reads,
                 "genome_size": args.genome_size,
                 "target_coverage_depth": args.target_coverage_depth,

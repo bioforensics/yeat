@@ -161,6 +161,8 @@ def create_config(args):
 
 
 def get_config_data(args):
+    print(args)
+    assert 0
     return {
         "samples": {
             args.sample_label: {

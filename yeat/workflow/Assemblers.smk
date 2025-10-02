@@ -229,7 +229,7 @@ rule myloasm:
     shell:
         """
         myloasm {params.input_args} -o {params.outdir} -t {threads} {params.extra_args} > {log} 2>&1
-        ln -s assembly.fasta {output.contigs}
+        ln -s assembly_primary.fa {output.contigs}
         """
 
 

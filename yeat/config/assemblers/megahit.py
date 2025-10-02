@@ -28,10 +28,8 @@ class MEGAHITAssembler(Assembler):
         return targets
 
     def input_files(self, sample):
-        sample_path = f"analysis/{sample}/qc"
-        sample_obj = self.samples[sample]
-        reads = sample_obj.data["illumina"]
-        downsample_dir = f"{sample_path}/illumina/downsample"
+        reads = self.samples[sample].data["illumina"]
+        downsample_dir = f"analysis/{sample}/qc/illumina/downsample"
         if len(reads) == 1:
             return {"illumina": [f"{downsample_dir}/read.fastq.gz"]}
         return {"illumina": [f"{downsample_dir}/R1.fastq.gz", f"{downsample_dir}/R2.fastq.gz"]}

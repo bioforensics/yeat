@@ -67,18 +67,10 @@ def options(parser):
 
 def filter_configuration(parser):
     illumina = parser.add_argument_group("filter configuration")
-    filter_group = illumina.add_mutually_exclusive_group()
-    filter_group.add_argument(
+    illumina.add_argument(
         "--skip-filter",
-        dest="skip_filter",
         action="store_true",
-        help="Skip the filtering step (default)",
-    )
-    filter_group.add_argument(
-        "--no-skip-filter",
-        dest="skip_filter",
-        action="store_false",
-        help="Do not skip the filtering step",
+        help="skip the filtering step; default is to filter with fastp or chopper",
     )
     illumina.add_argument(
         "-l",
@@ -169,6 +161,8 @@ def create_config(args):
 
 
 def get_config_data(args):
+    print(args)
+    assert 0
     return {
         "samples": {
             args.sample_label: {

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.8.1] 2025-09-19
 
+### Added
+- Verkko (#101)
+- Myloasm (#102)
+
 ### Changed
 - Reverted back to original stdout (#99)
 

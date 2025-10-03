@@ -27,7 +27,7 @@ class SPAdesAssembler(Assembler):
         return targets
 
     def input_files(self, sample):
-        infiles = {}
+        infiles = dict()
         sample_path = f"analysis/{sample}/qc"
         sample_obj = self.samples[sample]
         infiles.update(self.get_illumina_files(sample_path, sample_obj))

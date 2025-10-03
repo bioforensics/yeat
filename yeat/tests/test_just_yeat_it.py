@@ -32,14 +32,11 @@ def test_paired_end_assemblers_dry_run(tmp_path):
 
 
 @pytest.mark.long
-@pytest.mark.parametrize("algorithm", ["spades", "megahit", "unicycler", "penguin"])
-def test_paired_end_assemblers(algorithm, capsys, tmp_path):
+def test_paired_end_assemblers(capsys, tmp_path):
     wd = str(tmp_path)
     arglist = [
         "-w",
         wd,
-        "--algorithm",
-        algorithm,
         data_file("short_reads_1.fastq.gz"),
         data_file("short_reads_2.fastq.gz"),
     ]

@@ -9,9 +9,10 @@
 
 from .assembler import Assembler
 from glob import glob
+from yeat.config.sample import BEST_LR_ORDER
 
 
-class HifiasmMetaAssembler(Assembler):
+class VerkkoAssembler(Assembler):
     @staticmethod
     def _check_sample_compatibility(sample):
         return sample.has_long_reads
@@ -20,24 +21,35 @@ class HifiasmMetaAssembler(Assembler):
     def targets(self):
         targets = list()
         for sample in self.samples.values():
-            label_dir = f"analysis/{sample.label}/yeat/hifiasm_meta/{self.label}"
+            label_dir = f"analysis/{sample.label}/yeat/verkko/{self.label}"
             targets.append(f"{label_dir}/quast/report.html")
             targets.append(f"{label_dir}/bandage/.done")
         return targets
 
     def input_files(self, sample):
         infiles = dict()
-        best_read_type = self.samples[sample].best_long_read_type
-        infiles[best_read_type] = [
-            f"analysis/{sample}/qc/{best_read_type}/downsample/read.fastq.gz"
-        ]
+        for read_type in BEST_LR_ORDER:
+            if read_type in self.samples[sample].data:
+                infiles[read_type] = [f"analysis/{sample}/qc/{read_type}/downsample/read.fastq.gz"]
         return infiles
 
     def input_args(self, sample):
         reads = self.input_files(sample)
-        long_read_type = self.samples[sample].best_long_read_type
-        long_reads = reads[long_read_type]
-        return f"{long_reads[0]}"
+        args = list()
+        args.extend(self.get_long_args(reads))
+        return " ".join(args)
+
+    def get_long_args(self, reads):
+        args = ["--hifi"]
+        for read_type in ["pacbio_hifi", "ont_simplex", "ont_duplex"]:
+            if read_type in reads:
+                args.append(reads[read_type][0])
+        if len(args) == 1:
+            args.append(reads["ont_ultralong"][0])
+            return args
+        if "ont_ultralong" in reads:
+            args.extend(["--nano", reads["ont_ultralong"][0]])
+        return args
 
     def gfa_files(self, sample):
-        return glob(f"analysis/{sample}/yeat/hifiasm_meta/{self.label}/*.gfa")
+        return glob(f"analysis/{sample}/yeat/verkko/{self.label}/*.gfa")

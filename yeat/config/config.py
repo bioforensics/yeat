@@ -99,7 +99,11 @@ class AssemblyConfiguration(BaseModel):
         return self.samples[sample].target_coverage_depth
 
     def get_assembler_input_files(self, label, sample):
-        return self.assemblers[label].input_files(sample)
+        infiles = self.assemblers[label].input_files(sample)
+        input_files = []
+        for files in infiles.values():
+            input_files.extend(files)
+        return input_files
 
     def get_assembler_input_args(self, label, sample):
         return self.assemblers[label].input_args(sample)

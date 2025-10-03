@@ -9,9 +9,10 @@
 
 from .assembler import Assembler
 from glob import glob
+from yeat.config.sample import ONT_PLATFORMS
 
 
-class HifiasmMetaAssembler(Assembler):
+class MyloasmAssembler(Assembler):
     @staticmethod
     def _check_sample_compatibility(sample):
         return sample.has_long_reads
@@ -20,7 +21,7 @@ class HifiasmMetaAssembler(Assembler):
     def targets(self):
         targets = list()
         for sample in self.samples.values():
-            label_dir = f"analysis/{sample.label}/yeat/hifiasm_meta/{self.label}"
+            label_dir = f"analysis/{sample.label}/yeat/myloasm/{self.label}"
             targets.append(f"{label_dir}/quast/report.html")
             targets.append(f"{label_dir}/bandage/.done")
         return targets
@@ -35,9 +36,16 @@ class HifiasmMetaAssembler(Assembler):
 
     def input_args(self, sample):
         reads = self.input_files(sample)
+        args = list()
+        args.extend(self.get_long_args(sample, reads))
+        return " ".join(args)
+
+    def get_long_args(self, sample, reads):
         long_read_type = self.samples[sample].best_long_read_type
         long_reads = reads[long_read_type]
-        return f"{long_reads[0]}"
+        if long_read_type in ONT_PLATFORMS:
+            return [long_reads[0]]
+        return [long_reads[0], "--hifi"]
 
     def gfa_files(self, sample):
-        return glob(f"analysis/{sample}/yeat/hifiasm_meta/{self.label}/*.gfa")
+        return glob(f"analysis/{sample}/yeat/myloasm/{self.label}/*.gfa")

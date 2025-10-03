@@ -1,7 +1,19 @@
 [samples.hybrid_Shigella_sonnei_53G]
 illumina = "yeat/tests/data/short_reads_?.fastq.gz"
 pacbio_hifi = "yeat/tests/data/long_reads_high_depth.fastq.gz"
-skip_filter = true
+
+[samples.ecoli_k12]
+pacbio_hifi = "yeat/tests/data/ecoli_hifi_subset24x.fastq.gz"
+ont_ultralong = "yeat/tests/data/ecoli_ont_subset50x.fastq.gz"
 
 [assemblers.unicycler_default]
 algorithm = "unicycler"
+samples = ["hybrid_Shigella_sonnei_53G"]
+
+[assemblers.hifiasm_default]
+algorithm = "hifiasm"
+samples = ["ecoli_k12"]
+
+[assemblers.verkko_default]
+algorithm = "verkko"
+samples = ["ecoli_k12"]

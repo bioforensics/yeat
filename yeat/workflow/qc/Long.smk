@@ -16,7 +16,7 @@ rule copy_input:
     output:
         read="analysis/{sample}/qc/{platform}/read.fastq.gz",
     wildcard_constraints:
-        platform="ont_simplex|ont_duplex|pacbio_hifi",
+        platform="ont_simplex|ont_duplex|ont_ultralong|pacbio_hifi",
     params:
         do_copy=config["copy_input"],
     run:
@@ -29,7 +29,7 @@ rule fastqc:
     output:
         html="analysis/{sample}/qc/{platform}/fastqc/read_fastqc.html",
     wildcard_constraints:
-        platform="ont_simplex|ont_duplex|pacbio_hifi",
+        platform="ont_simplex|ont_duplex|ont_ultralong|pacbio_hifi",
     threads: 128
     params:
         outdir="analysis/{sample}/qc/{platform}/fastqc",
@@ -47,7 +47,7 @@ rule chopper:
     output:
         read="analysis/{sample}/qc/{platform}/chopper/read.fastq.gz",
     wildcard_constraints:
-        platform="ont_simplex|ont_duplex|pacbio_hifi",
+        platform="ont_simplex|ont_duplex|ont_ultralong|pacbio_hifi",
     threads: 128
     params:
         symlink_read="../read.fastq.gz",
@@ -67,7 +67,7 @@ rule downsample:
     output:
         read="analysis/{sample}/qc/{platform}/downsample/read.fastq.gz",
     wildcard_constraints:
-        platform="ont_simplex|ont_duplex|pacbio_hifi",
+        platform="ont_simplex|ont_duplex|ont_ultralong|pacbio_hifi",
     params:
         symlink_read="../chopper/read.fastq.gz",
         seed=config["seed"],

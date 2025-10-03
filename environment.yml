@@ -18,7 +18,6 @@ dependencies:
     - hifiasm>=0.19
     - hifiasm_meta>=hamtv0.3
     - mash>=2.3
-    - megahit>=1.2
     - metamdbg>=1.0
     - nanofilt>=2.3
     - nanoplot>=1.20

@@ -12,7 +12,6 @@ import json
 from pathlib import Path
 from random import randint
 import subprocess
-import sys
 import toml
 from yeat.config.sample import READ_TYPES
 
@@ -38,6 +37,7 @@ def run_workflow(
         "--configfile",
         snakemake_config,
         "--printshellcmds",
+        "--use-conda",
     ]
     if slurm:
         command.extend(("--executor", "slurm", "--jobs", max_jobs))

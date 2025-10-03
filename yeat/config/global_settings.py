@@ -18,7 +18,7 @@ class GlobalSettings(BaseModel):
     genome_size: Optional[int] = 0  # 0 auto
     min_length: Optional[int] = 100
     quality: Optional[int] = 10
-    skip_filter: Optional[bool] = False
+    skip_filter: Optional[bool] = True
 
     @classmethod
     def parse_data(cls, data):

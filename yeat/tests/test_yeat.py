@@ -8,7 +8,6 @@
 # -------------------------------------------------------------------------------------------------
 
 import pytest
-import sys
 from yeat.tests import data_file, run_yeat, get_core_count, final_contig_files_exist
 
 
@@ -40,8 +39,6 @@ def test_assemblers_dry_run(tmp_path, config):
 def test_short_assemblers(capsys, tmp_path, config):
     wd = str(tmp_path)
     cores = str(get_core_count())
-    if sys.platform == "darwin":
-        cores = "1"
     arglist = ["-w", wd, "-t", cores, config]
     run_yeat(arglist)
     final_contig_files_exist(wd, config)

@@ -33,6 +33,8 @@ rule megahit:
         reads=lambda wc: config["asm_cfg"].get_assembler_input_files(wc.label, wc.sample),
     output:
         contigs="analysis/{sample}/yeat/megahit/{label}/contigs.fasta",
+    conda:
+        "yeat-megahit"
     threads: 128
     params:
         temp_outdir="analysis/{sample}/yeat/megahit/{label}/megahit-temp",

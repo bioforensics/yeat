@@ -26,15 +26,27 @@ class HifiasmAssembler(Assembler):
         return targets
 
     def input_files(self, sample):
+        infiles = dict()
         best_read_type = self.samples[sample].best_long_read_type
-        return [f"analysis/{sample}/qc/{best_read_type}/downsample/read.fastq.gz"]
+        infiles[best_read_type] = [
+            f"analysis/{sample}/qc/{best_read_type}/downsample/read.fastq.gz"
+        ]
+        return infiles
 
     def input_args(self, sample):
-        best_read_type = self.samples[sample].best_long_read_type
         reads = self.input_files(sample)
-        if best_read_type in ["ont_simplex", "ont_duplex"]:
-            return f"--ont {reads[0]}"
-        return f"{reads[0]}"
+        args = list()
+        if "ont_ultralong" in reads:
+            args.extend(["--ul", reads["ont_ultralong"][0]])
+        args.extend(self.get_long_args(sample, reads))
+        return " ".join(args)
+
+    def get_long_args(self, sample, reads):
+        long_read_type = self.samples[sample].best_long_read_type
+        long_reads = reads[long_read_type]
+        if long_read_type in ["ont_simplex", "ont_duplex"]:
+            return ["--ont", long_reads[0]]
+        return [long_reads[0]]
 
     def gfa_files(self, sample):
         return glob(f"analysis/{sample}/yeat/hifiasm/{self.label}/*.gfa")

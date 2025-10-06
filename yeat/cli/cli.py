@@ -119,7 +119,7 @@ class InitAction(Action):
             "genome_size": 0,
             "min_length": 100,
             "quality": 10,
-            "skip_filter": False,
+            "skip_filter": True,
         },
         "samples": {"sample1": {"illumina": "short_reads_?.fastq.gz"}},
         "assemblers": {"spades_default": {"algorithm": "spades"}},

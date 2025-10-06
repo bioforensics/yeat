@@ -31,16 +31,20 @@ class MEGAHITAssembler(Assembler):
         reads = self.samples[sample].data["illumina"]
         downsample_dir = f"analysis/{sample}/qc/illumina/downsample"
         if len(reads) == 1:
-            return [f"{downsample_dir}/read.fastq.gz"]
-        r1 = f"{downsample_dir}/R1.fastq.gz"
-        r2 = f"{downsample_dir}/R2.fastq.gz"
-        return [r1, r2]
+            return {"illumina": [f"{downsample_dir}/read.fastq.gz"]}
+        return {"illumina": [f"{downsample_dir}/R1.fastq.gz", f"{downsample_dir}/R2.fastq.gz"]}
 
     def input_args(self, sample):
         reads = self.input_files(sample)
-        if len(reads) == 1:
-            return f"-r {reads[0]}"
-        return f"-1 {reads[0]} -2 {reads[1]}"
+        args = list()
+        args.extend(self.get_illumina_args(reads))
+        return " ".join(args)
+
+    def get_illumina_args(self, reads):
+        illumina_reads = reads["illumina"]
+        if len(illumina_reads) == 1:
+            return ["-r", illumina_reads[0]]
+        return ["-1", illumina_reads[0], "-2", illumina_reads[1]]
 
     def gfa_files(self, sample):
         gfa_files = []

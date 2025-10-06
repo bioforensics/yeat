@@ -13,6 +13,7 @@ from .hifiasm import HifiasmAssembler
 from .hifiasm_meta import HifiasmMetaAssembler
 from .megahit import MEGAHITAssembler
 from .metamdbg import MetaMDBGAssembler
+from .myloasm import MyloasmAssembler
 from .penguin import PenguiNAssembler
 from .spades import SPAdesAssembler
 from .unicycler import UnicyclerAssembler
@@ -26,6 +27,7 @@ ALGORITHM_CONFIGS = {
     "hifiasm_meta": HifiasmMetaAssembler,
     "megahit": MEGAHITAssembler,
     "metamdbg": MetaMDBGAssembler,
+    "myloasm": MyloasmAssembler,
     "penguin": PenguiNAssembler,
     "spades": SPAdesAssembler,
     "unicycler": UnicyclerAssembler,

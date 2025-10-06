@@ -27,6 +27,7 @@ FINAL_FILES = {
     "hifiasm_meta": "asm.p_ctg.fa",
     "metamdbg": "contigs.fasta",
     "verkko": "assembly.fasta",
+    "myloasm": "assembly_primary.fa",
 }
 
 

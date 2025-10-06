@@ -15,3 +15,6 @@ samples = ["zymoBIOMICS_D6331"]
 
 [assemblers.metamdbg_default]
 algorithm = "metamdbg"
+
+[assemblers.myloasm_default]
+algorithm = "myloasm"

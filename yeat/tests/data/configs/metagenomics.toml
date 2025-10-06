@@ -4,5 +4,17 @@ ont_simplex = "yeat/tests/data/SRR23926885.fastq.gz"
 [samples.zymoBIOMICS_D6331]
 pacbio_hifi = "yeat/tests/data/zymoD6331std-ecoli-ten-percent.fq.gz"
 
+[assemblers.metaflye_default]
+algorithm = "flye"
+arguments = "--meta"
+
+[assemblers.hifiasm_meta_default]
+algorithm = "hifiasm_meta"
+arguments = "--no-binning"
+samples = ["zymoBIOMICS_D6331"]
+
+[assemblers.metamdbg_default]
+algorithm = "metamdbg"
+
 [assemblers.myloasm_default]
 algorithm = "myloasm"

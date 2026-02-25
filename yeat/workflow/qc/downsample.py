@@ -42,7 +42,7 @@ class Downsample(BaseModel):
             data = json.load(fh)
         base_count = data["summary"]["after_filtering"]["total_bases"]
         read_count = data["summary"]["after_filtering"]["total_reads"]
-        return base_count / read_count
+        return int(base_count / read_count)
 
     def get_num_reads(self, paired=True):
         if self.target_num_reads != 0:

@@ -66,7 +66,7 @@ rule mash:
         mash_report="analysis/{sample}/qc/illumina/mash/report.tsv",
     shell:
         """
-        mash sketch {input.read} -o {output.sketch}
+        mash sketch {input.read} -o {output.sketch} -r
         mash info -t {output.sketch} > {output.mash_report}
         """
 

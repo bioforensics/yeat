@@ -17,7 +17,7 @@ def test_downsample():
         genome_size=6275000,
         mash_report=data_file("report.tsv"),
         fastp_report=data_file("fastp.json"),
-        target_coverage_depth=150,
+        target_depth=150,
         target_num_reads=0,
     )
 
@@ -39,7 +39,7 @@ def test_get_num_reads(input_down):
     downsample = Downsample(
         genome_size=6275000,
         average_read_length=125.0,
-        target_coverage_depth=150,
+        target_depth=150,
         target_num_reads=input_down,
     )
     down = downsample.get_num_reads()

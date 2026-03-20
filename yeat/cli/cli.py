@@ -114,12 +114,13 @@ def grid_configuration(parser):
 class InitAction(Action):
     config_template = {
         "global_settings": {
-            "target_coverage_depth": 150,
+            "skip_filter": True,
+            "min_length": 100,
+            "quality": 15,
+            "downsampling": "none",
             "target_num_reads": -1,
             "genome_size": 0,
-            "min_length": 100,
-            "quality": 10,
-            "skip_filter": True,
+            "target_depth": 150,
         },
         "samples": {"sample1": {"illumina": "short_reads_?.fastq.gz"}},
         "assemblers": {"spades_default": {"algorithm": "spades"}},

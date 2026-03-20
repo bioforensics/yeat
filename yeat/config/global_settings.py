@@ -13,12 +13,13 @@ from typing import Optional
 
 class GlobalSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    target_coverage_depth: Optional[int] = 150
-    target_num_reads: Optional[int] = -1  # -1 disable, 0 auto
-    genome_size: Optional[int] = 0  # 0 auto
-    min_length: Optional[int] = 100
-    quality: Optional[int] = 10
     skip_filter: Optional[bool] = True
+    min_length: Optional[int] = 100
+    quality: Optional[int] = 15
+    downsampling: Optional[str] = "none"
+    target_depth: Optional[int] = 150
+    target_num_reads: Optional[int] = 0
+    genome_size: Optional[int] = 0
 
     @classmethod
     def parse_data(cls, data):

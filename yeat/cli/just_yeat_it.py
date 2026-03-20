@@ -80,8 +80,12 @@ def filter_configuration(parser):
         metavar="L",
         type=int,
     )
+    illumina.add_argument(
+        "-q", "--quality", default=150, help="hello world", metavar="Q", type=int
+    )
 
 
+# update everything here.....
 def downsample_configuration(parser):
     illumina = parser.add_argument_group("downsample configuration")
     illumina.add_argument(
@@ -102,7 +106,7 @@ def downsample_configuration(parser):
     )
     illumina.add_argument(
         "-c",
-        "--target-coverage-depth",
+        "--target-depth",
         default=150,
         help="target an average depth of coverage Cx when auto-downsampling; by default, C=150",
         metavar="C",
@@ -167,9 +171,11 @@ def get_config_data(args):
                 "illumina": args.read,
                 "skip_filter": args.skip_filter,
                 "min_length": args.length_required,
+                "quality": args.quality,
+                "downsampling": args.downsampling,
+                "target_depth": args.target_depth,
                 "target_num_reads": args.target_num_reads,
                 "genome_size": args.genome_size,
-                "target_coverage_depth": args.target_coverage_depth,
             },
         },
         "assemblers": {

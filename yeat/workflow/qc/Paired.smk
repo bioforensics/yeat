@@ -57,51 +57,76 @@ rule fastp:
         txt_report="analysis/{sample}/qc/illumina/fastp/report.txt",
         skip_filter=lambda wc: config["asm_cfg"].get_sample_skip_filter(wc.sample),
         min_length=lambda wc: config["asm_cfg"].get_sample_min_length(wc.sample),
+        quality=lambda wc: config["asm_cfg"].get_sample_quality(wc.sample),
     run:
         if params.skip_filter:
             Path(output.r1).symlink_to(params.symlink_r1)
             Path(output.r2).symlink_to(params.symlink_r2)
             return
-        cmd = "fastp -i {input.r1} -I {input.r2} -o {output.r1} -O {output.r2} -l {params.min_length} --detect_adapter_for_pe --html {params.html_report} --json {params.json_report} 2> {params.txt_report}"
+        cmd = "fastp -i {input.r1} -I {input.r2} -o {output.r1} -O {output.r2} -l {params.min_length} -q {params.quality} --detect_adapter_for_pe --html {params.html_report} --json {params.json_report} 2> {params.txt_report}"
         shell(cmd)
 
 
-rule mash:
+rule estimate_genome_size:
     input:
-        r1=rules.copy_input.output.r1,
+        r1=rules.fastp.output.r1,
+        r2=rules.fastp.output.r2,
     output:
-        sketch="analysis/{sample}/qc/illumina/mash/R1.fastq.gz.msh",
+        mash_sentinel="analysis/{sample}/qc/illumina/mash/sentinel.done",
+        seqkit_sentinel="analysis/{sample}/qc/illumina/seqkit/sentinel.done",
+    params:
+        min_copies=2,
+        sketch="analysis/{sample}/qc/illumina/mash/reference.msh",
         mash_report="analysis/{sample}/qc/illumina/mash/report.tsv",
-    shell:
-        """
-        mash sketch {input.r1} -o {output.sketch}
-        mash info -t {output.sketch} > {output.mash_report}
-        """
+        seqkit_report="analysis/{sample}/qc/illumina/seqkit/report.tsv",
+        genome_size=lambda wc: config["asm_cfg"].get_sample_genome_size(wc.sample),
+    log:
+        "analysis/{sample}/qc/illumina/mash/mash.log",
+    run:
+        if params.genome_size:
+            shell("touch {output.mash_sentinel} {output.seqkit_sentinel}")
+            return
+        shell("mash sketch -m {params.min_copies} -r {input.r1} {input.r2} -o {params.sketch} > {log} 2>&1")
+        shell("mash info -t {params.sketch} > {params.mash_report}")
+        shell("touch {output.mash_sentinel}")
+        shell("seqkit stats {input} > {params.seqkit_report}")
+        shell("touch {output.seqkit_sentinel}")
 
 
 rule downsample:
     input:
         r1=rules.fastp.output.r1,
         r2=rules.fastp.output.r2,
-        mash_report=rules.mash.output.mash_report,
+        mash_sentinel=rules.estimate_genome_size.output.mash_sentinel,
+        seqkit_sentinel=rules.estimate_genome_size.output.seqkit_sentinel,
     output:
         r1="analysis/{sample}/qc/illumina/downsample/R1.fastq.gz",
         r2="analysis/{sample}/qc/illumina/downsample/R2.fastq.gz",
+    threads: 128
     params:
         symlink_r1="../R1.fastq.gz",
         symlink_r2="../R2.fastq.gz",
-        fastp_report="analysis/{sample}/qc/illumina/fastp/fastp.json",
+        mash_report="analysis/{sample}/qc/illumina/mash/report.tsv",
+        seqkit_report="analysis/{sample}/qc/illumina/seqkit/report.tsv",
         outdir="analysis/{sample}/qc/illumina/downsample",
         seed=config["seed"],
+        downsampling=lambda wc: config["asm_cfg"].get_sample_downsampling(wc.sample),
         target_num_reads=lambda wc: config["asm_cfg"].get_sample_target_num_reads(wc.sample),
         genome_size=lambda wc: config["asm_cfg"].get_sample_genome_size(wc.sample),
-        target_coverage_depth=lambda wc: config["asm_cfg"].get_sample_target_coverage_depth(wc.sample),
+        target_depth=lambda wc: config["asm_cfg"].get_sample_target_depth(wc.sample),
+    log:
+        "analysis/{sample}/qc/illumina/downsample/bbnorm.log",
     run:
-        if params.target_num_reads == -1:
+        if params.downsampling == "none":
             Path(output.r1).symlink_to(params.symlink_r1)
             Path(output.r2).symlink_to(params.symlink_r2)
-            return
-        downsample = Downsample.parse_data(params.genome_size, input.mash_report, params.fastp_report, params.target_coverage_depth, params.target_num_reads)
-        num_reads = downsample.get_num_reads()
-        shell("seqtk sample -s {params.seed} {input.r1} {num_reads} | gzip > {params.outdir}/R1.fastq.gz")
-        shell("seqtk sample -s {params.seed} {input.r2} {num_reads} | gzip > {params.outdir}/R2.fastq.gz")
+        elif params.downsampling == "random":
+            if params.target_num_reads:
+                num_reads = params.target_num_reads
+            else:
+                downsample = Downsample.parse_data(params.mash_report, params.seqkit_report, params.target_num_reads, params.genome_size, params.target_depth)
+                num_reads = downsample.get_num_reads()
+            shell("seqtk sample -s {params.seed} {input.r1} {num_reads} | gzip > {params.outdir}/R1.fastq.gz")
+            shell("seqtk sample -s {params.seed} {input.r2} {num_reads} | gzip > {params.outdir}/R2.fastq.gz")
+        elif params.downsampling == "diginorm":
+            shell("bbnorm.sh threads={threads} in={input.r1} in2={input.r2} out={params.outdir}/R1.fastq.gz out2={params.outdir}/R2.fastq.gz > {log} 2>&1")

@@ -66,15 +66,15 @@ def test_check_positive_valid_values(value):
     check_positive(value) == value
 
 
-@pytest.mark.parametrize("target_coverage_depth", [("-1"), ("0")])
-def test_invalid_target_coverage_depth_negative(target_coverage_depth):
-    arglist = ["-c", target_coverage_depth, data_file("paired.toml")]
-    with pytest.raises(ArgumentError, match=rf"{target_coverage_depth} is not a positive integer"):
+@pytest.mark.parametrize("target_depth", [("-1"), ("0")])
+def test_invalid_target_depth_negative(target_depth):
+    arglist = ["-c", target_depth, data_file("paired.toml")]
+    with pytest.raises(ArgumentError, match=rf"{target_depth} is not a positive integer"):
         get_parser(exit_on_error=False).parse_args(arglist)
 
 
-@pytest.mark.parametrize("target_coverage_depth", [("string"), ("3.14")])
-def test_invalid_target_coverage_depth_noninteger(target_coverage_depth):
-    arglist = ["-c", target_coverage_depth, data_file("paired.toml")]
-    with pytest.raises(ArgumentError, match=rf"{target_coverage_depth} is not an integer"):
+@pytest.mark.parametrize("target_depth", [("string"), ("3.14")])
+def test_invalid_target_depth_noninteger(target_depth):
+    arglist = ["-c", target_depth, data_file("paired.toml")]
+    with pytest.raises(ArgumentError, match=rf"{target_depth} is not an integer"):
         get_parser(exit_on_error=False).parse_args(arglist)

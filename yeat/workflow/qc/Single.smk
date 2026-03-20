@@ -84,11 +84,11 @@ rule downsample:
         seed=config["seed"],
         target_num_reads=lambda wc: config["asm_cfg"].get_sample_target_num_reads(wc.sample),
         genome_size=lambda wc: config["asm_cfg"].get_sample_genome_size(wc.sample),
-        target_coverage_depth=lambda wc: config["asm_cfg"].get_sample_target_coverage_depth(wc.sample),
+        target_depth=lambda wc: config["asm_cfg"].get_sample_target_depth(wc.sample),
     run:
         if params.target_num_reads == -1:
             Path(output.read).symlink_to(params.symlink_read)
             return
-        downsample = Downsample.parse_data(params.genome_size, input.mash_report, params.fastp_report, params.target_coverage_depth, params.target_num_reads)
+        downsample = Downsample.parse_data(params.genome_size, input.mash_report, params.fastp_report, params.target_depth, params.target_num_reads)
         num_reads = downsample.get_num_reads(paired=False)
         shell("seqtk sample -s {params.seed} {input.read} {num_reads} | gzip > {params.outdir}/read.fastq.gz")

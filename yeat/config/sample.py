@@ -20,7 +20,7 @@ BEST_LR_ORDER = ("pacbio_hifi", "ont_duplex", "ont_simplex", "ont_ultralong")
 
 class Sample(BaseModel):
     label: str
-    data: Dict[str, Union[list[Path], int, bool]]
+    data: Dict[str, Union[bool, int, list[Path], str]]
 
     @field_validator("data")
     @classmethod
@@ -39,6 +39,9 @@ class Sample(BaseModel):
             raise SampleConfigurationError(f"Sample has unexpected key(s): {extra_keys}")
         return data
 
+    # validate if downsample is random|diginorm|none <----------------------
+    # check that target_depth is not 0... assert that >= 0 in cli <-----------------
+
     @classmethod
     def parse_data(cls, label, data, global_settings):
         cls._check_read_paths(label, data)
@@ -52,11 +55,11 @@ class Sample(BaseModel):
                 continue
             reads = sorted(read_paths)
             if not reads:
-                message = f"Unable to find FASTQ files for sample '{label}' at path: {read_paths}"
+                message = f"Unable to find FASTQ files for sample '{label}'"
                 raise SampleConfigurationError(message)
             if len(reads) > 2:
                 message = (
-                    f"Found too many FASTQ files for sample '{label}' at path: {read_paths}. "
+                    f"Found too many FASTQ files for sample '{label}' at path: {reads}. "
                     f"Expected at most 2, found {len(reads)}."
                 )
                 raise SampleConfigurationError(message)
@@ -85,35 +88,39 @@ class Sample(BaseModel):
         return self.has_ont or self.has_pacbio
 
     @property
-    def target_coverage_depth(self):
-        return self.data.get("target_coverage_depth", 150)
-
-    @property
-    def target_num_reads(self):
-        return self.data.get("target_num_reads", -1)
-
-    @property
-    def genome_size(self):
-        return self.data.get("genome_size", 0)
-
-    @property
-    def min_length(self):
-        return self.data.get("min_length", 100)
-
-    @property
-    def quality(self):
-        return self.data.get("quality", 10)
+    def best_long_read_type(self):
+        for read_type in BEST_LR_ORDER:
+            if read_type in self.data:
+                return read_type
+        return None
 
     @property
     def skip_filter(self):
         return self.data.get("skip_filter", True)
 
     @property
-    def best_long_read_type(self):
-        for read_type in BEST_LR_ORDER:
-            if read_type in self.data:
-                return read_type
-        return None
+    def min_length(self):
+        return self.data.get("min_length", 150)
+
+    @property
+    def quality(self):
+        return self.data.get("quality", 10)
+
+    @property
+    def downsampling(self):
+        return self.data.get("downsampling", "none")
+
+    @property
+    def target_depth(self):
+        return self.data.get("target_depth", 150)
+
+    @property
+    def target_num_reads(self):
+        return self.data.get("target_num_reads", 0)
+
+    @property
+    def genome_size(self):
+        return self.data.get("genome_size", 0)
 
     @property
     def targets(self):

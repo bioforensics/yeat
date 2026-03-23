@@ -118,7 +118,7 @@ class InitAction(Action):
             "min_length": 100,
             "quality": 15,
             "downsampling": "none",
-            "target_num_reads": -1,
+            "target_num_reads": 0,
             "genome_size": 0,
             "target_depth": 150,
         },

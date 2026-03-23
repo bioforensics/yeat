@@ -17,9 +17,9 @@ class GlobalSettings(BaseModel):
     min_length: Optional[int] = 100
     quality: Optional[int] = 15
     downsampling: Optional[str] = "none"
-    target_depth: Optional[int] = 150
     target_num_reads: Optional[int] = 0
     genome_size: Optional[int] = 0
+    target_depth: Optional[int] = 150
 
     @classmethod
     def parse_data(cls, data):

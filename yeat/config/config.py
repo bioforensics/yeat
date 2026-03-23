@@ -92,14 +92,14 @@ class AssemblyConfiguration(BaseModel):
     def get_sample_downsampling(self, sample):
         return self.samples[sample].downsampling
 
-    def get_sample_target_depth(self, sample):
-        return self.samples[sample].target_depth
-
     def get_sample_target_num_reads(self, sample):
         return self.samples[sample].target_num_reads
 
     def get_sample_genome_size(self, sample):
         return self.samples[sample].genome_size
+
+    def get_sample_target_depth(self, sample):
+        return self.samples[sample].target_depth
 
     def get_assembler_input_files(self, label, sample):
         infiles = self.assemblers[label].input_files(sample)

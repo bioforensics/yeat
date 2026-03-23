@@ -19,6 +19,7 @@ def main(args=None):
     if args is None:
         args = get_parser().parse_args()  # pragma: no cover
     create_config(args)
+    assert 0
     add_config(args)
     run_workflow(
         config=args.config,

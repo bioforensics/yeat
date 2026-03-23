@@ -41,6 +41,20 @@ class Sample(BaseModel):
 
     # validate if downsample is random|diginorm|none <----------------------
     # check that target_depth is not 0... assert that >= 0 in cli <-----------------
+    @field_validator("data")
+    @classmethod
+    def has_valid_downsample_configurations(cls, data):
+        print(data["downsampling"])
+        if data["downsampling"] not in ["random", "diginorm", "none"]:
+            raise SampleConfigurationError(
+                f"Sample has incompatible downsampling configurations"
+            )  # : {cls.label}
+        if data["downsampling"] == "random":
+            if data["genome_size"] < 0:
+                raise SampleConfigurationError("genome_size must be 0 (auto-calculate) or greater")
+            if data["target_depth"] <= 0:
+                raise SampleConfigurationError("target_depth must be greater than 0")
+        return data
 
     @classmethod
     def parse_data(cls, label, data, global_settings):
@@ -104,15 +118,11 @@ class Sample(BaseModel):
 
     @property
     def quality(self):
-        return self.data.get("quality", 10)
+        return self.data.get("quality", 15)
 
     @property
     def downsampling(self):
         return self.data.get("downsampling", "none")
-
-    @property
-    def target_depth(self):
-        return self.data.get("target_depth", 150)
 
     @property
     def target_num_reads(self):
@@ -121,6 +131,10 @@ class Sample(BaseModel):
     @property
     def genome_size(self):
         return self.data.get("genome_size", 0)
+
+    @property
+    def target_depth(self):
+        return self.data.get("target_depth", 150)
 
     @property
     def targets(self):

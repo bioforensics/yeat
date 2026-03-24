@@ -13,7 +13,7 @@ from typing import Optional
 
 class GlobalSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    skip_filter: Optional[bool] = True
+    skip_filter: Optional[bool] = False
     min_length: Optional[int] = 100
     quality: Optional[int] = 15
     downsampling: Optional[str] = "none"

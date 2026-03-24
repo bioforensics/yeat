@@ -61,7 +61,7 @@ def workflow_configuration(parser):
         "-s",
         "--seed",
         default=randint(1, 2**16 - 1),
-        help="seed for the random number generator used for downsampling; by default, the seed is chosen randomly",
+        help="seed for random number generator used in downsampling (default: random)",
         metavar="S",
         type=int,
     )
@@ -69,7 +69,7 @@ def workflow_configuration(parser):
         "-t",
         "--threads",
         default=1,
-        help="number of available T threads for sequential and parallel processing jobs; by default, T=1",
+        help="number of threads T for processing (default: 1)",
         metavar="T",
         type=int,
     )
@@ -77,7 +77,7 @@ def workflow_configuration(parser):
         "-w",
         "--workdir",
         default=".",
-        help="working directory; default is current working directory",
+        help="working directory (default: current directory)",
         metavar="DIR",
         type=str,
     )
@@ -85,12 +85,12 @@ def workflow_configuration(parser):
         "-n",
         "--dry-run",
         action="store_true",
-        help="construct workflow DAG and print a summary but do not execute",
+        help="construct workflow DAG and print summary without execution",
     )
     workflow.add_argument(
         "--copy_input",
         action="store_true",
-        help="copy input Fastq files to the working directory to ensure complete data provenance; by default, input Fastq files are symbolically linked to the working directory",
+        help="copy input FASTQ files to the working directory instead of symlinking",
     )
 
 
@@ -114,7 +114,7 @@ def grid_configuration(parser):
 class InitAction(Action):
     config_template = {
         "global_settings": {
-            "skip_filter": True,
+            "skip_filter": False,
             "min_length": 100,
             "quality": 15,
             "downsampling": "none",

@@ -39,13 +39,12 @@ class Sample(BaseModel):
             raise SampleConfigurationError(f"Sample has unexpected key(s): {extra_keys}")
         return data
 
-    # validate if downsample is random|diginorm|none <----------------------
+    # validate if downsample is random|bbnorm|none <----------------------
     # check that target_depth is not 0... assert that >= 0 in cli <-----------------
     @field_validator("data")
     @classmethod
     def has_valid_downsample_configurations(cls, data):
-        print(data["downsampling"])
-        if data["downsampling"] not in ["random", "diginorm", "none"]:
+        if data["downsampling"] not in ["random", "bbnorm", "none"]:
             raise SampleConfigurationError(
                 f"Sample has incompatible downsampling configurations"
             )  # : {cls.label}
@@ -110,7 +109,7 @@ class Sample(BaseModel):
 
     @property
     def skip_filter(self):
-        return self.data.get("skip_filter", True)
+        return self.data.get("skip_filter", False)
 
     @property
     def min_length(self):

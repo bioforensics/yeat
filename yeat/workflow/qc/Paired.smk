@@ -128,5 +128,5 @@ rule downsample:
                 num_reads = downsample.get_num_reads()
             shell("seqtk sample -s {params.seed} {input.r1} {num_reads} | gzip > {params.outdir}/R1.fastq.gz")
             shell("seqtk sample -s {params.seed} {input.r2} {num_reads} | gzip > {params.outdir}/R2.fastq.gz")
-        elif params.downsampling == "diginorm":
+        elif params.downsampling == "bbnorm":
             shell("bbnorm.sh threads={threads} in={input.r1} in2={input.r2} out={params.outdir}/R1.fastq.gz out2={params.outdir}/R2.fastq.gz > {log} 2>&1")

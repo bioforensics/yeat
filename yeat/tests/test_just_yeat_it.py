@@ -10,7 +10,7 @@
 from argparse import ArgumentError
 from pathlib import Path
 import pytest
-from yeat.cli.just_yeat_it import get_parser, main, check_positive
+from yeat.cli.just_yeat_it import get_parser, main
 from yeat.tests import data_file, final_contig_files_exist
 
 
@@ -61,9 +61,9 @@ def test_invalid_input_algorithm(capfd, tmp_path):
     assert "Unknown assembly algorithm DNE" in err
 
 
-@pytest.mark.parametrize("value", [1, 10, 100])
-def test_check_positive_valid_values(value):
-    check_positive(value) == value
+# @pytest.mark.parametrize("value", [1, 10, 100])
+# def test_check_positive_valid_values(value):
+#     check_positive(value) == value
 
 
 @pytest.mark.parametrize("target_depth", [("-1"), ("0")])

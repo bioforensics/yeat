@@ -61,7 +61,7 @@ def workflow_configuration(parser):
         "-s",
         "--seed",
         default=randint(1, 2**16 - 1),
-        help="seed for random number generator used in downsampling (default: random)",
+        help="seed for random number generator used in downsampling (default: random int)",
         metavar="S",
         type=int,
     )

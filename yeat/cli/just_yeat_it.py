@@ -71,7 +71,7 @@ def filter_configuration(parser):
         "-l",
         "--length-required",
         default=100,
-        help="discard reads shorter than length L after preprocessing (default: 100)",
+        help="discard reads shorter than length L (default: 100)",
         metavar="L",
         type=int,
     )

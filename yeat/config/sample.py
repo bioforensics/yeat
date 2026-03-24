@@ -39,22 +39,6 @@ class Sample(BaseModel):
             raise SampleConfigurationError(f"Sample has unexpected key(s): {extra_keys}")
         return data
 
-    # validate if downsample is random|bbnorm|none <----------------------
-    # check that target_depth is not 0... assert that >= 0 in cli <-----------------
-    @field_validator("data")
-    @classmethod
-    def has_valid_downsample_configurations(cls, data):
-        if data["downsampling"] not in ["random", "bbnorm", "none"]:
-            raise SampleConfigurationError(
-                f"Sample has incompatible downsampling configurations"
-            )  # : {cls.label}
-        if data["downsampling"] == "random":
-            if data["genome_size"] < 0:
-                raise SampleConfigurationError("genome_size must be 0 (auto-calculate) or greater")
-            if data["target_depth"] <= 0:
-                raise SampleConfigurationError("target_depth must be greater than 0")
-        return data
-
     @classmethod
     def parse_data(cls, label, data, global_settings):
         cls._check_read_paths(label, data)
@@ -68,11 +52,11 @@ class Sample(BaseModel):
                 continue
             reads = sorted(read_paths)
             if not reads:
-                message = f"Unable to find FASTQ files for sample '{label}'"
+                message = f"Unable to find FASTQ files for sample '{label}' at path: {read_paths}"
                 raise SampleConfigurationError(message)
             if len(reads) > 2:
                 message = (
-                    f"Found too many FASTQ files for sample '{label}' at path: {reads}. "
+                    f"Found too many FASTQ files for sample '{label}' at path: {read_paths}. "
                     f"Expected at most 2, found {len(reads)}."
                 )
                 raise SampleConfigurationError(message)

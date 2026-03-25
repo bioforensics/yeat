@@ -69,7 +69,7 @@ def workflow_configuration(parser):
         "-t",
         "--threads",
         default=1,
-        help="number of threads T for processing (default: 1)",
+        help="number of threads T for sequential and parallel processing (default: 1)",
         metavar="T",
         type=int,
     )

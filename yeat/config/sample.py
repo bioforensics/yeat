@@ -100,7 +100,7 @@ class Sample(BaseModel):
 
     @property
     def skip_filter(self):
-        return self.data.get("skip_filter", False)
+        return self.data.get("skip_filter", True)
 
     @property
     def min_length(self):

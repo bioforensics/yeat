@@ -114,7 +114,7 @@ def grid_configuration(parser):
 class InitAction(Action):
     config_template = {
         "global_settings": {
-            "skip_filter": False,
+            "skip_filter": True,
             "min_length": 100,
             "quality": 15,
             "downsampling": "none",

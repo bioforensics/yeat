@@ -115,13 +115,10 @@ rule downsample:
     run:
         if params.downsampling == "none":
             Path(output.read).symlink_to(params.symlink_read)
-        elif params.downsampling == "random":
-            if params.target_num_reads:
-                num_reads = params.target_num_reads
-            else:
-                downsample = Downsample.parse_data(params.mash_report, params.seqkit_report, params.target_num_reads, params.genome_size, params.target_depth)
-                num_reads = downsample.get_num_reads(paired=False)
-            shell("seqtk sample -s {params.seed} {input.read} {num_reads} | gzip > {params.outdir}/read.fastq.gz")
-            # bbnorm still being tested for long reads
-            # elif params.downsampling == "bbnorm":
-            #     shell("bbnorm.sh threads={threads} in={input.read} out={params.outdir}/read.fastq.gz > {log} 2>&1")
+            return
+        if params.target_num_reads:
+            num_reads = params.target_num_reads
+        else:
+            downsample = Downsample.parse_data(params.mash_report, params.seqkit_report, params.target_num_reads, params.genome_size, params.target_depth)
+            num_reads = downsample.get_num_reads(paired=False)
+        shell("seqtk sample -s {params.seed} {input.read} {num_reads} | gzip > {params.outdir}/read.fastq.gz")

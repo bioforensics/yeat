@@ -39,6 +39,12 @@ class Sample(BaseModel):
             raise SampleConfigurationError(f"Sample has unexpected key(s): {extra_keys}")
         return data
 
+    # @field_validator("data")
+    # @classmethod
+    # def valid_downsample_configuration(cls, data):
+    #     pass
+    # work on this here.... check that
+
     @classmethod
     def parse_data(cls, label, data, global_settings):
         cls._check_read_paths(label, data)

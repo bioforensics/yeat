@@ -19,7 +19,7 @@ class Downsample:
     average_read_length: int
 
     @classmethod
-    def parse_data(cls, mash_report, seqkit_report, target_num_reads, genome_size, target_depth):
+    def parse_data(cls, target_num_reads, genome_size, target_depth, mash_report, seqkit_report):
         return cls(
             target_num_reads=target_num_reads,
             genome_size=(

@@ -111,7 +111,7 @@ rule downsample:
             if params.target_num_reads:
                 num_reads = params.target_num_reads
             else:
-                downsample = Downsample.parse_data(params.mash_report, params.seqkit_report, params.target_num_reads, params.genome_size, params.target_depth)
+                downsample = Downsample.parse_data(params.target_num_reads, params.genome_size, params.target_depth, params.mash_report, params.seqkit_report)
                 num_reads = downsample.get_num_reads(paired=False)
             shell("seqtk sample -s {params.seed} {input.read} {num_reads} | gzip > {params.outdir}/read.fastq.gz")
         elif params.downsampling == "bbnorm":

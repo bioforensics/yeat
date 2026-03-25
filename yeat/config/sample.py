@@ -39,11 +39,12 @@ class Sample(BaseModel):
             raise SampleConfigurationError(f"Sample has unexpected key(s): {extra_keys}")
         return data
 
-    # @field_validator("data")
-    # @classmethod
-    # def valid_downsample_configuration(cls, data):
-    #     pass
-    # work on this here.... check that
+    @field_validator("data")
+    @classmethod
+    def valid_downsample_application(cls, data):
+        if "illumina" not in data and data.get("downsampling", "none") == "bbnorm":
+            raise SampleConfigurationError(f"Applying BBNorm to long reads is highly discouraged")
+        return data
 
     @classmethod
     def parse_data(cls, label, data, global_settings):

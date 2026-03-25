@@ -12,35 +12,35 @@ from yeat.workflow.qc.downsample import Downsample
 from yeat.tests import data_file
 
 
-# need to change fastp report to seqkit report
-# def test_downsample():
-#     Downsample.parse_data(
-#         mash_report=data_file("report.tsv"),
-#         fastp_report=data_file("fastp.json"),
-#         target_num_reads=0,
-#         genome_size=6275000,
-#         target_depth=150,
-#     )
+def test_downsample():
+    Downsample.parse_data(
+        target_num_reads=0,
+        genome_size=0,
+        target_depth=150,
+        mash_report=data_file("mash_report.tsv"),
+        seqkit_report=data_file("seqkit_report.tsv"),
+    )
 
 
 def test_get_genome_size():
-    report_path = data_file("combined-reads.report.tsv")
+    report_path = data_file("mash_report.tsv")
     genome_size = Downsample._get_estimated_genome_size(report_path)
-    assert genome_size == 6275000
+    assert genome_size == 188786
 
 
-# def test_get_average_read_length():
-#     average_read_length = Downsample._get_average_read_length(data_file("fastp.json"))
-#     assert average_read_length == 125.0
+def test_get_average_read_length():
+    report_path = data_file("seqkit_report.tsv")
+    average_read_length = Downsample._get_average_read_length(report_path)
+    assert average_read_length == 125.0
 
 
 @pytest.mark.parametrize("input_down", [0, 3765000])
 def test_get_num_reads(input_down):
     downsample = Downsample(
-        genome_size=6275000,
-        average_read_length=125.0,
-        target_depth=150,
         target_num_reads=input_down,
+        genome_size=6275000,
+        target_depth=150,
+        average_read_length=125.0,
     )
     down = downsample.get_num_reads()
     assert down == 3765000

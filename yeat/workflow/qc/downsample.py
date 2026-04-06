@@ -9,6 +9,7 @@
 
 from dataclasses import dataclass
 import pandas as pd
+from pathlib import Path
 
 
 @dataclass
@@ -31,16 +32,20 @@ class Downsample:
 
     @staticmethod
     def _get_estimated_genome_size(mash_report):
+        if not Path(mash_report).exists():
+            return 0
         df = pd.read_csv(mash_report, sep="\t")
         return int(df.iloc[0]["Length"])
 
     @staticmethod
     def _get_average_read_length(seqkit_report):
+        if not Path(seqkit_report).exists():
+            return 0
         df = pd.read_csv(seqkit_report, sep=r"\s+")
         return df.iloc[0]["avg_len"]
 
     def get_num_reads(self, paired=True):
-        if self.target_num_reads != 0:
+        if self.target_num_reads:
             return self.target_num_reads
         avl = 2 * self.average_read_length if paired else self.average_read_length
         return int((self.genome_size * self.target_depth) / avl)

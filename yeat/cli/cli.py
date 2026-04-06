@@ -11,8 +11,6 @@ from argparse import ArgumentParser, Action
 from importlib.metadata import version
 from pathlib import Path
 from random import randint
-import sys
-import toml
 
 
 def get_parser(exit_on_error=True):
@@ -112,20 +110,20 @@ def grid_configuration(parser):
 
 
 class InitAction(Action):
-    config_template = {
-        "global_settings": {
-            "skip_filter": True,
-            "min_length": 100,
-            "quality": 15,
-            "downsampling": "none",
-            "target_num_reads": 0,
-            "genome_size": 0,
-            "target_depth": 150,
-        },
-        "samples": {"sample1": {"illumina": "short_reads_?.fastq.gz"}},
-        "assemblers": {"spades_default": {"algorithm": "spades"}},
-    }
+    config_template = """[global_settings.filter]
+enabled = true                              # if false, proceed to downsample
+min_length = 100                            # adjust for long reads   
+quality = 15                                # adjust for long reads  
+
+[global_settings.downsample]
+method = "none"                             # if method="none", proceed to assembly; "none"|"random"|"bbnorm"
+target_num_reads = 0                        # adjust when downsample="random"; if target_num_reads=0, auto calculate input value using genome_size and target_depth
+genome_size = 0                             # adjust when downsample="random" and target_num_reads=0; if genome_size=0, auto calculate input value using MASH
+target_depth = 150                          # adjust when downsample="random" and target_num_reads=0
+
+[samples.sample1]
+illumina = "data/short_reads_?.fastq.gz"    # glob path"""
 
     def __call__(self, parser, namespace, values, option_string=None):
-        toml.dump(self.config_template, sys.stdout)
+        print(self.config_template)
         raise SystemExit()

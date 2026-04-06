@@ -7,20 +7,24 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from .global_settings import GlobalSettings
+from .global_settings import GlobalSettings, FilterSettings, DownsampleSettings
+from copy import deepcopy
 from pathlib import Path
 from pydantic import BaseModel, field_validator
-from typing import Dict, Union
+from typing import Dict
 
 
 ONT_PLATFORMS = {"ont_simplex", "ont_duplex", "ont_ultralong"}
 READ_TYPES = ONT_PLATFORMS | {"illumina", "pacbio_hifi"}
 BEST_LR_ORDER = ("pacbio_hifi", "ont_duplex", "ont_simplex", "ont_ultralong")
+OPTIONAL_KEYS = {"filter", "downsample"}
 
 
 class Sample(BaseModel):
     label: str
-    data: Dict[str, Union[bool, int, list[Path], str]]
+    data: Dict[str, list[Path]]
+    filter_settings: FilterSettings
+    downsample_settings: DownsampleSettings
 
     @field_validator("data")
     @classmethod
@@ -31,43 +35,45 @@ class Sample(BaseModel):
 
     @field_validator("data")
     @classmethod
-    def has_valid_keys(cls, data):
-        field_names = set(GlobalSettings.model_fields.keys())
-        valid_keys = field_names | READ_TYPES
-        extra_keys = set(data.keys()) - valid_keys
-        if extra_keys:
-            raise SampleConfigurationError(f"Sample has unexpected key(s): {extra_keys}")
+    def has_read_paths(cls, data):
+        for read_type, read_paths in data.items():
+            if read_type not in READ_TYPES:
+                continue
+            if not read_paths:
+                message = f"Unable to find FASTQ files for sample"
+                raise SampleConfigurationError(message)
+            if len(read_paths) > 2:
+                message = f"Sample has too many FASTQ files. Expected at most 2, found {len(read_paths)}."
+                raise SampleConfigurationError(message)
         return data
 
     @field_validator("data")
     @classmethod
-    def valid_downsample_application(cls, data):
-        if "illumina" not in data and data.get("downsampling", "none") == "bbnorm":
-            raise SampleConfigurationError(f"Applying BBNorm to long reads is highly discouraged")
+    def has_valid_downsample_application(cls, data):
+        if "illumina" not in data and data["method"] == "bbnorm":
+            raise SampleConfigurationError(f"BBNorm can only be applied to Illumina reads")
+        return data
+
+    @field_validator("data")
+    @classmethod
+    def has_invalid_keys(cls, data):
+        extra_keys = data - GlobalSettings.model_fields.keys() - READ_TYPES
+        if extra_keys:
+            raise SampleConfigurationError(f"Sample has unexpected key(s): {extra_keys}")
         return data
 
     @classmethod
     def parse_data(cls, label, data, global_settings):
-        cls._check_read_paths(label, data)
-        cls._add_global_settings(data, global_settings)
-        return cls(label=label, data=data)
-
-    @staticmethod
-    def _check_read_paths(label, data):
-        for read_type, read_paths in data.items():
-            if read_type not in READ_TYPES:
-                continue
-            reads = sorted(read_paths)
-            if not reads:
-                message = f"Unable to find FASTQ files for sample '{label}' at path: {read_paths}"
-                raise SampleConfigurationError(message)
-            if len(reads) > 2:
-                message = (
-                    f"Found too many FASTQ files for sample '{label}' at path: {read_paths}. "
-                    f"Expected at most 2, found {len(reads)}."
-                )
-                raise SampleConfigurationError(message)
-            data[read_type] = reads
+        filter_copy = deepcopy(global_settings.filter).update(data.get("filter", {}))
+        downsample_copy = deepcopy(global_settings.downsample).update(data.get("downsample", {}))
+        data.pop("filter", None)
+        data.pop("downsample", None)
+        return cls(
+            label=label,
+            data=data,
+            filter_settings=filter_copy,
+            downsample_settings=downsample_copy,
+        )
 
     @staticmethod
     def _add_global_settings(data, global_settings):
@@ -100,31 +106,31 @@ class Sample(BaseModel):
 
     @property
     def skip_filter(self):
-        return self.data.get("skip_filter", True)
+        return self.filter_settings.enabled
 
     @property
     def min_length(self):
-        return self.data.get("min_length", 150)
+        return self.filter_settings.min_length
 
     @property
     def quality(self):
-        return self.data.get("quality", 15)
+        return self.filter_settings.quality
 
     @property
     def downsampling(self):
-        return self.data.get("downsampling", "none")
+        return self.downsample_settings.method
 
     @property
     def target_num_reads(self):
-        return self.data.get("target_num_reads", 0)
+        return self.downsample_settings.target_num_reads
 
     @property
     def genome_size(self):
-        return self.data.get("genome_size", 0)
+        return self.downsample_settings.genome_size
 
     @property
     def target_depth(self):
-        return self.data.get("target_depth", 150)
+        return self.downsample_settings.target_depth
 
     @property
     def targets(self):

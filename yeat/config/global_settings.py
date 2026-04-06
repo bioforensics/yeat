@@ -11,16 +11,48 @@ from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
 
-class GlobalSettings(BaseModel):
+class FilterSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    skip_filter: Optional[bool] = True
+    enabled: Optional[bool] = True
     min_length: Optional[int] = 100
     quality: Optional[int] = 15
-    downsampling: Optional[str] = "none"
+
+    @classmethod
+    def parse_data(cls, data):
+        return cls(**data)
+
+    def update(self, data):
+        invalid_keys = set(data.keys()) - set(self.model_fields.keys())
+        if invalid_keys:
+            raise ValueError(f"Invalid field(s): {', '.join(invalid_keys)}")
+        return self.model_copy(update=data)
+
+
+class DownsampleSettings(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    method: Optional[str] = "none"
     target_num_reads: Optional[int] = 0
     genome_size: Optional[int] = 0
     target_depth: Optional[int] = 150
 
     @classmethod
     def parse_data(cls, data):
+        return cls(**data)
+
+    def update(self, data):
+        invalid_keys = set(data.keys()) - set(self.model_fields.keys())
+        if invalid_keys:
+            raise ValueError(f"Invalid field(s): {', '.join(invalid_keys)}")
+        return self.model_copy(update=data)
+
+
+class GlobalSettings(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    filter: FilterSettings
+    downsample: DownsampleSettings
+
+    @classmethod
+    def parse_data(cls, data):
+        data["filter"] = FilterSettings.parse_data(data.get("filter", {}))
+        data["downsample"] = DownsampleSettings.parse_data(data.get("downsample", {}))
         return cls(**data)

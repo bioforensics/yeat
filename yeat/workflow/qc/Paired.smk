@@ -121,11 +121,8 @@ rule downsample:
             Path(output.r1).symlink_to(params.symlink_r1)
             Path(output.r2).symlink_to(params.symlink_r2)
         elif params.downsampling == "random":
-            if params.target_num_reads:
-                num_reads = params.target_num_reads
-            else:
-                downsample = Downsample.parse_data(params.target_num_reads, params.genome_size, params.target_depth, params.mash_report, params.seqkit_report)
-                num_reads = downsample.get_num_reads()
+            downsample = Downsample.parse_data(params.target_num_reads, params.genome_size, params.target_depth, params.mash_report, params.seqkit_report)
+            num_reads = downsample.get_num_reads()
             shell("seqtk sample -s {params.seed} {input.r1} {num_reads} | gzip > {params.outdir}/R1.fastq.gz")
             shell("seqtk sample -s {params.seed} {input.r2} {num_reads} | gzip > {params.outdir}/R2.fastq.gz")
         elif params.downsampling == "bbnorm":

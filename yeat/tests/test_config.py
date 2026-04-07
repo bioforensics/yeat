@@ -21,6 +21,19 @@ def test_has_one_sample():
 
 
 def test_has_one_assembler():
+
+    # working on here!!!!
+
+    samples = {"sample1": Sample(label="sample1", data={"ont_simplex": ["READ.fastq.gz"]})}
+    assembler = {"spades"}
+    message = "Config has no assemblers"
+    with pytest.raises(ValidationError, match=message):
+        AssemblyConfiguration(
+            global_settings=GlobalSettings, samples=samples, assemblers=assembler
+        )
+
+
+def test_config_has_no_assembler():
     samples = {"sample1": Sample(label="sample1", data={"ont_simplex": ["READ.fastq.gz"]})}
     message = "Config has no assemblers"
     with pytest.raises(ValidationError, match=message):

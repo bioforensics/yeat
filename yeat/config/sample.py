@@ -49,7 +49,7 @@ class Sample(BaseModel):
     @field_validator("data")
     @classmethod
     def has_invalid_keys(cls, data):
-        extra_keys = data.keys() - READ_TYPES - GlobalSettings.model_fields.keys()
+        extra_keys = set(data.keys()) - READ_TYPES - set(GlobalSettings.model_fields.keys())
         if extra_keys:
             raise SampleConfigurationError(f"Sample has unexpected key(s): {extra_keys}")
         return data

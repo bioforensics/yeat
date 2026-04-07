@@ -100,12 +100,7 @@ def downsample_configuration(parser):
         "--downsample-method",
         choices=["none", "random", "bbnorm"],
         default="none",
-        help=(
-            "Downsampling method: "
-            '"none" (disable), '
-            '"random" (subsample reads), '
-            '"bbnorm" (digital normalization; ignores other downsampling params)'
-        ),
+        help='Downsampling method: "none" (disable), "random" (subsample reads), "bbnorm" (digital normalization; ignores other downsampling params)',
     )
     downsample.add_argument(
         "-d",
@@ -166,11 +161,11 @@ def algorithm_configuration(parser):
 
 
 def create_config(args):
-    data = get_config_data(args)
     workdir = Path(args.workdir)
     workdir.mkdir(parents=True, exist_ok=True)
     config = workdir / "config.toml"
     with open(config, "w") as f:
+        data = get_config_data(args)
         toml.dump(data, f)
     setattr(args, "config", str(config.resolve()))
 

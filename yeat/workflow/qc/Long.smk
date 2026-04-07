@@ -51,13 +51,13 @@ rule chopper:
     threads: 128
     params:
         symlink_read="../read.fastq.gz",
-        skip_filter=lambda wc: config["asm_cfg"].get_sample_skip_filter(wc.sample),
+        filter_enabled=lambda wc: config["asm_cfg"].get_sample_filter_enabled(wc.sample),
         quality=lambda wc: config["asm_cfg"].get_sample_quality(wc.sample),
         min_length=lambda wc: config["asm_cfg"].get_sample_min_length(wc.sample),
     log:
         "analysis/{sample}/qc/{platform}/chopper/chopper.log",
     run:
-        if params.skip_filter:
+        if not params.filter_enabled:
             Path(output.read).symlink_to(params.symlink_read)
             return
         shell("chopper -t {threads} -q {params.quality} -l {params.min_length} -i {input.read} 2> {log} | gzip > {output.read}")
@@ -106,14 +106,14 @@ rule downsample:
         seqkit_report="analysis/{sample}/qc/{platform}/seqkit/report.tsv",
         outdir="analysis/{sample}/qc/{platform}/downsample",
         seed=config["seed"],
-        downsampling=lambda wc: config["asm_cfg"].get_sample_downsampling(wc.sample),
+        downsample_method=lambda wc: config["asm_cfg"].get_sample_downsample_method(wc.sample),
         target_num_reads=lambda wc: config["asm_cfg"].get_sample_target_num_reads(wc.sample),
         genome_size=lambda wc: config["asm_cfg"].get_sample_genome_size(wc.sample),
         target_depth=lambda wc: config["asm_cfg"].get_sample_target_depth(wc.sample),
     log:
         "analysis/{sample}/qc/{platform}/downsample/bbnorm.log",
     run:
-        if params.downsampling == "none":
+        if params.downsample_method == "none":
             Path(output.read).symlink_to(params.symlink_read)
             return
         downsample = Downsample.parse_data(params.target_num_reads, params.genome_size, params.target_depth, params.mash_report, params.seqkit_report)

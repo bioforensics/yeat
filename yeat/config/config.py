@@ -80,8 +80,8 @@ class AssemblyConfiguration(BaseModel):
     def get_sample_input_files(self, sample, read_type):
         return self.samples[sample].data[read_type]
 
-    def get_sample_skip_filter(self, sample):
-        return self.samples[sample].skip_filter
+    def get_sample_filter_enabled(self, sample):
+        return self.samples[sample].enabled
 
     def get_sample_min_length(self, sample):
         return self.samples[sample].min_length
@@ -89,8 +89,8 @@ class AssemblyConfiguration(BaseModel):
     def get_sample_quality(self, sample):
         return self.samples[sample].quality
 
-    def get_sample_downsampling(self, sample):
-        return self.samples[sample].downsampling
+    def get_sample_downsample_method(self, sample):
+        return self.samples[sample].method
 
     def get_sample_target_num_reads(self, sample):
         return self.samples[sample].target_num_reads

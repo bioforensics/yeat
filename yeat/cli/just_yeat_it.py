@@ -61,13 +61,22 @@ def options(parser):
 
 
 def filter_configuration(parser):
-    illumina = parser.add_argument_group("filter configuration")
-    illumina.add_argument(
-        "--skip-filter",
+    filter = parser.add_argument_group("filter configuration")
+    group = filter.add_mutually_exclusive_group()
+    group.add_argument(
+        "--filter",
+        dest="filter",
         action="store_true",
-        help="skip read filtering (ignores -l, -q; default: filtering enabled via fastp)",
+        help="enable read filtering (default: enabled)",
     )
-    illumina.add_argument(
+    group.add_argument(
+        "--no-filter",
+        dest="filter",
+        action="store_false",
+        help="disable read filtering (ignores -l, -q)",
+    )
+    parser.set_defaults(filter_enabled=True)
+    filter.add_argument(
         "-l",
         "--length-required",
         default=100,
@@ -75,7 +84,7 @@ def filter_configuration(parser):
         metavar="L",
         type=int,
     )
-    illumina.add_argument(
+    filter.add_argument(
         "-q",
         "--quality",
         default=15,
@@ -86,18 +95,19 @@ def filter_configuration(parser):
 
 
 def downsample_configuration(parser):
-    illumina = parser.add_argument_group("downsample configuration")
-    illumina.add_argument(
-        "--downsampling",
-        default="none",
+    downsample = parser.add_argument_group("downsample configuration")
+    downsample.add_argument(
+        "--downsample-method",
         choices=["none", "random", "bbnorm"],
+        default="none",
         help=(
-            'downsampling mode: "none" (disable), "random" (subsample reads), "bbnorm" (digital normalization; ignores -d, -g, -c) (default: none)'
+            "Downsampling method: "
+            '"none" (disable), '
+            '"random" (subsample reads), '
+            '"bbnorm" (digital normalization; ignores other downsampling params)'
         ),
-        metavar="STR",
-        type=str,
     )
-    illumina.add_argument(
+    downsample.add_argument(
         "-d",
         "--target-num-reads",
         default=0,
@@ -105,7 +115,7 @@ def downsample_configuration(parser):
         metavar="D",
         type=int,
     )
-    illumina.add_argument(
+    downsample.add_argument(
         "-g",
         "--genome-size",
         default=0,
@@ -113,7 +123,7 @@ def downsample_configuration(parser):
         metavar="G",
         type=int,
     )
-    illumina.add_argument(
+    downsample.add_argument(
         "-c",
         "--target-depth",
         default=150,
@@ -170,13 +180,17 @@ def get_config_data(args):
         "samples": {
             args.sample_label: {
                 "illumina": args.read,
-                "skip_filter": args.skip_filter,
-                "min_length": args.length_required,
-                "quality": args.quality,
-                "downsampling": args.downsampling,
-                "target_num_reads": args.target_num_reads,
-                "genome_size": args.genome_size,
-                "target_depth": args.target_depth,
+                "filter": {
+                    "enabled": args.filter_enabled,
+                    "min_length": args.length_required,
+                    "quality": args.quality,
+                },
+                "downsample": {
+                    "method": args.downsample_method,
+                    "target_num_reads": args.target_num_reads,
+                    "genome_size": args.genome_size,
+                    "target_depth": args.target_depth,
+                },
             },
         },
         "assemblers": {

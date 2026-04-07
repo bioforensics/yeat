@@ -105,7 +105,7 @@ class Sample(BaseModel):
         return None
 
     @property
-    def skip_filter(self):
+    def enabled(self):
         return self.filter_settings.enabled
 
     @property
@@ -117,7 +117,7 @@ class Sample(BaseModel):
         return self.filter_settings.quality
 
     @property
-    def downsampling(self):
+    def method(self):
         return self.downsample_settings.method
 
     @property

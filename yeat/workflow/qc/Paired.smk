@@ -55,11 +55,11 @@ rule fastp:
         html_report="analysis/{sample}/qc/illumina/fastp/fastp.html",
         json_report="analysis/{sample}/qc/illumina/fastp/fastp.json",
         txt_report="analysis/{sample}/qc/illumina/fastp/report.txt",
-        skip_filter=lambda wc: config["asm_cfg"].get_sample_skip_filter(wc.sample),
+        filter_enabled=lambda wc: config["asm_cfg"].get_sample_filter_enabled(wc.sample),
         min_length=lambda wc: config["asm_cfg"].get_sample_min_length(wc.sample),
         quality=lambda wc: config["asm_cfg"].get_sample_quality(wc.sample),
     run:
-        if params.skip_filter:
+        if not params.filter_enabled:
             Path(output.r1).symlink_to(params.symlink_r1)
             Path(output.r2).symlink_to(params.symlink_r2)
             return
@@ -110,20 +110,20 @@ rule downsample:
         seqkit_report="analysis/{sample}/qc/illumina/seqkit/report.tsv",
         outdir="analysis/{sample}/qc/illumina/downsample",
         seed=config["seed"],
-        downsampling=lambda wc: config["asm_cfg"].get_sample_downsampling(wc.sample),
+        downsample_method=lambda wc: config["asm_cfg"].get_sample_downsample_method(wc.sample),
         target_num_reads=lambda wc: config["asm_cfg"].get_sample_target_num_reads(wc.sample),
         genome_size=lambda wc: config["asm_cfg"].get_sample_genome_size(wc.sample),
         target_depth=lambda wc: config["asm_cfg"].get_sample_target_depth(wc.sample),
     log:
         "analysis/{sample}/qc/illumina/downsample/bbnorm.log",
     run:
-        if params.downsampling == "none":
+        if params.downsample_method == "none":
             Path(output.r1).symlink_to(params.symlink_r1)
             Path(output.r2).symlink_to(params.symlink_r2)
-        elif params.downsampling == "random":
+        elif params.downsample_method == "random":
             downsample = Downsample.parse_data(params.target_num_reads, params.genome_size, params.target_depth, params.mash_report, params.seqkit_report)
             num_reads = downsample.get_num_reads()
             shell("seqtk sample -s {params.seed} {input.r1} {num_reads} | gzip > {params.outdir}/R1.fastq.gz")
             shell("seqtk sample -s {params.seed} {input.r2} {num_reads} | gzip > {params.outdir}/R2.fastq.gz")
-        elif params.downsampling == "bbnorm":
+        elif params.downsample_method == "bbnorm":
             shell("bbnorm.sh threads={threads} in={input.r1} in2={input.r2} out={params.outdir}/R1.fastq.gz out2={params.outdir}/R2.fastq.gz > {log} 2>&1")

@@ -10,21 +10,20 @@
 from .global_settings import GlobalSettings, FilterSettings, DownsampleSettings
 from copy import deepcopy
 from pathlib import Path
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, model_validator
 from typing import Dict
 
 
 ONT_PLATFORMS = {"ont_simplex", "ont_duplex", "ont_ultralong"}
 READ_TYPES = ONT_PLATFORMS | {"illumina", "pacbio_hifi"}
 BEST_LR_ORDER = ("pacbio_hifi", "ont_duplex", "ont_simplex", "ont_ultralong")
-OPTIONAL_KEYS = {"filter", "downsample"}
 
 
 class Sample(BaseModel):
     label: str
     data: Dict[str, list[Path]]
-    filter_settings: FilterSettings
-    downsample_settings: DownsampleSettings
+    filter_settings: FilterSettings = FilterSettings()
+    downsample_settings: DownsampleSettings = DownsampleSettings()
 
     @field_validator("data")
     @classmethod
@@ -49,15 +48,8 @@ class Sample(BaseModel):
 
     @field_validator("data")
     @classmethod
-    def has_valid_downsample_application(cls, data):
-        if "illumina" not in data and data["method"] == "bbnorm":
-            raise SampleConfigurationError(f"BBNorm can only be applied to Illumina reads")
-        return data
-
-    @field_validator("data")
-    @classmethod
     def has_invalid_keys(cls, data):
-        extra_keys = data - GlobalSettings.model_fields.keys() - READ_TYPES
+        extra_keys = data.keys() - READ_TYPES - GlobalSettings.model_fields.keys()
         if extra_keys:
             raise SampleConfigurationError(f"Sample has unexpected key(s): {extra_keys}")
         return data
@@ -75,11 +67,11 @@ class Sample(BaseModel):
             downsample_settings=downsample_copy,
         )
 
-    @staticmethod
-    def _add_global_settings(data, global_settings):
-        for key, value in global_settings.model_dump().items():
-            if key not in data:
-                data[key] = value
+    @model_validator(mode="after")
+    def has_valid_downsample_application(self):
+        if "illumina" not in self.data and self.downsample_settings.method == "bbnorm":
+            raise SampleConfigurationError("BBNorm can only be applied to Illumina reads")
+        return self
 
     @property
     def has_illumina(self):

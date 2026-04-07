@@ -17,5 +17,4 @@ def test_display_config_template(capsys):
     with pytest.raises(SystemExit):
         action(None, None, None, None)
     out, err = capsys.readouterr()
-    data = toml.loads(out)
-    assert data == InitAction.config_template
+    assert toml.loads(out) == toml.loads(InitAction.config_template)

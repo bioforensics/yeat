@@ -7,6 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+from glob import glob
 from shutil import copy
 from pydantic import ValidationError
 import pytest
@@ -14,15 +15,14 @@ from yeat.config.sample import SampleConfigurationError, Sample
 from yeat.tests import data_file
 
 
-@pytest.mark.parametrize("data", [{}, {"target_num_reads": -1}])
-def test_has_one_read_type(data):
+def test_has_one_read_type():
     message = "Sample must have at least one read type"
     with pytest.raises(ValidationError, match=message):
-        Sample(label="sample1", data=data)
+        Sample(label="sample1", data={})
 
 
-def test_has_valid_keys():
-    data = {"illumina": [data_file("short_reads_1.fastq.gz")], "INVALID": 0}
+def test_has_invalid_keys():
+    data = {"illumina": [data_file("short_reads_1.fastq.gz")], "INVALID": []}
     message = r"Sample has unexpected key\(s\): \{'INVALID'\}"
     with pytest.raises(ValidationError, match=message):
         Sample(label="sample1", data=data)
@@ -36,17 +36,15 @@ def test_has_valid_keys():
     ],
 )
 def test_check_read_paths(read_path):
-    label = "sample1"
     data = {"illumina": read_path}
-    Sample._check_read_paths(label, data)
+    Sample.has_read_paths(data)
 
 
 def test_check_read_paths_unable_to_find():
-    label = "sample1"
     data = {"illumina": []}
-    message = f"Unable to find FASTQ files for sample '{label}' at path:"
+    message = "Unable to find FASTQ files for sample"
     with pytest.raises(SampleConfigurationError, match=message):
-        Sample._check_read_paths(label, data)
+        Sample.has_read_paths(data)
 
 
 def test_check_read_paths_found_too_many(tmp_path):
@@ -56,11 +54,10 @@ def test_check_read_paths_found_too_many(tmp_path):
     copy(read1, wd / "short_reads_1.fastq.gz")
     copy(read2, wd / "short_reads_2.fastq.gz")
     (wd / "short_reads_3.fastq.gz").touch()
-    label = "sample1"
-    data = {"illumina": str(wd / "short_reads_*.fastq.gz")}
-    message = f"Found too many FASTQ files for sample '{label}' at path:"
+    data = {"illumina": glob(str(wd / "short_reads_*.fastq.gz"))}
+    message = "Sample has too many FASTQ files. Expected at most 2, found 3."
     with pytest.raises(SampleConfigurationError, match=message):
-        Sample._check_read_paths(label, data)
+        Sample.has_read_paths(data)
 
 
 @pytest.mark.parametrize(

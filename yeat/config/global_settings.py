@@ -8,14 +8,13 @@
 # -------------------------------------------------------------------------------------------------
 
 from pydantic import BaseModel, ConfigDict
-from typing import Optional
 
 
 class FilterSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    enabled: Optional[bool] = True
-    min_length: Optional[int] = 100
-    quality: Optional[int] = 15
+    enabled: bool = True
+    min_length: int = 100
+    quality: int = 15
 
     @classmethod
     def parse_data(cls, data):
@@ -30,10 +29,10 @@ class FilterSettings(BaseModel):
 
 class DownsampleSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    method: Optional[str] = "none"
-    target_num_reads: Optional[int] = 0
-    genome_size: Optional[int] = 0
-    target_depth: Optional[int] = 150
+    method: str = "none"
+    target_num_reads: int = 0
+    genome_size: int = 0
+    target_depth: int = 150
 
     @classmethod
     def parse_data(cls, data):

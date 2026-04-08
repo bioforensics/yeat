@@ -7,6 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+from typing import Literal
 from pydantic import BaseModel, ConfigDict
 
 
@@ -21,15 +22,19 @@ class FilterSettings(BaseModel):
         return cls(**data)
 
     def update(self, data):
-        invalid_keys = set(data.keys()) - set(self.model_fields.keys())
-        if invalid_keys:
-            raise ValueError(f"Invalid field(s): {', '.join(invalid_keys)}")
+        extra_keys = set(data.keys()) - set(type(self).model_fields.keys())
+        if extra_keys:
+            raise FilterSettingsError(f"Extra field(s): {', '.join(extra_keys)}")
         return self.model_copy(update=data)
+
+
+class FilterSettingsError(ValueError):
+    pass
 
 
 class DownsampleSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    method: str = "none"
+    method: Literal["none", "random", "bbnorm"] = "none"
     target_num_reads: int = 0
     genome_size: int = 0
     target_depth: int = 150
@@ -39,10 +44,14 @@ class DownsampleSettings(BaseModel):
         return cls(**data)
 
     def update(self, data):
-        invalid_keys = set(data.keys()) - set(self.model_fields.keys())
-        if invalid_keys:
-            raise ValueError(f"Invalid field(s): {', '.join(invalid_keys)}")
+        extra_keys = set(data.keys()) - set(type(self).model_fields.keys())
+        if extra_keys:
+            raise DownsampleSettingsError(f"Extra field(s): {', '.join(extra_keys)}")
         return self.model_copy(update=data)
+
+
+class DownsampleSettingsError(ValueError):
+    pass
 
 
 class GlobalSettings(BaseModel):

@@ -7,7 +7,6 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from argparse import ArgumentError
 from pathlib import Path
 import pytest
 from yeat.cli.just_yeat_it import get_parser, main

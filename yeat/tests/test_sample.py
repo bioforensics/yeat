@@ -7,25 +7,25 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+from . import SAMPLES
+from collections import Counter
 from glob import glob
 from shutil import copy
-from pydantic import ValidationError
 import pytest
+from yeat.config.global_settings import GlobalSettings
 from yeat.config.sample import SampleConfigurationError, Sample
 from yeat.tests import data_file
 
 
 def test_has_one_read_type():
+    data = {"illumina": ["READ1.fastq.gz", "READ2.fastq.gz"]}
+    Sample.has_one_read_type(data)
+
+
+def test_has_no_read_type():
     message = "Sample must have at least one read type"
-    with pytest.raises(ValidationError, match=message):
-        Sample(label="sample1", data={})
-
-
-def test_has_invalid_keys():
-    data = {"illumina": [data_file("short_reads_1.fastq.gz")], "INVALID": []}
-    message = r"Sample has unexpected key\(s\): \{'INVALID'\}"
-    with pytest.raises(ValidationError, match=message):
-        Sample(label="sample1", data=data)
+    with pytest.raises(SampleConfigurationError, match=message):
+        Sample.has_one_read_type({})
 
 
 @pytest.mark.parametrize(
@@ -35,19 +35,24 @@ def test_has_invalid_keys():
         [data_file("short_reads_1.fastq.gz")],
     ],
 )
-def test_check_read_paths(read_path):
+def test_has_read_paths(read_path):
     data = {"illumina": read_path}
     Sample.has_read_paths(data)
 
 
-def test_check_read_paths_unable_to_find():
+def test_has_read_paths_add_global_setting_keys():
+    data = {"illumina": ["READ1.fastq.gz", "READ2.fastq.gz"], "filter": {"enabled": False}}
+    Sample.has_read_paths(data)
+
+
+def test_has_read_paths_unable_to_find():
     data = {"illumina": []}
     message = "Unable to find FASTQ files for sample"
     with pytest.raises(SampleConfigurationError, match=message):
         Sample.has_read_paths(data)
 
 
-def test_check_read_paths_found_too_many(tmp_path):
+def test_has_read_paths_found_too_many(tmp_path):
     wd = tmp_path
     read1 = data_file("short_reads_1.fastq.gz")
     read2 = data_file("short_reads_2.fastq.gz")
@@ -58,6 +63,48 @@ def test_check_read_paths_found_too_many(tmp_path):
     message = "Sample has too many FASTQ files. Expected at most 2, found 3."
     with pytest.raises(SampleConfigurationError, match=message):
         Sample.has_read_paths(data)
+
+
+def test_has_invalid_keys():
+    message = r"Sample has unexpected key\(s\): \{'INVALID'\}"
+    with pytest.raises(SampleConfigurationError, match=message):
+        Sample.has_invalid_keys({"INVALID": "INVALID"})
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        {"illumina": ["READ1.fastq.gz", "READ2.fastq.gz"]},
+        {"illumina": ["READ.fastq.gz"]},
+        {"pacbio_hifi": ["READ.fastq.gz"]},
+        {"ont_duplex": ["READ.fastq.gz"]},
+        {"ont_simplex": ["READ.fastq.gz"]},
+        {"ont_ultralong": ["READ.fastq.gz"]},
+    ],
+)
+def test_has_valid_keys(data):
+    Sample.has_invalid_keys(data)
+
+
+def test_parse_data():
+    data = {"illumina": ["READ1.fastq.gz", "READ2.fastq.gz"]}
+    global_settings = GlobalSettings(filter={}, downsample={})
+    Sample.parse_data("sample1", data, global_settings)
+
+
+def test_has_valid_downsample_application():
+    data = {"illumina": ["READ1.fastq.gz", "READ2.fastq.gz"]}
+    global_settings = GlobalSettings(filter={}, downsample={"method": "bbnorm"})
+    sample = Sample.parse_data("sample1", data, global_settings)
+    sample.has_valid_downsample_application()
+
+
+def test_has_invalid_downsample_application():
+    data = {"pacbio_hifi": ["READ.fastq.gz"]}
+    global_settings = GlobalSettings(filter={}, downsample={"method": "bbnorm"})
+    message = "BBNorm can only be applied to Illumina reads"
+    with pytest.raises(ValueError, match=message):
+        Sample.parse_data("sample1", data, global_settings)
 
 
 @pytest.mark.parametrize(
@@ -81,3 +128,50 @@ def test_check_read_paths_found_too_many(tmp_path):
 def test_best_long_read_type(data, read_type):
     sample = Sample(label="sample1", data=data)
     assert sample.best_long_read_type == read_type
+
+
+def test_enabled():
+    sample = SAMPLES["sample1"]
+    assert sample.enabled == True
+
+
+def test_min_length():
+    sample = SAMPLES["sample1"]
+    assert sample.min_length == 100
+
+
+def test_quality():
+    sample = SAMPLES["sample1"]
+    assert sample.quality == 15
+
+
+def test_method():
+    sample = SAMPLES["sample1"]
+    assert sample.method == "none"
+
+
+def test_target_num_reads():
+    sample = SAMPLES["sample1"]
+    assert sample.target_num_reads == 0
+
+
+def test_genome_size():
+    sample = SAMPLES["sample1"]
+    assert sample.genome_size == 0
+
+
+def test_target_depth():
+    sample = SAMPLES["sample1"]
+    assert sample.target_depth == 150
+
+
+def test_targets():
+    data = {"illumina": ["READ1.fastq.gz", "READ2.fastq.gz"], "ont_simplex": ["READ.fastq.gz"]}
+    sample = Sample(label="sample1", data=data)
+    assert Counter(sample.targets) == Counter(
+        [
+            "analysis/sample1/qc/illumina/fastqc/R1_fastqc.html",
+            "analysis/sample1/qc/illumina/fastqc/R2_fastqc.html",
+            "analysis/sample1/qc/ont_simplex/fastqc/read_fastqc.html",
+        ]
+    )

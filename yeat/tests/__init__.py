@@ -13,6 +13,7 @@ from pathlib import Path
 from yeat.cli import main, cli
 from yeat.config.assemblers import ALGORITHM_CONFIGS
 from yeat.config.config import AssemblyConfiguration
+from yeat.config.sample import Sample
 from yeat.workflow import get_config_data
 
 
@@ -28,6 +29,12 @@ FINAL_FILES = {
     "metamdbg": "contigs.fasta",
     "verkko": "assembly.fasta",
     "myloasm": "assembly_primary.fa",
+}
+SAMPLES = {
+    "sample1": Sample(label="sample1", data={"illumina": ["READ1.fastq.gz", "READ2.fastq.gz"]}),
+    "sample2": Sample(label="sample2", data={"illumina": ["READ1.fastq.gz", "READ2.fastq.gz"]}),
+    "sample3": Sample(label="sample2", data={"ont_simplex": ["READ.fastq.gz"]}),
+    "sample4": Sample(label="sample3", data={"pacbio_hifi": ["READ.fastq.gz"]}),
 }
 
 

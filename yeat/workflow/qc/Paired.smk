@@ -94,7 +94,7 @@ rule seqkit:
         r1=rules.fastp.output.r1,
         r2=rules.fastp.output.r2,
     output:
-        seqkit_report="analysis/{sample}/qc/illumina/seqkit/report.tsv"
+        seqkit_report="analysis/{sample}/qc/illumina/seqkit/report.tsv",
     shell:
         """
         seqkit stats {input} > {output.seqkit_report}

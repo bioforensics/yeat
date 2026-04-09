@@ -84,7 +84,7 @@ rule seqkit:
     input:
         read=rules.fastp.output.read,
     output:
-        seqkit_report="analysis/{sample}/qc/illumina/seqkit/report.tsv"
+        seqkit_report="analysis/{sample}/qc/illumina/seqkit/report.tsv",
     shell:
         """
         seqkit stats {input} > {output.seqkit_report}

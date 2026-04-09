@@ -110,7 +110,7 @@ def grid_configuration(parser):
 
 
 class InitAction(Action):
-    config_template = """[global_settings.filter]
+    config_template = '''[global_settings.filter]
 enabled = true                              # if false, proceed to downsample
 min_length = 100                            # adjust for long reads   
 quality = 15                                # adjust for long reads  
@@ -122,7 +122,10 @@ genome_size = 0                             # adjust when downsample="random" an
 target_depth = 150                          # adjust when downsample="random" and target_num_reads=0
 
 [samples.sample1]
-illumina = "data/short_reads_?.fastq.gz"    # glob path"""
+illumina = "data/short_reads_?.fastq.gz"    # glob path
+
+[assemblers.spades_default]
+algorithm = "spades"'''
 
     def __call__(self, parser, namespace, values, option_string=None):
         print(self.config_template)

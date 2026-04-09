@@ -1,3 +1,6 @@
+[global_settings.filter]
+enabled = false
+
 [samples.ZymoBIOMICS_Gut_Microbiome_Standard]
 ont_simplex = "yeat/tests/data/SRR23926885.fastq.gz"
 

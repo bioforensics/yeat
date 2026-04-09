@@ -64,38 +64,44 @@ rule estimate_genome_size:
         read=rules.fastp.output.read,
     output:
         mash_sentinel="analysis/{sample}/qc/illumina/mash/sentinel.done",
-        seqkit_sentinel="analysis/{sample}/qc/illumina/seqkit/sentinel.done",
     params:
         min_copies=2,
         sketch="analysis/{sample}/qc/illumina/mash/reference.msh",
         mash_report="analysis/{sample}/qc/illumina/mash/report.tsv",
-        seqkit_report="analysis/{sample}/qc/illumina/seqkit/report.tsv",
         genome_size=lambda wc: config["asm_cfg"].get_sample_genome_size(wc.sample),
     log:
         "analysis/{sample}/qc/illumina/mash/mash.log",
     run:
         if params.genome_size:
-            shell("touch {output.mash_sentinel} {output.seqkit_sentinel}")
+            shell("touch {output.mash_sentinel}")
             return
         shell("mash sketch -m {params.min_copies} -r {input.read} -o {params.sketch} > {log} 2>&1")
         shell("mash info -t {params.sketch} > {params.mash_report}")
         shell("touch {output.mash_sentinel}")
-        shell("seqkit stats {input} > {params.seqkit_report}")
-        shell("touch {output.seqkit_sentinel}")
+
+
+rule seqkit:
+    input:
+        read=rules.fastp.output.read,
+    output:
+        seqkit_report="analysis/{sample}/qc/illumina/seqkit/report.tsv"
+    shell:
+        """
+        seqkit stats {input} > {output.seqkit_report}
+        """
 
 
 rule downsample:
     input:
         read=rules.fastp.output.read,
         mash_sentinel=rules.estimate_genome_size.output.mash_sentinel,
-        seqkit_sentinel=rules.estimate_genome_size.output.seqkit_sentinel,
+        seqkit_report=rules.seqkit.output.seqkit_report,
     output:
         read="analysis/{sample}/qc/illumina/downsample/read.fastq.gz",
     threads: 128
     params:
         symlink_read="../read.fastq.gz",
         mash_report="analysis/{sample}/qc/illumina/mash/report.tsv",
-        seqkit_report="analysis/{sample}/qc/illumina/seqkit/report.tsv",
         outdir="analysis/{sample}/qc/illumina/downsample",
         seed=config["seed"],
         downsample_method=lambda wc: config["asm_cfg"].get_sample_downsample_method(wc.sample),
@@ -108,7 +114,7 @@ rule downsample:
         if params.downsample_method == "none":
             Path(output.read).symlink_to(params.symlink_read)
         elif params.downsample_method == "random":
-            downsample = Downsample.parse_data(params.target_num_reads, params.genome_size, params.target_depth, params.mash_report, params.seqkit_report)
+            downsample = Downsample.parse_data(params.target_num_reads, params.genome_size, params.target_depth, params.mash_report, input.seqkit_report)
             num_reads = downsample.get_num_reads(paired=False)
             shell("seqtk sample -s {params.seed} {input.read} {num_reads} | gzip > {params.outdir}/read.fastq.gz")
         elif params.downsample_method == "bbnorm":

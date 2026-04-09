@@ -68,33 +68,42 @@ rule estimate_genome_size:
         read=rules.chopper.output.read,
     output:
         mash_sentinel="analysis/{sample}/qc/{platform}/mash/sentinel.done",
-        seqkit_sentinel="analysis/{sample}/qc/{platform}/seqkit/sentinel.done",
     wildcard_constraints:
         platform="ont_simplex|ont_duplex|ont_ultralong|pacbio_hifi",
     params:
         min_copies=2,
         sketch="analysis/{sample}/qc/{platform}/mash/reference.msh",
         mash_report="analysis/{sample}/qc/{platform}/mash/report.tsv",
-        seqkit_report="analysis/{sample}/qc/{platform}/seqkit/report.tsv",
         genome_size=lambda wc: config["asm_cfg"].get_sample_genome_size(wc.sample),
     log:
         "analysis/{sample}/qc/{platform}/mash/mash.log",
     run:
         if params.genome_size:
-            shell("touch {output.mash_sentinel} {output.seqkit_sentinel}")
+            shell("touch {output.mash_sentinel}")
             return
         shell("mash sketch -m {params.min_copies} -r {input.read} -o {params.sketch} > {log} 2>&1")
         shell("mash info -t {params.sketch} > {params.mash_report}")
         shell("touch {output.mash_sentinel}")
-        shell("seqkit stats {input} > {params.seqkit_report}")
-        shell("touch {output.seqkit_sentinel}")
+
+
+rule seqkit:
+    input:
+        read=rules.chopper.output.read,
+    output:
+        seqkit_report="analysis/{sample}/qc/{platform}/seqkit/report.tsv",
+    wildcard_constraints:
+        platform="ont_simplex|ont_duplex|ont_ultralong|pacbio_hifi",
+    shell:
+        """
+        seqkit stats {input} > {output.seqkit_report}
+        """
 
 
 rule downsample:
     input:
         read=rules.chopper.output.read,
         mash_sentinel=rules.estimate_genome_size.output.mash_sentinel,
-        seqkit_sentinel=rules.estimate_genome_size.output.seqkit_sentinel,
+        seqkit_report=rules.seqkit.output.seqkit_report,
     output:
         read="analysis/{sample}/qc/{platform}/downsample/read.fastq.gz",
     wildcard_constraints:
@@ -103,7 +112,6 @@ rule downsample:
     params:
         symlink_read="../chopper/read.fastq.gz",
         mash_report="analysis/{sample}/qc/{platform}/mash/report.tsv",
-        seqkit_report="analysis/{sample}/qc/{platform}/seqkit/report.tsv",
         outdir="analysis/{sample}/qc/{platform}/downsample",
         seed=config["seed"],
         downsample_method=lambda wc: config["asm_cfg"].get_sample_downsample_method(wc.sample),
@@ -116,6 +124,6 @@ rule downsample:
         if params.downsample_method == "none":
             Path(output.read).symlink_to(params.symlink_read)
             return
-        downsample = Downsample.parse_data(params.target_num_reads, params.genome_size, params.target_depth, params.mash_report, params.seqkit_report)
+        downsample = Downsample.parse_data(params.target_num_reads, params.genome_size, params.target_depth, params.mash_report, output.seqkit_report)
         num_reads = downsample.get_num_reads(paired=False)
         shell("seqtk sample -s {params.seed} {input.read} {num_reads} | gzip > {params.outdir}/read.fastq.gz")

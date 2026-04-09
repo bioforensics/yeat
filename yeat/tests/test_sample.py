@@ -130,38 +130,14 @@ def test_best_long_read_type(data, read_type):
     assert sample.best_long_read_type == read_type
 
 
-def test_enabled():
+def test_sample_properties():
     sample = SAMPLES["sample1"]
     assert sample.enabled == True
-
-
-def test_min_length():
-    sample = SAMPLES["sample1"]
     assert sample.min_length == 100
-
-
-def test_quality():
-    sample = SAMPLES["sample1"]
     assert sample.quality == 15
-
-
-def test_method():
-    sample = SAMPLES["sample1"]
     assert sample.method == "none"
-
-
-def test_target_num_reads():
-    sample = SAMPLES["sample1"]
     assert sample.target_num_reads == 0
-
-
-def test_genome_size():
-    sample = SAMPLES["sample1"]
     assert sample.genome_size == 0
-
-
-def test_target_depth():
-    sample = SAMPLES["sample1"]
     assert sample.target_depth == 150
 
 

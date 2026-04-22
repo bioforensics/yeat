@@ -55,15 +55,14 @@ rule fastp:
         html_report="analysis/{sample}/qc/illumina/fastp/fastp.html",
         json_report="analysis/{sample}/qc/illumina/fastp/fastp.json",
         txt_report="analysis/{sample}/qc/illumina/fastp/report.txt",
-        filter_enabled=lambda wc: config["asm_cfg"].get_sample_filter_enabled(wc.sample),
-        min_length=lambda wc: config["asm_cfg"].get_sample_min_length(wc.sample),
-        quality=lambda wc: config["asm_cfg"].get_sample_quality(wc.sample),
+        filter_enabled=lambda wc: config["asm_cfg"].get_sample_filter_enabled(wc.sample, "short"),
+        filter_args=lambda wc: config["asm_cfg"].get_sample_filter_args(wc.sample, "short"),
     run:
         if not params.filter_enabled:
             Path(output.r1).symlink_to(params.symlink_r1)
             Path(output.r2).symlink_to(params.symlink_r2)
             return
-        cmd = "fastp -i {input.r1} -I {input.r2} -o {output.r1} -O {output.r2} -l {params.min_length} -q {params.quality} --detect_adapter_for_pe --html {params.html_report} --json {params.json_report} 2> {params.txt_report}"
+        cmd = "fastp -i {input.r1} -I {input.r2} -o {output.r1} -O {output.r2} --html {params.html_report} --json {params.json_report} {params.filter_args} 2> {params.txt_report}"
         shell(cmd)
 
 
@@ -77,11 +76,11 @@ rule estimate_genome_size:
         min_copies=2,
         sketch="analysis/{sample}/qc/illumina/mash/reference.msh",
         mash_report="analysis/{sample}/qc/illumina/mash/report.tsv",
-        genome_size=lambda wc: config["asm_cfg"].get_sample_genome_size(wc.sample),
+        genome_size=lambda wc: config["asm_cfg"].get_sample_genome_size(wc.sample, "short"),
     log:
         "analysis/{sample}/qc/illumina/mash/mash.log",
     run:
-        if params.genome_size:
+        if isinstance(params.genome_size, int):
             shell("touch {output.mash_sentinel}")
             return
         shell("mash sketch -m {params.min_copies} -r {input.r1} {input.r2} -o {params.sketch} > {log} 2>&1")
@@ -117,17 +116,18 @@ rule downsample:
         mash_report="analysis/{sample}/qc/illumina/mash/report.tsv",
         outdir="analysis/{sample}/qc/illumina/downsample",
         seed=config["seed"],
-        downsample_method=lambda wc: config["asm_cfg"].get_sample_downsample_method(wc.sample),
-        target_num_reads=lambda wc: config["asm_cfg"].get_sample_target_num_reads(wc.sample),
-        genome_size=lambda wc: config["asm_cfg"].get_sample_genome_size(wc.sample),
-        target_depth=lambda wc: config["asm_cfg"].get_sample_target_depth(wc.sample),
+        downsample_enabled=lambda wc: config["asm_cfg"].get_sample_downsample_enabled(wc.sample, "short"),
+        downsample_method=lambda wc: config["asm_cfg"].get_sample_downsample_method(wc.sample, "short"),
+        target_num_reads=lambda wc: config["asm_cfg"].get_sample_target_num_reads(wc.sample, "short"),
+        genome_size=lambda wc: config["asm_cfg"].get_sample_genome_size(wc.sample, "short"),
+        target_depth=lambda wc: config["asm_cfg"].get_sample_target_depth(wc.sample, "short"),
     log:
         "analysis/{sample}/qc/illumina/downsample/bbnorm.log",
     run:
-        if params.downsample_method == "none":
+        if not params.downsample_enabled:
             Path(output.r1).symlink_to(params.symlink_r1)
             Path(output.r2).symlink_to(params.symlink_r2)
-        elif params.downsample_method == "random":
+        if params.downsample_method == "random":
             downsample = Downsample.parse_data(params.target_num_reads, params.genome_size, params.target_depth, params.mash_report, input.seqkit_report)
             num_reads = downsample.get_num_reads()
             shell("seqtk sample -s {params.seed} {input.r1} {num_reads} | gzip > {params.outdir}/R1.fastq.gz")

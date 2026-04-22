@@ -7,8 +7,9 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from .global_settings import GlobalSettings, FilterSettings, DownsampleSettings
-from copy import deepcopy
+from .downsample_settings import DownsampleGroup
+from .filter_settings import FilterGroup
+from .global_settings import GlobalSettings
 from pathlib import Path
 from pydantic import BaseModel, field_validator, model_validator
 from typing import Dict
@@ -22,8 +23,8 @@ BEST_LR_ORDER = ("pacbio_hifi", "ont_duplex", "ont_simplex", "ont_ultralong")
 class Sample(BaseModel):
     label: str
     data: Dict[str, list[Path]]
-    filter_settings: FilterSettings = FilterSettings()
-    downsample_settings: DownsampleSettings = DownsampleSettings()
+    filter: FilterGroup
+    downsample: DownsampleGroup
 
     @field_validator("data")
     @classmethod
@@ -56,15 +57,16 @@ class Sample(BaseModel):
 
     @classmethod
     def parse_data(cls, label, data, global_settings):
-        filter_copy = deepcopy(global_settings.filter).update(data.get("filter", {}))
-        downsample_copy = deepcopy(global_settings.downsample).update(data.get("downsample", {}))
+        global_settings_copy = global_settings.model_copy()
+        global_settings_copy.update_filter_settings(data.get("filter", {}))
+        global_settings_copy.update_downsample_settings(data.get("downsample", {}))
         data.pop("filter", None)
         data.pop("downsample", None)
         return cls(
             label=label,
             data=data,
-            filter_settings=filter_copy,
-            downsample_settings=downsample_copy,
+            filter=global_settings_copy.filter,
+            downsample=global_settings_copy.downsample,
         )
 
     @model_validator(mode="after")
@@ -96,33 +98,33 @@ class Sample(BaseModel):
                 return read_type
         return None
 
-    @property
-    def enabled(self):
-        return self.filter_settings.enabled
+    def get_filter_settings(self, read_type):
+        return getattr(self.filter, f"{read_type}_filter_settings")
 
-    @property
-    def min_length(self):
-        return self.filter_settings.min_length
+    def get_downsample_settings(self, read_type):
+        return getattr(self.downsample, f"{read_type}_downsample_settings")
 
-    @property
-    def quality(self):
-        return self.filter_settings.quality
+    def filter_enabled(self, read_type):
+        return self.get_filter_settings(read_type).enabled
 
-    @property
-    def method(self):
-        return self.downsample_settings.method
+    def filter_args(self, read_type):
+        settings = self.get_filter_settings(read_type)
+        return settings.fastp_args if read_type == "short" else settings.chopper_args
 
-    @property
-    def target_num_reads(self):
-        return self.downsample_settings.target_num_reads
+    def downsample_enabled(self, read_type):
+        return self.get_downsample_settings(read_type).enabled
 
-    @property
-    def genome_size(self):
-        return self.downsample_settings.genome_size
+    def downsample_method(self, read_type):
+        return self.get_downsample_settings(read_type).method
 
-    @property
-    def target_depth(self):
-        return self.downsample_settings.target_depth
+    def target_depth(self, read_type):
+        return self.get_downsample_settings(read_type).target_depth
+
+    def target_num_reads(self, read_type):
+        return self.get_downsample_settings(read_type).target_num_reads
+
+    def genome_size(self, read_type):
+        return self.get_downsample_settings(read_type).genome_size
 
     @property
     def targets(self):

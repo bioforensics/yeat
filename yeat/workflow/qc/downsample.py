@@ -14,19 +14,21 @@ from pathlib import Path
 
 @dataclass
 class Downsample:
+    target_depth: int
     target_num_reads: int
     genome_size: int
-    target_depth: int
     average_read_length: int
 
     @classmethod
     def parse_data(cls, target_num_reads, genome_size, target_depth, mash_report, seqkit_report):
         return cls(
-            target_num_reads=target_num_reads,
-            genome_size=(
-                genome_size if genome_size else cls._get_estimated_genome_size(mash_report)
-            ),
             target_depth=target_depth,
+            target_num_reads=target_num_reads if isinstance(target_num_reads, int) else None,
+            genome_size=(
+                genome_size
+                if isinstance(genome_size, int)
+                else cls._get_estimated_genome_size(mash_report)
+            ),
             average_read_length=cls._get_average_read_length(seqkit_report),
         )
 

@@ -7,60 +7,26 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from typing import Literal
+from .downsample_settings import DownsampleGroup
+from .filter_settings import FilterGroup
 from pydantic import BaseModel, ConfigDict
-
-
-class FilterSettings(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    enabled: bool = True
-    min_length: int = 100
-    quality: int = 15
-
-    @classmethod
-    def parse_data(cls, data):
-        return cls(**data)
-
-    def update(self, data):
-        extra_keys = set(data.keys()) - set(type(self).model_fields.keys())
-        if extra_keys:
-            raise FilterSettingsError(f"Extra field(s): {', '.join(extra_keys)}")
-        return self.model_copy(update=data)
-
-
-class FilterSettingsError(ValueError):
-    pass
-
-
-class DownsampleSettings(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    method: Literal["none", "random", "bbnorm"] = "none"
-    target_num_reads: int = 0
-    genome_size: int = 0
-    target_depth: int = 150
-
-    @classmethod
-    def parse_data(cls, data):
-        return cls(**data)
-
-    def update(self, data):
-        extra_keys = set(data.keys()) - set(type(self).model_fields.keys())
-        if extra_keys:
-            raise DownsampleSettingsError(f"Extra field(s): {', '.join(extra_keys)}")
-        return self.model_copy(update=data)
-
-
-class DownsampleSettingsError(ValueError):
-    pass
 
 
 class GlobalSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    filter: FilterSettings
-    downsample: DownsampleSettings
+    filter: FilterGroup
+    downsample: DownsampleGroup
 
     @classmethod
     def parse_data(cls, data):
-        data["filter"] = FilterSettings.parse_data(data.get("filter", {}))
-        data["downsample"] = DownsampleSettings.parse_data(data.get("downsample", {}))
+        data["filter"] = FilterGroup.parse_data(data.get("filter", {}))
+        data["downsample"] = DownsampleGroup.parse_data(data.get("downsample", {}))
         return cls(**data)
+
+    def update_filter_settings(self, data):
+        for read_type, filter_data in data.items():
+            self.filter.update_settings(read_type, filter_data)
+
+    def update_downsample_settings(self, data):
+        for read_type, downsample_data in data.items():
+            self.downsample.update_settings(read_type, downsample_data)

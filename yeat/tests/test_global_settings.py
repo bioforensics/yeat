@@ -191,7 +191,6 @@ def test_downsample_settings_update_extra_keys():
 )
 def test_global_settings_parse_data(data, expected):
     global_settings = GlobalSettings.parse_data(data)
-    print(global_settings.model_dump())
     assert global_settings.model_dump() == expected
 
 

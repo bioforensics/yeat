@@ -8,6 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 from yeat.workflow.qc.aux import copy_input
+from yeat.workflow.qc.downsample import Downsample
 
 
 rule copy_input:
@@ -114,15 +115,14 @@ rule downsample:
         outdir="analysis/{sample}/qc/{platform}/downsample",
         seed=config["seed"],
         downsample_enabled=lambda wc: config["asm_cfg"].get_sample_downsample_enabled(wc.sample, "long"),
+        target_depth=lambda wc: config["asm_cfg"].get_sample_target_depth(wc.sample, "long"),
         target_num_reads=lambda wc: config["asm_cfg"].get_sample_target_num_reads(wc.sample, "long"),
         genome_size=lambda wc: config["asm_cfg"].get_sample_genome_size(wc.sample, "long"),
-        target_depth=lambda wc: config["asm_cfg"].get_sample_target_depth(wc.sample, "long"),
     log:
         "analysis/{sample}/qc/{platform}/downsample/bbnorm.log",
     run:
         if not params.downsample_enabled:
             Path(output.read).symlink_to(params.symlink_read)
             return
-        downsample = Downsample.parse_data(params.target_num_reads, params.genome_size, params.target_depth, params.mash_report, output.seqkit_report)
-        num_reads = downsample.get_num_reads(paired=False)
-        shell("seqtk sample -s {params.seed} {input.read} {num_reads} | gzip > {params.outdir}/read.fastq.gz")
+        downsample = Downsample.parse_data(params.target_depth, params.target_num_reads, params.genome_size, params.mash_report, input.seqkit_report, "long")
+        shell("seqtk sample -s {params.seed} {input.read} {downsample.target_num_reads} | gzip > {params.outdir}/read.fastq.gz")

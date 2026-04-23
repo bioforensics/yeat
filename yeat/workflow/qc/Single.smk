@@ -104,17 +104,17 @@ rule downsample:
         outdir="analysis/{sample}/qc/illumina/downsample",
         seed=config["seed"],
         downsample_method=lambda wc: config["asm_cfg"].get_sample_downsample_method(wc.sample, "short"),
+        target_depth=lambda wc: config["asm_cfg"].get_sample_target_depth(wc.sample, "short"),
         target_num_reads=lambda wc: config["asm_cfg"].get_sample_target_num_reads(wc.sample, "short"),
         genome_size=lambda wc: config["asm_cfg"].get_sample_genome_size(wc.sample, "short"),
-        target_depth=lambda wc: config["asm_cfg"].get_sample_target_depth(wc.sample, "short"),
     log:
         "analysis/{sample}/qc/illumina/downsample/bbnorm.log",
     run:
         if not params.downsample_enabled:
             Path(output.read).symlink_to(params.symlink_read)
+            return
         if params.downsample_method == "random":
-            downsample = Downsample.parse_data(params.target_num_reads, params.genome_size, params.target_depth, params.mash_report, input.seqkit_report)
-            num_reads = downsample.get_num_reads(paired=False)
-            shell("seqtk sample -s {params.seed} {input.read} {num_reads} | gzip > {params.outdir}/read.fastq.gz")
+            downsample = Downsample.parse_data(params.target_depth, params.target_num_reads, params.genome_size, params.mash_report, input.seqkit_report, "single")
+            shell("seqtk sample -s {params.seed} {input.read} {downsample.target_num_reads} | gzip > {params.outdir}/read.fastq.gz")
         elif params.downsample_method == "bbnorm":
             shell("bbnorm.sh threads={threads} in={input.read} out={params.outdir}/read.fastq.gz > {log} 2>&1")

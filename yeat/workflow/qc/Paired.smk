@@ -127,10 +127,10 @@ rule downsample:
         if not params.downsample_enabled:
             Path(output.r1).symlink_to(params.symlink_r1)
             Path(output.r2).symlink_to(params.symlink_r2)
+            return
         if params.downsample_method == "random":
-            downsample = Downsample.parse_data(params.target_num_reads, params.genome_size, params.target_depth, params.mash_report, input.seqkit_report)
-            num_reads = downsample.get_num_reads()
-            shell("seqtk sample -s {params.seed} {input.r1} {num_reads} | gzip > {params.outdir}/R1.fastq.gz")
-            shell("seqtk sample -s {params.seed} {input.r2} {num_reads} | gzip > {params.outdir}/R2.fastq.gz")
+            downsample = Downsample.parse_data(params.target_depth, params.target_num_reads, params.genome_size, params.mash_report, input.seqkit_report, "paired")
+            shell("seqtk sample -s {params.seed} {input.r1} {downsample.target_num_reads} | gzip > {params.outdir}/R1.fastq.gz")
+            shell("seqtk sample -s {params.seed} {input.r2} {downsample.target_num_reads} | gzip > {params.outdir}/R2.fastq.gz")
         elif params.downsample_method == "bbnorm":
             shell("bbnorm.sh threads={threads} in={input.r1} in2={input.r2} out={params.outdir}/R1.fastq.gz out2={params.outdir}/R2.fastq.gz > {log} 2>&1")

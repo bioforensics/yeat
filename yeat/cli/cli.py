@@ -110,22 +110,37 @@ def grid_configuration(parser):
 
 
 class InitAction(Action):
-    config_template = '''[global_settings.filter]
-enabled = true                              # if false, proceed to downsample
-min_length = 100                            # adjust for long reads   
-quality = 15                                # adjust for long reads  
+    config_template = '''[global_settings.filter.short]
+enabled = false
+fastp_args = ""
 
-[global_settings.downsample]
-method = "none"                             # if method="none", proceed to assembly; "none"|"random"|"bbnorm"
-target_num_reads = 0                        # adjust when downsample="random"; if target_num_reads=0, auto calculate input value using genome_size and target_depth
-genome_size = 0                             # adjust when downsample="random" and target_num_reads=0; if genome_size=0, auto calculate input value using MASH
-target_depth = 150                          # adjust when downsample="random" and target_num_reads=0
+[global_settings.filter.long]
+enabled = false
+chopper_args = ""
+
+[global_settings.downsample.short]
+enabled = false
+method = "random"          # random|bbnorm
+target_depth = 150         # desired depth of coverage
+target_num_reads = "auto"  # number or "auto" to calculate from target_depth and genome_size; ignored if mode = "bbnorm"
+genome_size = "auto"       # number (if genome size known) or "auto" to estimate using Mash; ignored if mode = "bbnorm"
+
+[global_settings.downsample.long]
+enabled = false
+target_depth = 150         # desired depth of coverage
+target_num_reads = "auto"  # number or "auto" to calculate from target_depth and genome_size
+genome_size = "auto"       # number (if genome size known) or "auto" to estimate using Mash
 
 [samples.sample1]
-illumina = "data/short_reads_?.fastq.gz"    # glob path
+illumina = "data/short_reads_R?.fastq.gz"
 
-[assemblers.spades_default]
-algorithm = "spades"'''
+[samples.sample2]
+illumina = "data/short_reads_R?.fastq.gz"
+pacbio_hifi = "data/long_reads.fastq.gz"
+
+[assemblers.assembly1]
+algorithm = "spades"
+arguments = ""'''
 
     def __call__(self, parser, namespace, values, option_string=None):
         print(self.config_template)

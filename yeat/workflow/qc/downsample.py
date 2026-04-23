@@ -23,7 +23,11 @@ class Downsample:
     def __post_init__(self):
         if self.target_num_reads:
             return
-        avl = 2 * self.average_read_length if self.read_type == "paired" else self.average_read_length
+        avl = (
+            2 * self.average_read_length
+            if self.read_type == "paired"
+            else self.average_read_length
+        )
         self.target_num_reads = int((self.genome_size * self.target_depth) / avl)
 
     @classmethod

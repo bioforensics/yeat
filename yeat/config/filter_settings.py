@@ -38,8 +38,8 @@ class LongFilterSettings(FilterSettings):
 
 
 class FilterGroup(BaseModel):
-    short_filter_settings: ShortFilterSettings
-    long_filter_settings: LongFilterSettings
+    short_filter_settings: ShortFilterSettings = ShortFilterSettings()
+    long_filter_settings: LongFilterSettings = LongFilterSettings()
 
     @classmethod
     def parse_data(cls, data):

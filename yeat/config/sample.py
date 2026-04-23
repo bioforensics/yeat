@@ -11,7 +11,7 @@ from .downsample_settings import DownsampleGroup
 from .filter_settings import FilterGroup
 from .global_settings import GlobalSettings
 from pathlib import Path
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, field_validator
 from typing import Dict
 
 
@@ -23,8 +23,8 @@ BEST_LR_ORDER = ("pacbio_hifi", "ont_duplex", "ont_simplex", "ont_ultralong")
 class Sample(BaseModel):
     label: str
     data: Dict[str, list[Path]]
-    filter: FilterGroup
-    downsample: DownsampleGroup
+    filter: FilterGroup = FilterGroup()
+    downsample: DownsampleGroup = DownsampleGroup()
 
     @field_validator("data")
     @classmethod
@@ -68,12 +68,6 @@ class Sample(BaseModel):
             filter=global_settings_copy.filter,
             downsample=global_settings_copy.downsample,
         )
-
-    @model_validator(mode="after")
-    def has_valid_downsample_application(self):
-        if "illumina" not in self.data and self.downsample_settings.method == "bbnorm":
-            raise SampleConfigurationError("BBNorm can only be applied to Illumina reads")
-        return self
 
     @property
     def has_illumina(self):

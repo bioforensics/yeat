@@ -42,8 +42,8 @@ class LongDownsampleSettings(DownsampleSettings):
 
 
 class DownsampleGroup(BaseModel):
-    short_downsample_settings: ShortDownsampleSettings
-    long_downsample_settings: LongDownsampleSettings
+    short_downsample_settings: ShortDownsampleSettings = ShortDownsampleSettings()
+    long_downsample_settings: LongDownsampleSettings = LongDownsampleSettings()
 
     @classmethod
     def parse_data(cls, data):

@@ -13,7 +13,7 @@ from typing import Literal
 
 class DownsampleSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    enabled: bool = True
+    enabled: bool = False
     target_depth: PositiveInt = 150
     target_num_reads: PositiveInt | Literal["auto"] = "auto"
     genome_size: PositiveInt | Literal["auto"] = "auto"

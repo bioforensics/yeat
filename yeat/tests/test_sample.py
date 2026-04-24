@@ -92,21 +92,6 @@ def test_parse_data():
     Sample.parse_data("sample1", data, global_settings)
 
 
-def test_has_valid_downsample_application():
-    data = {"illumina": ["READ1.fastq.gz", "READ2.fastq.gz"]}
-    global_settings = GlobalSettings(filter={}, downsample={"method": "bbnorm"})
-    sample = Sample.parse_data("sample1", data, global_settings)
-    sample.has_valid_downsample_application()
-
-
-def test_has_invalid_downsample_application():
-    data = {"pacbio_hifi": ["READ.fastq.gz"]}
-    global_settings = GlobalSettings(filter={}, downsample={"method": "bbnorm"})
-    message = "BBNorm can only be applied to Illumina reads"
-    with pytest.raises(ValueError, match=message):
-        Sample.parse_data("sample1", data, global_settings)
-
-
 @pytest.mark.parametrize(
     "data,read_type",
     [
@@ -130,15 +115,15 @@ def test_best_long_read_type(data, read_type):
     assert sample.best_long_read_type == read_type
 
 
-def test_sample_properties():
+def test_sample_settings():
     sample = SAMPLES["sample1"]
-    assert sample.enabled == True
-    assert sample.min_length == 100
-    assert sample.quality == 15
-    assert sample.method == "none"
-    assert sample.target_num_reads == 0
-    assert sample.genome_size == 0
-    assert sample.target_depth == 150
+    assert sample.filter_enabled("short") == False
+    assert sample.filter_args("short") == ""
+    assert sample.downsample_enabled("short") == False
+    assert sample.downsample_method("short") == "random"
+    assert sample.target_depth("short") == 150
+    assert sample.target_num_reads("short") == "auto"
+    assert sample.genome_size("short") == "auto"
 
 
 def test_targets():

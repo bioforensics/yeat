@@ -54,4 +54,4 @@ class Downsample:
     @staticmethod
     def _get_average_read_length(seqkit_report):
         df = pd.read_csv(seqkit_report, sep=r"\s+")
-        return int(float(df.iloc[0]["avg_len"].replace(",", "")))
+        return int(float(str(df.iloc[0]["avg_len"]).replace(",", "")))

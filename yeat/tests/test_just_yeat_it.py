@@ -31,7 +31,7 @@ def test_paired_end_assemblers_dry_run(tmp_path):
 
 
 @pytest.mark.long
-def test_paired_end_assemblers(capsys, tmp_path):
+def test_paired_end_assemblers(tmp_path):
     wd = str(tmp_path)
     arglist = [
         "-w",
@@ -44,7 +44,7 @@ def test_paired_end_assemblers(capsys, tmp_path):
     final_contig_files_exist(wd, config)
 
 
-def test_invalid_input_algorithm(capfd, tmp_path):
+def test_invalid_input_algorithm(capsys, tmp_path):
     wd = str(tmp_path)
     arglist = [
         "-w",
@@ -54,7 +54,10 @@ def test_invalid_input_algorithm(capfd, tmp_path):
         data_file("short_reads_1.fastq.gz"),
         data_file("short_reads_2.fastq.gz"),
     ]
-    with pytest.raises(RuntimeError, match="Snakemake Failed"):
+    with pytest.raises(SystemExit, match="2"):
         run_yeat(arglist)
-    out, err = capfd.readouterr()
-    assert "Unknown assembly algorithm DNE" in err
+    captured = capsys.readouterr()
+    message = (
+        "argument --algorithm: invalid choice: 'DNE' (choose from spades, megahit, unicycler)"
+    )
+    assert message in captured.err

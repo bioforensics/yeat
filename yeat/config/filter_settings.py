@@ -12,7 +12,7 @@ from pydantic import BaseModel, ConfigDict
 
 class FilterSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    enabled: bool = True
+    enabled: bool = False
 
     @classmethod
     def parse_data(cls, data):

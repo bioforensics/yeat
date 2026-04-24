@@ -55,6 +55,25 @@ def test_select_algorithm_not_supported():
         AssemblyConfiguration.select("DNE")
 
 
+def test_targets():
+    global_settings = GlobalSettings(filter={}, downsample={})
+    samples = {"sample1": SAMPLES["sample1"]}
+    assembler = {
+        "spades_default": SPAdesAssembler(
+            label="spades_default", samples={"sample1": SAMPLES["sample1"]}
+        )
+    }
+    config = AssemblyConfiguration(
+        global_settings=global_settings, samples=samples, assemblers=assembler
+    )
+    assert config.targets == [
+        "analysis/sample1/qc/illumina/fastqc/R1_fastqc.html",
+        "analysis/sample1/qc/illumina/fastqc/R2_fastqc.html",
+        "analysis/sample1/yeat/spades/spades_default/quast/report.html",
+        "analysis/sample1/yeat/spades/spades_default/bandage/.done",
+    ]
+
+
 def test_spades_metadata():
     global_settings = GlobalSettings(filter={}, downsample={})
     samples = {"sample1": SAMPLES["sample1"]}
@@ -70,13 +89,13 @@ def test_spades_metadata():
         Path("READ1.fastq.gz"),
         Path("READ2.fastq.gz"),
     ]
-    assert config.get_sample_filter_enabled("sample1") == True
-    assert config.get_sample_min_length("sample1") == 100
-    assert config.get_sample_quality("sample1") == 15
-    assert config.get_sample_downsample_method("sample1") == "none"
-    assert config.get_sample_target_num_reads("sample1") == 0
-    assert config.get_sample_genome_size("sample1") == 0
-    assert config.get_sample_target_depth("sample1") == 150
+    assert config.get_sample_filter_enabled("sample1", "short") == False
+    assert config.get_sample_filter_args("sample1", "short") == ""
+    assert config.get_sample_downsample_enabled("sample1", "short") == False
+    assert config.get_sample_downsample_method("sample1", "short") == "random"
+    assert config.get_sample_target_depth("sample1", "short") == 150
+    assert config.get_sample_target_num_reads("sample1", "short") == "auto"
+    assert config.get_sample_genome_size("sample1", "short") == "auto"
     assert config.get_assembler_input_files("spades_default", "sample1") == [
         "analysis/sample1/qc/illumina/downsample/R1.fastq.gz",
         "analysis/sample1/qc/illumina/downsample/R2.fastq.gz",

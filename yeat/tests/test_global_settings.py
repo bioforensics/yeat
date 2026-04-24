@@ -7,194 +7,170 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+from copy import deepcopy
 from pydantic import ValidationError
 import pytest
-from yeat.config.global_settings import (
-    FilterSettings,
-    FilterSettingsError,
-    DownsampleSettings,
-    DownsampleSettingsError,
-    GlobalSettings,
-)
+from yeat.config.downsample_settings import DownsampleSettings, DownsampleSettingsError
+from yeat.config.filter_settings import FilterSettings, FilterSettingsError
+from yeat.config.global_settings import GlobalSettings
+
+
+GLOBAL_DEFAULT_SETTINGS = {
+    "filter": {
+        "short_filter_settings": {"enabled": False, "fastp_args": ""},
+        "long_filter_settings": {"enabled": False, "chopper_args": ""},
+    },
+    "downsample": {
+        "short_downsample_settings": {
+            "enabled": False,
+            "method": "random",
+            "target_depth": 150,
+            "target_num_reads": "auto",
+            "genome_size": "auto",
+        },
+        "long_downsample_settings": {
+            "enabled": False,
+            "target_depth": 150,
+            "target_num_reads": "auto",
+            "genome_size": "auto",
+        },
+    },
+}
 
 
 @pytest.mark.parametrize(
-    "data,expected",
+    "data",
     [
-        (
-            {"enabled": True, "min_length": 250, "quality": 10},
-            {"enabled": True, "min_length": 250, "quality": 10},
-        ),
-        ({"enabled": False}, {"enabled": False, "min_length": 100, "quality": 15}),
-        ({}, {"enabled": True, "min_length": 100, "quality": 15}),
+        GLOBAL_DEFAULT_SETTINGS,
+        {"filter": GLOBAL_DEFAULT_SETTINGS["filter"]},
+        {
+            "filter": {
+                "short_filter_settings": GLOBAL_DEFAULT_SETTINGS["filter"]["short_filter_settings"]
+            }
+        },
+        {
+            "filter": {
+                "long_filter_settings": GLOBAL_DEFAULT_SETTINGS["filter"]["long_filter_settings"]
+            }
+        },
+        {"downsample": GLOBAL_DEFAULT_SETTINGS["downsample"]},
+        {
+            "downsample": {
+                "short_downsample_settings": GLOBAL_DEFAULT_SETTINGS["downsample"][
+                    "short_downsample_settings"
+                ]
+            }
+        },
+        {
+            "downsample": {
+                "long_downsample_settings": GLOBAL_DEFAULT_SETTINGS["downsample"][
+                    "long_downsample_settings"
+                ]
+            }
+        },
+        {},
     ],
 )
-def test_filter_settings_parse_data(data, expected):
-    filter_settings = FilterSettings.parse_data(data)
-    assert filter_settings.model_dump() == expected
+def test_global_settings_parse_data(data):
+    GLOBAL_DEFAULT_SETTINGS_copy = deepcopy(GLOBAL_DEFAULT_SETTINGS)
+    global_settings = GlobalSettings.parse_data(GLOBAL_DEFAULT_SETTINGS_copy)
+    assert global_settings.model_dump() == GLOBAL_DEFAULT_SETTINGS
 
 
-def test_filter_settings_parse_data_extra_keys():
+@pytest.mark.parametrize(
+    "update_method, attr_path, initial_expected, update_payload, final_expected",
+    [
+        (
+            "update_filter_settings",
+            ("filter", "short_filter_settings"),
+            {"enabled": False, "fastp_args": ""},
+            {
+                "short": {
+                    "enabled": True,
+                    "fastp_args": "--length_required 100 --unqualified_percent_limit 25",
+                }
+            },
+            {
+                "enabled": True,
+                "fastp_args": "--length_required 100 --unqualified_percent_limit 25",
+            },
+        ),
+        (
+            "update_filter_settings",
+            ("filter", "long_filter_settings"),
+            {"enabled": False, "chopper_args": ""},
+            {"long": {"enabled": True, "chopper_args": "--quality 15 --minlength 250"}},
+            {"enabled": True, "chopper_args": "--quality 15 --minlength 250"},
+        ),
+        (
+            "update_downsample_settings",
+            ("downsample", "short_downsample_settings"),
+            {
+                "enabled": False,
+                "target_depth": 150,
+                "target_num_reads": "auto",
+                "genome_size": "auto",
+                "method": "random",
+            },
+            {"short": {"enabled": True, "method": "bbnorm"}},
+            {
+                "enabled": True,
+                "target_depth": 150,
+                "target_num_reads": "auto",
+                "genome_size": "auto",
+                "method": "bbnorm",
+            },
+        ),
+        (
+            "update_downsample_settings",
+            ("downsample", "long_downsample_settings"),
+            {
+                "enabled": False,
+                "target_depth": 150,
+                "target_num_reads": "auto",
+                "genome_size": "auto",
+            },
+            {"long": {"enabled": True}},
+            {
+                "enabled": True,
+                "target_depth": 150,
+                "target_num_reads": "auto",
+                "genome_size": "auto",
+            },
+        ),
+    ],
+)
+def test_update_settings(
+    update_method, attr_path, initial_expected, update_payload, final_expected
+):
+    settings = GlobalSettings.parse_data(deepcopy(GLOBAL_DEFAULT_SETTINGS))
+    obj = settings
+    for attr in attr_path:
+        obj = getattr(obj, attr)
+    assert obj.model_dump() == initial_expected
+    getattr(settings, update_method)(update_payload)
+    obj = settings
+    for attr in attr_path:
+        obj = getattr(obj, attr)
+    assert obj.model_dump() == final_expected
+
+
+@pytest.mark.parametrize(
+    "model",
+    [GlobalSettings, FilterSettings, DownsampleSettings],
+)
+def test_parse_data_extra_keys(model):
     message = r"Extra inputs are not permitted \[type=extra_forbidden, input_value='INVALID'"
     with pytest.raises(ValidationError, match=message):
-        FilterSettings.parse_data({"INVALID": "INVALID"})
+        model.parse_data({"INVALID": "INVALID"})
 
 
 @pytest.mark.parametrize(
-    "data,expected",
-    [
-        (
-            {"enabled": True, "min_length": 250, "quality": 10},
-            {"enabled": True, "min_length": 250, "quality": 10},
-        ),
-        ({"enabled": False}, {"enabled": False, "min_length": 100, "quality": 15}),
-        ({}, {"enabled": True, "min_length": 100, "quality": 15}),
-    ],
+    "model,error_model",
+    [(FilterSettings, FilterSettingsError), (DownsampleSettings, DownsampleSettingsError)],
 )
-def test_filter_settings_update(data, expected):
-    filter_settings = FilterSettings()
-    filter_settings = filter_settings.update(data)
-    assert filter_settings.model_dump() == expected
-
-
-def test_filter_settings_update_extra_keys():
+def test_update_extra_keys(model, error_model):
     message = r"Extra field\(s\): INVALID"
-    with pytest.raises(FilterSettingsError, match=message):
-        filter_settings = FilterSettings()
-        filter_settings = filter_settings.update({"INVALID": "INVALID"})
-
-
-@pytest.mark.parametrize(
-    "data,expected",
-    [
-        (
-            {
-                "method": "random",
-                "target_num_reads": 0,
-                "genome_size": 4600000,
-                "target_depth": 250,
-            },
-            {
-                "method": "random",
-                "target_num_reads": 0,
-                "genome_size": 4600000,
-                "target_depth": 250,
-            },
-        ),
-        (
-            {"method": "random"},
-            {"method": "random", "target_num_reads": 0, "genome_size": 0, "target_depth": 150},
-        ),
-        ({}, {"method": "none", "target_num_reads": 0, "genome_size": 0, "target_depth": 150}),
-    ],
-)
-def test_downsample_settings_parse_data(data, expected):
-    downsample_settings = DownsampleSettings.parse_data(data)
-    assert downsample_settings.model_dump() == expected
-
-
-def test_downsample_settings_parse_data_extra_keys():
-    message = r"Extra inputs are not permitted \[type=extra_forbidden, input_value='INVALID'"
-    with pytest.raises(ValidationError, match=message):
-        DownsampleSettings.parse_data({"INVALID": "INVALID"})
-
-
-@pytest.mark.parametrize(
-    "data,expected",
-    [
-        (
-            {
-                "method": "random",
-                "target_num_reads": 0,
-                "genome_size": 4600000,
-                "target_depth": 250,
-            },
-            {
-                "method": "random",
-                "target_num_reads": 0,
-                "genome_size": 4600000,
-                "target_depth": 250,
-            },
-        ),
-        (
-            {"method": "random"},
-            {"method": "random", "target_num_reads": 0, "genome_size": 0, "target_depth": 150},
-        ),
-        ({}, {"method": "none", "target_num_reads": 0, "genome_size": 0, "target_depth": 150}),
-    ],
-)
-def test_downsample_settings_update(data, expected):
-    downsample_settings = DownsampleSettings()
-    downsample_settings = downsample_settings.update(data)
-    assert downsample_settings.model_dump() == expected
-
-
-def test_downsample_settings_update_extra_keys():
-    message = r"Extra field\(s\): INVALID"
-    with pytest.raises(DownsampleSettingsError, match=message):
-        downsample_settings = DownsampleSettings()
-        downsample_settings = downsample_settings.update({"INVALID": "INVALID"})
-
-
-@pytest.mark.parametrize(
-    "data,expected",
-    [
-        (
-            {"filter": {"enabled": False}, "downsample": {"method": "bbnorm"}},
-            {
-                "filter": {"enabled": False, "min_length": 100, "quality": 15},
-                "downsample": {
-                    "method": "bbnorm",
-                    "target_num_reads": 0,
-                    "genome_size": 0,
-                    "target_depth": 150,
-                },
-            },
-        ),
-        (
-            {"filter": {"enabled": False}},
-            {
-                "filter": {"enabled": False, "min_length": 100, "quality": 15},
-                "downsample": {
-                    "method": "none",
-                    "target_num_reads": 0,
-                    "genome_size": 0,
-                    "target_depth": 150,
-                },
-            },
-        ),
-        (
-            {"downsample": {"method": "bbnorm"}},
-            {
-                "filter": {"enabled": True, "min_length": 100, "quality": 15},
-                "downsample": {
-                    "method": "bbnorm",
-                    "target_num_reads": 0,
-                    "genome_size": 0,
-                    "target_depth": 150,
-                },
-            },
-        ),
-        (
-            {},
-            {
-                "filter": {"enabled": True, "min_length": 100, "quality": 15},
-                "downsample": {
-                    "method": "none",
-                    "target_num_reads": 0,
-                    "genome_size": 0,
-                    "target_depth": 150,
-                },
-            },
-        ),
-    ],
-)
-def test_global_settings_parse_data(data, expected):
-    global_settings = GlobalSettings.parse_data(data)
-    assert global_settings.model_dump() == expected
-
-
-def test_global_settings_parse_data_extra_keys():
-    message = r"Extra inputs are not permitted \[type=extra_forbidden, input_value='INVALID'"
-    with pytest.raises(ValidationError, match=message):
-        GlobalSettings.parse_data({"INVALID": "INVALID"})
+    m = model()
+    with pytest.raises(error_model, match=message):
+        m.update({"INVALID": "INVALID"})

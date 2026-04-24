@@ -112,11 +112,11 @@ def grid_configuration(parser):
 class InitAction(Action):
     config_template = '''[global_settings.filter.short]
 enabled = false
-fastp_args = "--length_required 100 --unqualified_percent_limit 25"
+fastp_args = ""
 
 [global_settings.filter.long]
 enabled = false
-chopper_args = "--quality 15 --minlength 250"
+chopper_args = ""
 
 [global_settings.downsample.short]
 enabled = false
@@ -135,12 +135,15 @@ genome_size = "auto"       # number (if genome size known) or "auto" to estimate
 illumina = "data/short_reads_R?.fastq.gz"
 
 [samples.sample2]
+pacbio_hifi = "data/long_reads.fastq.gz"
+
+[samples.sample3]
 illumina = "data/short_reads_R?.fastq.gz"
 pacbio_hifi = "data/long_reads.fastq.gz"
 
 [assemblers.assembly1]
 algorithm = "spades"
-arguments = "--isolate --careful"'''
+arguments = ""'''
 
     def __call__(self, parser, namespace, values, option_string=None):
         print(self.config_template)

@@ -14,8 +14,8 @@ from pydantic import BaseModel, ConfigDict
 
 class GlobalSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    filter: FilterGroup
-    downsample: DownsampleGroup
+    filter: FilterGroup = FilterGroup()
+    downsample: DownsampleGroup = DownsampleGroup()
 
     @classmethod
     def parse_data(cls, data):

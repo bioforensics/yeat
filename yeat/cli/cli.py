@@ -59,7 +59,7 @@ def workflow_configuration(parser):
         "-s",
         "--seed",
         default=randint(1, 2**16 - 1),
-        help="seed for random number generator used in downsampling (default: random int)",
+        help="seed for the random number generator used in the random downsampling method (default: random int)",
         metavar="S",
         type=int,
     )
@@ -77,7 +77,7 @@ def workflow_configuration(parser):
         default=".",
         help="working directory (default: current directory)",
         metavar="DIR",
-        type=str,
+        type=lambda p: str(Path(p).resolve()),
     )
     workflow.add_argument(
         "-n",
@@ -112,11 +112,11 @@ def grid_configuration(parser):
 class InitAction(Action):
     config_template = '''[global_settings.filter.short]
 enabled = false
-fastp_args = ""
+fastp_args = "--length_required 100 --unqualified_percent_limit 25"
 
 [global_settings.filter.long]
 enabled = false
-chopper_args = ""
+chopper_args = "--quality 15 --minlength 250"
 
 [global_settings.downsample.short]
 enabled = false
@@ -140,7 +140,7 @@ pacbio_hifi = "data/long_reads.fastq.gz"
 
 [assemblers.assembly1]
 algorithm = "spades"
-arguments = ""'''
+arguments = "--isolate --careful"'''
 
     def __call__(self, parser, namespace, values, option_string=None):
         print(self.config_template)

@@ -45,9 +45,9 @@ def positional_args(parser):
     parser._positionals.title = "required arguments"
     parser.add_argument(
         "read",
+        help="reads in FASTQ format; provide 2 for paired; provide 1 for single",
         nargs="+",
         type=lambda p: str(Path(p).resolve()),
-        help="reads in FASTQ format; provide 2 for paired; provide 1 for single",
     )
 
 
@@ -62,69 +62,54 @@ def options(parser):
 
 def filter_configuration(parser):
     filter = parser.add_argument_group("filter configuration")
-    group = filter.add_mutually_exclusive_group()
-    group.add_argument(
+    filter.add_argument(
         "--filter",
-        dest="filter",
         action="store_true",
-        help="enable read filtering (default: enabled)",
-    )
-    group.add_argument(
-        "--no-filter",
-        dest="filter",
-        action="store_false",
-        help="disable read filtering (ignores -l, -q)",
-    )
-    parser.set_defaults(filter_enabled=True)
-    filter.add_argument(
-        "-l",
-        "--length-required",
-        default=100,
-        help="discard reads shorter than length L (default: 100)",
-        metavar="L",
-        type=int,
+        help="enable read filtering (default: disabled)",
     )
     filter.add_argument(
-        "-q",
-        "--quality",
-        default=15,
-        help="minimum base quality threshold Q for filtering (default: 15)",
-        metavar="Q",
-        type=int,
+        "--fastp-args",
+        default="",
+        help='additional fastp arguments; e.g. "--length_required 100 --unqualified_percent_limit 25" (default: none)',
+        metavar="STR",
+        type=str,
     )
 
 
 def downsample_configuration(parser):
     downsample = parser.add_argument_group("downsample configuration")
     downsample.add_argument(
-        "--downsample-method",
-        choices=["none", "random", "bbnorm"],
-        default="none",
-        help='Downsampling method: "none" (disable), "random" (subsample reads), "bbnorm" (digital normalization; ignores other downsampling params)',
+        "--downsample",
+        action="store_true",
+        help="enable downsampling (default: disabled)",
     )
     downsample.add_argument(
-        "-d",
-        "--target-num-reads",
-        default=0,
-        help='number of reads D to sample in "random" mode (ignores -g, -c); D=0 enables automatic downsampling using -g and -c (default: 0)',
-        metavar="D",
-        type=int,
-    )
-    downsample.add_argument(
-        "-g",
-        "--genome-size",
-        default=0,
-        help="estimated genome size G in bp; G=0 enables automatic genome size estimation (default: 0)",
-        metavar="G",
-        type=int,
+        "--method",
+        choices=["random", "bbnorm"],
+        default="random",
+        help='downsampling method: "random" for random subsampling or "bbnorm" for digital normalization; other downsampling parameters are ignored when using "bbnorm" (default: "random")',
     )
     downsample.add_argument(
         "-c",
         "--target-depth",
         default=150,
-        help="target coverage depth C for automatic downsampling (default: 150)",
+        help="target coverage depth for automatic downsampling (default: 150)",
         metavar="C",
         type=int,
+    )
+    downsample.add_argument(
+        "-d",
+        "--target-num-reads",
+        default="auto",
+        help='target number of reads to downsample to (int), or use "auto" to calculate from --target-depth and --genome-size (default: "auto")',
+        metavar="D",
+    )
+    downsample.add_argument(
+        "-g",
+        "--genome-size",
+        default="auto",
+        help='known sample genome size (int), or use "auto" to estimate using Mash (default: "auto")',
+        metavar="G",
     )
 
 
@@ -135,6 +120,7 @@ def sample_configuration(parser):
         default="sample1",
         help='sample label (default: "sample1")',
         metavar="STR",
+        type=str,
     )
 
 
@@ -145,18 +131,20 @@ def algorithm_configuration(parser):
         default="assembly1",
         help='assembly label (default: "assembly1")',
         metavar="STR",
+        type=str,
     )
     algorithm.add_argument(
         "--algorithm",
+        choices=["spades", "megahit", "unicycler"],
         default="spades",
-        help='assembly algorithm to use (e.g., "megahit", "unicycler"; default: "spades")',
-        metavar="STR",
+        help='assembly algorithm (default: "spades")',
     )
     algorithm.add_argument(
         "--arguments",
         default="",
-        help='additional assembler arguments (e.g., "--meta", "--isolate --careful"; default: "")',
+        help='additional assembly algorithm arguments; e.g., "--meta", "--isolate --careful" (default: none)',
         metavar="STR",
+        type=str,
     )
 
 
@@ -175,16 +163,15 @@ def get_config_data(args):
         "samples": {
             args.sample_label: {
                 "illumina": args.read,
-                "filter": {
-                    "enabled": args.filter_enabled,
-                    "min_length": args.length_required,
-                    "quality": args.quality,
-                },
+                "filter": {"short": {"enabled": args.filter, "fastp_args": args.fastp_args}},
                 "downsample": {
-                    "method": args.downsample_method,
-                    "target_num_reads": args.target_num_reads,
-                    "genome_size": args.genome_size,
-                    "target_depth": args.target_depth,
+                    "short": {
+                        "enabled": args.downsample,
+                        "method": args.method,
+                        "target_depth": args.target_depth,
+                        "target_num_reads": args.target_num_reads,
+                        "genome_size": args.genome_size,
+                    }
                 },
             },
         },

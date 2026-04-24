@@ -31,7 +31,7 @@ def test_paired_end_assemblers_dry_run(tmp_path):
 
 
 @pytest.mark.long
-def test_paired_end_assemblers(tmp_path):
+def test_paired_end_assemblers(capsys, tmp_path):
     wd = str(tmp_path)
     arglist = [
         "-w",

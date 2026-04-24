@@ -103,6 +103,7 @@ rule downsample:
         mash_report="analysis/{sample}/qc/illumina/mash/report.tsv",
         outdir="analysis/{sample}/qc/illumina/downsample",
         seed=config["seed"],
+        downsample_enabled=lambda wc: config["asm_cfg"].get_sample_downsample_enabled(wc.sample, "short"),
         downsample_method=lambda wc: config["asm_cfg"].get_sample_downsample_method(wc.sample, "short"),
         target_depth=lambda wc: config["asm_cfg"].get_sample_target_depth(wc.sample, "short"),
         target_num_reads=lambda wc: config["asm_cfg"].get_sample_target_num_reads(wc.sample, "short"),

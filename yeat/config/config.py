@@ -77,8 +77,8 @@ class AssemblyConfiguration(BaseModel):
             targets.extend(assembler.targets)
         return targets
 
-    def get_sample_input_files(self, sample, read_type):
-        return self.samples[sample].data[read_type]
+    def get_sample_input_files(self, sample, platform):
+        return self.samples[sample].data[platform]
 
     def get_sample_filter_enabled(self, sample, read_type):
         return self.samples[sample].filter_enabled(read_type)

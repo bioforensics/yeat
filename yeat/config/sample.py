@@ -95,15 +95,15 @@ class Sample(BaseModel):
     def get_filter_settings(self, read_type):
         return getattr(self.filter, f"{read_type}_filter_settings")
 
-    def get_downsample_settings(self, read_type):
-        return getattr(self.downsample, f"{read_type}_downsample_settings")
-
     def filter_enabled(self, read_type):
         return self.get_filter_settings(read_type).enabled
 
     def filter_args(self, read_type):
         settings = self.get_filter_settings(read_type)
         return settings.fastp_args if read_type == "short" else settings.chopper_args
+
+    def get_downsample_settings(self, read_type):
+        return getattr(self.downsample, f"{read_type}_downsample_settings")
 
     def downsample_enabled(self, read_type):
         return self.get_downsample_settings(read_type).enabled

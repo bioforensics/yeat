@@ -120,24 +120,21 @@ chopper_args = ""
 
 [global_settings.downsample.short]
 enabled = false
-method = "random"          # random|bbnorm
-target_depth = 150         # desired depth of coverage
-target_num_reads = "auto"  # number or "auto" to calculate from target_depth and genome_size; ignored if mode = "bbnorm"
-genome_size = "auto"       # number (if genome size known) or "auto" to estimate using Mash; ignored if mode = "bbnorm"
+method = "random"                           # random|bbnorm
+target_depth = 150                          # desired depth of coverage
+target_num_reads = "auto"                   # number or "auto" to calculate from target_depth and genome_size; ignored if mode = "bbnorm"
+genome_size = "auto"                        # number (if genome size known) or "auto" to estimate using Mash; ignored if mode = "bbnorm"
 
 [global_settings.downsample.long]
 enabled = false
-target_depth = 150         # desired depth of coverage
-target_num_reads = "auto"  # number or "auto" to calculate from target_depth and genome_size
-genome_size = "auto"       # number (if genome size known) or "auto" to estimate using Mash
+target_depth = 150                          # desired depth of coverage
+target_num_reads = "auto"                   # number or "auto" to calculate from target_depth and genome_size
+genome_size = "auto"                        # number (if genome size known) or "auto" to estimate using Mash
 
 [samples.sample1]
-illumina = "data/short_reads_R?.fastq.gz"
+illumina = "data/short_reads_R?.fastq.gz"   # illumina|pacbio_hifi|ont_simplex|ont_duplex|ont_ultralong
 
 [samples.sample2]
-pacbio_hifi = "data/long_reads.fastq.gz"
-
-[samples.sample3]
 illumina = "data/short_reads_R?.fastq.gz"
 pacbio_hifi = "data/long_reads.fastq.gz"
 

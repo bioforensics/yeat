@@ -159,20 +159,22 @@ def create_config(args):
 
 
 def get_config_data(args):
+    filter = {"short": {"enabled": args.filter, "fastp_args": args.fastp_args}}
+    downsample = {
+        "short": {
+            "enabled": args.downsample,
+            "method": args.method,
+            "target_depth": args.target_depth,
+            "target_num_reads": args.target_num_reads,
+            "genome_size": args.genome_size,
+        }
+    }
     return {
         "samples": {
             args.sample_label: {
                 "illumina": args.read,
-                "filter": {"short": {"enabled": args.filter, "fastp_args": args.fastp_args}},
-                "downsample": {
-                    "short": {
-                        "enabled": args.downsample,
-                        "method": args.method,
-                        "target_depth": args.target_depth,
-                        "target_num_reads": args.target_num_reads,
-                        "genome_size": args.genome_size,
-                    }
-                },
+                "filter": filter,
+                "downsample": downsample,
             },
         },
         "assemblers": {

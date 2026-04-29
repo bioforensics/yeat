@@ -118,7 +118,7 @@ def test_best_long_read_type(data, read_type):
 def test_sample_settings():
     sample = SAMPLES["sample1"]
     assert sample.filter_enabled("short") == False
-    assert sample.filter_args("short") == ""
+    assert sample.filter_args("short") == "--length_required 100 --unqualified_percent_limit 25"
     assert sample.downsample_enabled("short") == False
     assert sample.downsample_method("short") == "random"
     assert sample.target_depth("short") == 150

@@ -10,15 +10,18 @@
 from copy import deepcopy
 from pydantic import ValidationError
 import pytest
-from yeat.config.downsample_settings import DownsampleSettings, DownsampleSettingsError
-from yeat.config.filter_settings import FilterSettings, FilterSettingsError
+from yeat.config.downsample_settings import DownsampleSettings
+from yeat.config.filter_settings import FilterSettings
 from yeat.config.global_settings import GlobalSettings
 
 
 GLOBAL_DEFAULT_SETTINGS = {
     "filter": {
-        "short_filter_settings": {"enabled": False, "fastp_args": ""},
-        "long_filter_settings": {"enabled": False, "chopper_args": ""},
+        "short_filter_settings": {
+            "enabled": False,
+            "fastp_args": "--length_required 100 --unqualified_percent_limit 25",
+        },
+        "long_filter_settings": {"enabled": False, "chopper_args": "--quality 15 --minlength 250"},
     },
     "downsample": {
         "short_downsample_settings": {
@@ -83,24 +86,19 @@ def test_global_settings_parse_data(data):
         (
             "update_filter_settings",
             ("filter", "short_filter_settings"),
-            {"enabled": False, "fastp_args": ""},
             {
-                "short": {
-                    "enabled": True,
-                    "fastp_args": "--length_required 100 --unqualified_percent_limit 25",
-                }
-            },
-            {
-                "enabled": True,
+                "enabled": False,
                 "fastp_args": "--length_required 100 --unqualified_percent_limit 25",
             },
+            {"short": {"enabled": True, "fastp_args": ""}},
+            {"enabled": True, "fastp_args": ""},
         ),
         (
             "update_filter_settings",
             ("filter", "long_filter_settings"),
-            {"enabled": False, "chopper_args": ""},
-            {"long": {"enabled": True, "chopper_args": "--quality 15 --minlength 250"}},
-            {"enabled": True, "chopper_args": "--quality 15 --minlength 250"},
+            {"enabled": False, "chopper_args": "--quality 15 --minlength 250"},
+            {"long": {"enabled": True, "chopper_args": ""}},
+            {"enabled": True, "chopper_args": ""},
         ),
         (
             "update_downsample_settings",
@@ -155,22 +153,16 @@ def test_update_settings(
     assert obj.model_dump() == final_expected
 
 
-@pytest.mark.parametrize(
-    "model",
-    [GlobalSettings, FilterSettings, DownsampleSettings],
-)
+@pytest.mark.parametrize("model", [GlobalSettings, FilterSettings, DownsampleSettings])
 def test_parse_data_extra_keys(model):
     message = r"Extra inputs are not permitted \[type=extra_forbidden, input_value='INVALID'"
     with pytest.raises(ValidationError, match=message):
         model.parse_data({"INVALID": "INVALID"})
 
 
-@pytest.mark.parametrize(
-    "model,error_model",
-    [(FilterSettings, FilterSettingsError), (DownsampleSettings, DownsampleSettingsError)],
-)
-def test_update_extra_keys(model, error_model):
-    message = r"Extra field\(s\): INVALID"
+@pytest.mark.parametrize("model", [FilterSettings, DownsampleSettings])
+def test_update_extra_keys(model):
+    message = r"Extra inputs are not permitted \[type=extra_forbidden, input_value='INVALID'"
     m = model()
-    with pytest.raises(error_model, match=message):
+    with pytest.raises(ValidationError, match=message):
         m.update({"INVALID": "INVALID"})

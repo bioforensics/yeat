@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from pydantic import BaseModel, ConfigDict, PositiveInt
+from pydantic import BaseModel, ConfigDict, PositiveInt, Field
 from typing import Literal
 
 
@@ -23,14 +23,7 @@ class DownsampleSettings(BaseModel):
         return cls(**data)
 
     def update(self, data):
-        extra_keys = set(data.keys()) - set(type(self).model_fields.keys())
-        if extra_keys:
-            raise DownsampleSettingsError(f"Extra field(s): {', '.join(extra_keys)}")
-        return self.model_copy(update=data)
-
-
-class DownsampleSettingsError(ValueError):
-    pass
+        return type(self)(**{**self.model_dump(), **data})
 
 
 class ShortDownsampleSettings(DownsampleSettings):
@@ -42,8 +35,12 @@ class LongDownsampleSettings(DownsampleSettings):
 
 
 class DownsampleGroup(BaseModel):
-    short_downsample_settings: ShortDownsampleSettings = ShortDownsampleSettings()
-    long_downsample_settings: LongDownsampleSettings = LongDownsampleSettings()
+    short_downsample_settings: ShortDownsampleSettings = Field(
+        default_factory=ShortDownsampleSettings, serialization_alias="short"
+    )
+    long_downsample_settings: LongDownsampleSettings = Field(
+        default_factory=LongDownsampleSettings, serialization_alias="long"
+    )
 
     @classmethod
     def parse_data(cls, data):

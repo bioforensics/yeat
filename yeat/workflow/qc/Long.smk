@@ -67,7 +67,7 @@ rule estimate_genome_size:
     input:
         read=rules.chopper.output.read,
     output:
-        mash_sentinel="analysis/{sample}/qc/{platform}/mash/sentinel.done",
+        mash_sentinel=touch("analysis/{sample}/qc/{platform}/mash/sentinel.done"),
     wildcard_constraints:
         platform="ont_simplex|ont_duplex|ont_ultralong|pacbio_hifi",
     params:
@@ -79,11 +79,9 @@ rule estimate_genome_size:
         "analysis/{sample}/qc/{platform}/mash/mash.log",
     run:
         if isinstance(params.genome_size, int):
-            shell("touch {output.mash_sentinel}")
             return
         shell("mash sketch -m {params.min_copies} -r {input.read} -o {params.sketch} > {log} 2>&1")
         shell("mash info -t {params.sketch} > {params.mash_report}")
-        shell("touch {output.mash_sentinel}")
 
 
 rule seqkit:

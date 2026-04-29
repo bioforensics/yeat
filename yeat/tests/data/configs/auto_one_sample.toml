@@ -3,3 +3,15 @@ illumina = "yeat/tests/data/short_reads_*.fastq.gz"
 
 [assemblers.spades_default]
 algorithm = "spades"
+arguments = "--isolate"
+
+[global_settings.filter.short]
+enabled = false
+fastp_args = "--length_required 100 --unqualified_percent_limit 25"
+
+[global_settings.downsample.short]
+enabled = false
+target_depth = 150
+target_num_reads = "auto"
+genome_size = "auto"
+method = "random"

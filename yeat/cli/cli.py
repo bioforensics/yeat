@@ -112,11 +112,11 @@ def grid_configuration(parser):
 class InitAction(Action):
     config_template = '''[global_settings.filter.short]
 enabled = false
-fastp_args = ""
+fastp_args = "--length_required 100 --unqualified_percent_limit 25"
 
 [global_settings.filter.long]
 enabled = false
-chopper_args = ""
+chopper_args = "--quality 15 --minlength 250"
 
 [global_settings.downsample.short]
 enabled = false

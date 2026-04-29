@@ -69,8 +69,8 @@ def filter_configuration(parser):
     )
     filter.add_argument(
         "--fastp-args",
-        default="",
-        help='additional fastp arguments; e.g. "--length_required 100 --unqualified_percent_limit 25" (default: none)',
+        default="--length_required 100 --unqualified_percent_limit 25",
+        help='additional fastp arguments; e.g. "--length_required 100 --unqualified_percent_limit 25" (default: "--length_required 100 --unqualified_percent_limit 25")',
         metavar="STR",
         type=str,
     )
@@ -141,8 +141,8 @@ def algorithm_configuration(parser):
     )
     algorithm.add_argument(
         "--arguments",
-        default="",
-        help='additional assembly algorithm arguments; e.g., "--meta", "--isolate --careful" (default: none)',
+        default="--isolate",
+        help='additional assembly algorithm arguments; e.g., "--meta", "--isolate --careful" (default: "--isolate")',
         metavar="STR",
         type=str,
     )
@@ -155,7 +155,7 @@ def create_config(args):
     with open(config, "w") as f:
         data = get_config_data(args)
         toml.dump(data, f)
-    setattr(args, "config", str(config.resolve()))
+    args.config = str(config.resolve())
 
 
 def get_config_data(args):

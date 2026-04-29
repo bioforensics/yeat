@@ -71,7 +71,7 @@ rule estimate_genome_size:
         r1=rules.fastp.output.r1,
         r2=rules.fastp.output.r2,
     output:
-        mash_sentinel="analysis/{sample}/qc/illumina/mash/sentinel.done",
+        mash_sentinel=touch("analysis/{sample}/qc/illumina/mash/sentinel.done"),
     params:
         min_copies=2,
         sketch="analysis/{sample}/qc/illumina/mash/reference.msh",
@@ -81,11 +81,9 @@ rule estimate_genome_size:
         "analysis/{sample}/qc/illumina/mash/mash.log",
     run:
         if isinstance(params.genome_size, int):
-            shell("touch {output.mash_sentinel}")
             return
         shell("mash sketch -m {params.min_copies} -r {input.r1} {input.r2} -o {params.sketch} > {log} 2>&1")
         shell("mash info -t {params.sketch} > {params.mash_report}")
-        shell("touch {output.mash_sentinel}")
 
 
 rule seqkit:

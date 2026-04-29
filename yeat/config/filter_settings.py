@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class FilterSettings(BaseModel):
@@ -19,27 +19,24 @@ class FilterSettings(BaseModel):
         return cls(**data)
 
     def update(self, data):
-        extra_keys = set(data.keys()) - set(type(self).model_fields.keys())
-        if extra_keys:
-            raise FilterSettingsError(f"Extra field(s): {', '.join(extra_keys)}")
-        return self.model_copy(update=data)
-
-
-class FilterSettingsError(ValueError):
-    pass
+        return type(self)(**{**self.model_dump(), **data})
 
 
 class ShortFilterSettings(FilterSettings):
-    fastp_args: str = ""
+    fastp_args: str = "--length_required 100 --unqualified_percent_limit 25"
 
 
 class LongFilterSettings(FilterSettings):
-    chopper_args: str = ""
+    chopper_args: str = "--quality 15 --minlength 250"
 
 
 class FilterGroup(BaseModel):
-    short_filter_settings: ShortFilterSettings = ShortFilterSettings()
-    long_filter_settings: LongFilterSettings = LongFilterSettings()
+    short_filter_settings: ShortFilterSettings = Field(
+        default_factory=ShortFilterSettings, serialization_alias="short"
+    )
+    long_filter_settings: LongFilterSettings = Field(
+        default_factory=LongFilterSettings, serialization_alias="long"
+    )
 
     @classmethod
     def parse_data(cls, data):

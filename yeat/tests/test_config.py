@@ -90,7 +90,10 @@ def test_spades_metadata():
         Path("READ2.fastq.gz"),
     ]
     assert config.get_sample_filter_enabled("sample1", "short") == False
-    assert config.get_sample_filter_args("sample1", "short") == ""
+    assert (
+        config.get_sample_filter_args("sample1", "short")
+        == "--length_required 100 --unqualified_percent_limit 25"
+    )
     assert config.get_sample_downsample_enabled("sample1", "short") == False
     assert config.get_sample_downsample_method("sample1", "short") == "random"
     assert config.get_sample_target_depth("sample1", "short") == 150

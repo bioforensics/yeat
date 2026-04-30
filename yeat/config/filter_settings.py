@@ -19,15 +19,17 @@ class FilterSettings(BaseModel):
         return cls(**data)
 
     def update(self, data):
-        return type(self)(**{**self.model_dump(), **data})
+        updated_data = {**self.model_dump(), **data}
+        self_type = type(self)
+        return self_type(**updated_data)
 
 
 class ShortFilterSettings(FilterSettings):
-    fastp_args: str = "--length_required 100 --unqualified_percent_limit 25"
+    fastp_args: str = "--min-length 50 --detect_adapter_for_pe"
 
 
 class LongFilterSettings(FilterSettings):
-    chopper_args: str = "--quality 15 --minlength 250"
+    chopper_args: str = ""
 
 
 class FilterGroup(BaseModel):

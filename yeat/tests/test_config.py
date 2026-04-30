@@ -92,7 +92,7 @@ def test_spades_metadata():
     assert config.get_sample_filter_enabled("sample1", "short") == False
     assert (
         config.get_sample_filter_args("sample1", "short")
-        == "--length_required 100 --unqualified_percent_limit 25"
+        == "--min-length 50 --detect_adapter_for_pe"
     )
     assert config.get_sample_downsample_enabled("sample1", "short") == False
     assert config.get_sample_downsample_method("sample1", "short") == "random"

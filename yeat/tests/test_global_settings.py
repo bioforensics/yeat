@@ -19,9 +19,9 @@ GLOBAL_DEFAULT_SETTINGS = {
     "filter": {
         "short_filter_settings": {
             "enabled": False,
-            "fastp_args": "--length_required 100 --unqualified_percent_limit 25",
+            "fastp_args": "--min-length 50 --detect_adapter_for_pe",
         },
-        "long_filter_settings": {"enabled": False, "chopper_args": "--quality 15 --minlength 250"},
+        "long_filter_settings": {"enabled": False, "chopper_args": ""},
     },
     "downsample": {
         "short_downsample_settings": {
@@ -88,7 +88,7 @@ def test_global_settings_parse_data(data):
             ("filter", "short_filter_settings"),
             {
                 "enabled": False,
-                "fastp_args": "--length_required 100 --unqualified_percent_limit 25",
+                "fastp_args": "--min-length 50 --detect_adapter_for_pe",
             },
             {"short": {"enabled": True, "fastp_args": ""}},
             {"enabled": True, "fastp_args": ""},
@@ -96,7 +96,7 @@ def test_global_settings_parse_data(data):
         (
             "update_filter_settings",
             ("filter", "long_filter_settings"),
-            {"enabled": False, "chopper_args": "--quality 15 --minlength 250"},
+            {"enabled": False, "chopper_args": ""},
             {"long": {"enabled": True, "chopper_args": ""}},
             {"enabled": True, "chopper_args": ""},
         ),

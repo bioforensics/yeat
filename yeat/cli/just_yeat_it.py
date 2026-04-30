@@ -69,8 +69,8 @@ def filter_configuration(parser):
     )
     filter.add_argument(
         "--fastp-args",
-        default="--length_required 100 --unqualified_percent_limit 25",
-        help='additional fastp arguments; e.g. "--length_required 100 --unqualified_percent_limit 25" (default: "--length_required 100 --unqualified_percent_limit 25")',
+        default="--min-length 50 --detect_adapter_for_pe",
+        help='additional fastp arguments (default: "--min-length 50 --detect_adapter_for_pe")',
         metavar="STR",
         type=str,
     )
@@ -142,7 +142,7 @@ def algorithm_configuration(parser):
     algorithm.add_argument(
         "--arguments",
         default="--isolate",
-        help='additional assembly algorithm arguments; e.g., "--meta", "--isolate --careful" (default: "--isolate")',
+        help='additional assembly algorithm arguments (default: "--isolate")',
         metavar="STR",
         type=str,
     )

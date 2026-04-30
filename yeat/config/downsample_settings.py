@@ -23,7 +23,9 @@ class DownsampleSettings(BaseModel):
         return cls(**data)
 
     def update(self, data):
-        return type(self)(**{**self.model_dump(), **data})
+        updated_data = {**self.model_dump(), **data}
+        self_type = type(self)
+        return self_type(**updated_data)
 
 
 class ShortDownsampleSettings(DownsampleSettings):

@@ -112,11 +112,11 @@ def grid_configuration(parser):
 class InitAction(Action):
     config_template = '''[global_settings.filter.short]
 enabled = false
-fastp_args = "--length_required 100 --unqualified_percent_limit 25"
+fastp_args = "--min-length 50 --detect_adapter_for_pe"
 
 [global_settings.filter.long]
 enabled = false
-chopper_args = "--quality 15 --minlength 250"
+chopper_args = ""
 
 [global_settings.downsample.short]
 enabled = false
@@ -140,7 +140,7 @@ pacbio_hifi = "data/long_reads.fastq.gz"
 
 [assemblers.assembly1]
 algorithm = "spades"
-arguments = ""'''
+arguments = "--isolate"'''
 
     def __call__(self, parser, namespace, values, option_string=None):
         print(self.config_template)

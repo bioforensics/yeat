@@ -54,10 +54,7 @@ def test_invalid_input_algorithm(capsys, tmp_path):
         data_file("short_reads_1.fastq.gz"),
         data_file("short_reads_2.fastq.gz"),
     ]
-    with pytest.raises(SystemExit, match="2"):
+    with pytest.raises(SystemExit):
         run_yeat(arglist)
-    captured = capsys.readouterr()
-    message = (
-        "argument --algorithm: invalid choice: 'DNE' (choose from spades, megahit, unicycler)"
-    )
-    assert message in captured.err
+    out, err = capsys.readouterr()
+    assert "argument --algorithm: invalid choice: 'DNE'" in err

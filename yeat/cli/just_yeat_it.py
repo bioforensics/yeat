@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from argparse import ArgumentParser, ArgumentTypeError
+from argparse import ArgumentParser
 from importlib.metadata import version
 from pathlib import Path
 import toml
@@ -19,7 +19,6 @@ def main(args=None):
     if args is None:
         args = get_parser().parse_args()  # pragma: no cover
     create_config(args)
-    add_config(args)
     run_workflow(
         config=args.config,
         seed=args.seed,
@@ -46,14 +45,10 @@ def positional_args(parser):
     parser._positionals.title = "required arguments"
     parser.add_argument(
         "read",
-        nargs="+",
-        type=absolute_path,
         help="reads in FASTQ format; provide 2 for paired; provide 1 for single",
+        nargs="+",
+        type=lambda p: str(Path(p).resolve()),
     )
-
-
-def absolute_path(path_str):
-    return str(Path(path_str).resolve())
 
 
 def options(parser):
@@ -66,58 +61,56 @@ def options(parser):
 
 
 def filter_configuration(parser):
-    illumina = parser.add_argument_group("filter configuration")
-    illumina.add_argument(
-        "--skip-filter",
+    filter = parser.add_argument_group("filter configuration")
+    filter.add_argument(
+        "--filter",
         action="store_true",
-        help="skip the filtering step; default is to filter with fastp or chopper",
+        help="enable read filtering (default: disabled)",
     )
-    illumina.add_argument(
-        "-l",
-        "--length-required",
-        default=100,
-        help="discard reads shorter than the required L length after pre-preocessing; by default, L=100",
-        metavar="L",
-        type=int,
+    filter.add_argument(
+        "--fastp-args",
+        default="--min-length 50 --detect_adapter_for_pe",
+        help='additional fastp arguments (default: "--min-length 50 --detect_adapter_for_pe")',
+        metavar="STR",
+        type=str,
     )
 
 
 def downsample_configuration(parser):
-    illumina = parser.add_argument_group("downsample configuration")
-    illumina.add_argument(
+    downsample = parser.add_argument_group("downsample configuration")
+    downsample.add_argument(
+        "--downsample",
+        action="store_true",
+        help="enable downsampling (default: disabled)",
+    )
+    downsample.add_argument(
+        "--method",
+        choices=["random", "bbnorm"],
+        default="random",
+        help='downsampling method: "random" for random subsampling or "bbnorm" for digital normalization; other downsampling parameters are ignored when using "bbnorm" (default: "random")',
+    )
+    downsample.add_argument(
+        "-c",
+        "--target-depth",
+        default=150,
+        help="target coverage depth for automatic downsampling (default: 150)",
+        metavar="C",
+        type=int,
+    )
+    downsample.add_argument(
         "-d",
         "--target-num-reads",
-        default=-1,
-        help="randomly sample D reads from the input rather than assembling the full set; set D=0 to perform auto-downsampling to a desired level of coverage (see --target-coverage-depth); set D=-1 to disable downsampling; by default, D=-1",
+        default="auto",
+        help='target number of reads to downsample to (int), or use "auto" to calculate from --target-depth and --genome-size (default: "auto")',
         metavar="D",
-        type=int,
     )
-    illumina.add_argument(
+    downsample.add_argument(
         "-g",
         "--genome-size",
-        default=0,
-        help="provide known genome size in base pairs (bp); by default, G=0",
+        default="auto",
+        help='known sample genome size (int), or use "auto" to estimate using Mash (default: "auto")',
         metavar="G",
-        type=int,
     )
-    illumina.add_argument(
-        "-c",
-        "--target-coverage-depth",
-        default=150,
-        help="target an average depth of coverage Cx when auto-downsampling; by default, C=150",
-        metavar="C",
-        type=check_positive,
-    )
-
-
-def check_positive(value):
-    try:
-        value = int(value)
-        if value <= 0:
-            raise ArgumentTypeError(f"{value} is not a positive integer")
-    except ValueError:
-        raise ArgumentTypeError(f"{value} is not an integer")
-    return value
 
 
 def sample_configuration(parser):
@@ -125,8 +118,9 @@ def sample_configuration(parser):
     sample.add_argument(
         "--sample-label",
         default="sample1",
-        help='set the sample label; by default, "sample1"',
+        help='sample label (default: "sample1")',
         metavar="STR",
+        type=str,
     )
 
 
@@ -135,41 +129,52 @@ def algorithm_configuration(parser):
     algorithm.add_argument(
         "--assembly-label",
         default="assembly1",
-        help='set the assembly label; by default, "assembly1"',
+        help='assembly label (default: "assembly1")',
         metavar="STR",
+        type=str,
     )
     algorithm.add_argument(
         "--algorithm",
+        choices=["spades", "megahit", "unicycler"],
         default="spades",
-        help='substitute the default assembly algorithm with another algorithm; for example, "megahit" or "unicycler"; by default, "spades"',
-        metavar="STR",
+        help='assembly algorithm (default: "spades")',
     )
     algorithm.add_argument(
         "--arguments",
-        default="",
-        help='add assembly algorithm flags; for example, "--meta" or "--isolate --careful" for SPAdes; by default, empty string',
+        default="--isolate",
+        help='additional assembly algorithm arguments (default: "--isolate")',
         metavar="STR",
+        type=str,
     )
 
 
 def create_config(args):
-    data = get_config_data(args)
     workdir = Path(args.workdir)
     workdir.mkdir(parents=True, exist_ok=True)
-    outfile = open(workdir / "config.toml", "w")
-    toml.dump(data, outfile)
+    config = workdir / "config.toml"
+    with open(config, "w") as f:
+        data = get_config_data(args)
+        toml.dump(data, f)
+    args.config = str(config.resolve())
 
 
 def get_config_data(args):
+    filter = {"short": {"enabled": args.filter, "fastp_args": args.fastp_args}}
+    downsample = {
+        "short": {
+            "enabled": args.downsample,
+            "method": args.method,
+            "target_depth": args.target_depth,
+            "target_num_reads": args.target_num_reads,
+            "genome_size": args.genome_size,
+        }
+    }
     return {
         "samples": {
             args.sample_label: {
                 "illumina": args.read,
-                "skip_filter": args.skip_filter,
-                "min_length": args.length_required,
-                "target_num_reads": args.target_num_reads,
-                "genome_size": args.genome_size,
-                "target_coverage_depth": args.target_coverage_depth,
+                "filter": filter,
+                "downsample": downsample,
             },
         },
         "assemblers": {
@@ -180,8 +185,3 @@ def get_config_data(args):
             }
         },
     }
-
-
-def add_config(args):
-    config = Path(args.workdir) / "config.toml"
-    setattr(args, "config", str(config.resolve()))

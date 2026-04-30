@@ -7,52 +7,75 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from pydantic import ValidationError
+from . import SAMPLES
+from copy import deepcopy
 import pytest
 from yeat.config.assemblers.assembler import AssemblerConfigurationError
 from yeat.config.assemblers.flye import FlyeAssembler
-from yeat.config.sample import Sample
+from yeat.config.assemblers.spades import SPAdesAssembler
 
 
-def test_has_one_sample():
-    message = "FlyeAssembler has no samples to work with"
-    with pytest.raises(ValidationError, match=message):
-        FlyeAssembler(label="flye_default", arguments="", samples={})
+@pytest.mark.parametrize("samples", [{"sample1": SAMPLES["sample1"]}, SAMPLES])
+def test_has_one_sample(samples):
+    SPAdesAssembler.has_one_sample(samples)
+
+
+def test_has_no_sample():
+    message = "Assembler has no samples to work with"
+    with pytest.raises(AssemblerConfigurationError, match=message):
+        SPAdesAssembler.has_one_sample(samples={})
+
+
+def test_parse_data():
+    label = "spades_default"
+    data = {"algorithm": "spades"}
+    samples = {"sample1": SAMPLES["sample1"]}
+    SPAdesAssembler.parse_data(label, data, samples)
 
 
 @pytest.mark.parametrize(
     "data,expected",
     [
-        (
-            {"algorithm": "flye"},
-            {
-                "sample2": Sample(label="sample2", data={"ont_simplex": ["READ.fastq.gz"]}),
-                "sample3": Sample(label="sample3", data={"pacbio_hifi": ["READ.fastq.gz"]}),
-            },
-        ),
-        (
-            {"algorithm": "flye", "samples": ["sample2"]},
-            {"sample2": Sample(label="sample2", data={"ont_simplex": ["READ.fastq.gz"]})},
-        ),
+        ({"algorithm": "flye"}, ["sample3", "sample4"]),
+        ({"algorithm": "flye", "samples": ["sample3"]}, ["sample3"]),
     ],
 )
 def test_select_samples(data, expected):
-    samples = {
-        "sample1": Sample(
-            label="sample1", data={"illumina": ["READ1.fastq.gz", "READ2.fastq.gz"]}
-        ),
-        "sample2": Sample(label="sample2", data={"ont_simplex": ["READ.fastq.gz"]}),
-        "sample3": Sample(label="sample3", data={"pacbio_hifi": ["READ.fastq.gz"]}),
-    }
+    compatible_samples = FlyeAssembler.select_samples(data, SAMPLES)
+    assert list(compatible_samples.keys()) == expected
+
+
+def test_incompatiable_sample_selected():
+    data = {"algorithm": "flye", "samples": ["sample1"]}
+    compatible_samples = FlyeAssembler.select_samples(data, SAMPLES)
+    assert compatible_samples == {}
+
+
+def test_no_compatible_sample_avaliable():
+    data = {"algorithm": "flye"}
+    samples = deepcopy(SAMPLES)
+    del samples["sample3"]
+    del samples["sample4"]
     compatible_samples = FlyeAssembler.select_samples(data, samples)
-    assert compatible_samples == expected
+    assert compatible_samples == {}
 
 
 def test_select_samples_manual_selection_not_avaliable():
-    data = {"algorithm": "flye", "samples": ["sample2"]}
-    samples = {
-        "sample1": Sample(label="sample1", data={"illumina": ["READ1.fastq.gz", "READ2.fastq.gz"]})
-    }
-    message = "Sample 'sample2' not found in provided samples"
+    data = {"algorithm": "flye", "samples": ["sample5"]}
+    message = "Sample 'sample5' not found in provided samples"
     with pytest.raises(AssemblerConfigurationError, match=message):
-        FlyeAssembler.select_samples(data, samples)
+        FlyeAssembler.select_samples(data, SAMPLES)
+
+
+@pytest.mark.parametrize(
+    "data,expected",
+    [
+        ({"algorithm": "spades"}, ""),
+        ({"algorithm": "spades", "arguments": "--isolate"}, "--isolate"),
+    ],
+)
+def test_extra_args(data, expected):
+    label = "spades_default"
+    samples = {"sample1": SAMPLES["sample1"]}
+    assembler = SPAdesAssembler.parse_data(label, data, samples)
+    assert assembler.extra_args == expected

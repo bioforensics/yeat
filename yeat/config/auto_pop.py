@@ -7,6 +7,8 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+from .downsample_settings import DownsampleGroup
+from .filter_settings import FilterGroup
 from pathlib import Path
 import sys
 import toml
@@ -104,8 +106,14 @@ class AutoPop:
         toml.dump(data, sys.stdout)
 
     def get_config_data(self):
+        global_settings = {
+            "filter": FilterGroup().model_dump(include={"short_filter_settings"}, by_alias=True),
+            "downsample": DownsampleGroup().model_dump(
+                include={"short_downsample_settings"}, by_alias=True
+            ),
+        }
         samples = {}
         for label, regex_path in self.files_to_samples.items():
             samples[label] = {"illumina": regex_path}
-        assemblers = {"spades_default": {"algorithm": "spades"}}
-        return {"samples": samples, "assemblers": assemblers}
+        assemblers = {"spades_default": {"algorithm": "spades", "arguments": "--isolate"}}
+        return {"global_settings": global_settings, "samples": samples, "assemblers": assemblers}

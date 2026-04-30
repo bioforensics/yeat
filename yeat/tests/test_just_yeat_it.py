@@ -7,10 +7,9 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from argparse import ArgumentError
 from pathlib import Path
 import pytest
-from yeat.cli.just_yeat_it import get_parser, main, check_positive
+from yeat.cli.just_yeat_it import get_parser, main
 from yeat.tests import data_file, final_contig_files_exist
 
 
@@ -45,7 +44,7 @@ def test_paired_end_assemblers(capsys, tmp_path):
     final_contig_files_exist(wd, config)
 
 
-def test_invalid_input_algorithm(capfd, tmp_path):
+def test_invalid_input_algorithm(capsys, tmp_path):
     wd = str(tmp_path)
     arglist = [
         "-w",
@@ -55,26 +54,10 @@ def test_invalid_input_algorithm(capfd, tmp_path):
         data_file("short_reads_1.fastq.gz"),
         data_file("short_reads_2.fastq.gz"),
     ]
-    with pytest.raises(RuntimeError, match="Snakemake Failed"):
+    with pytest.raises(SystemExit, match="2"):
         run_yeat(arglist)
-    out, err = capfd.readouterr()
-    assert "Unknown assembly algorithm DNE" in err
-
-
-@pytest.mark.parametrize("value", [1, 10, 100])
-def test_check_positive_valid_values(value):
-    check_positive(value) == value
-
-
-@pytest.mark.parametrize("target_coverage_depth", [("-1"), ("0")])
-def test_invalid_target_coverage_depth_negative(target_coverage_depth):
-    arglist = ["-c", target_coverage_depth, data_file("paired.toml")]
-    with pytest.raises(ArgumentError, match=rf"{target_coverage_depth} is not a positive integer"):
-        get_parser(exit_on_error=False).parse_args(arglist)
-
-
-@pytest.mark.parametrize("target_coverage_depth", [("string"), ("3.14")])
-def test_invalid_target_coverage_depth_noninteger(target_coverage_depth):
-    arglist = ["-c", target_coverage_depth, data_file("paired.toml")]
-    with pytest.raises(ArgumentError, match=rf"{target_coverage_depth} is not an integer"):
-        get_parser(exit_on_error=False).parse_args(arglist)
+    captured = capsys.readouterr()
+    message = (
+        "argument --algorithm: invalid choice: 'DNE' (choose from spades, megahit, unicycler)"
+    )
+    assert message in captured.err

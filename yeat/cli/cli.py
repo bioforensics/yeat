@@ -11,8 +11,6 @@ from argparse import ArgumentParser, Action
 from importlib.metadata import version
 from pathlib import Path
 from random import randint
-import sys
-import toml
 
 
 def get_parser(exit_on_error=True):
@@ -61,7 +59,7 @@ def workflow_configuration(parser):
         "-s",
         "--seed",
         default=randint(1, 2**16 - 1),
-        help="seed for the random number generator used for downsampling; by default, the seed is chosen randomly",
+        help="seed for the random number generator used in the random downsampling method (default: random int)",
         metavar="S",
         type=int,
     )
@@ -69,7 +67,7 @@ def workflow_configuration(parser):
         "-t",
         "--threads",
         default=1,
-        help="number of available T threads for sequential and parallel processing jobs; by default, T=1",
+        help="number of threads T for sequential and parallel processing (default: 1)",
         metavar="T",
         type=int,
     )
@@ -77,20 +75,20 @@ def workflow_configuration(parser):
         "-w",
         "--workdir",
         default=".",
-        help="working directory; default is current working directory",
+        help="working directory (default: current directory)",
         metavar="DIR",
-        type=str,
+        type=lambda p: str(Path(p).resolve()),
     )
     workflow.add_argument(
         "-n",
         "--dry-run",
         action="store_true",
-        help="construct workflow DAG and print a summary but do not execute",
+        help="construct workflow DAG and print summary without execution",
     )
     workflow.add_argument(
         "--copy_input",
         action="store_true",
-        help="copy input Fastq files to the working directory to ensure complete data provenance; by default, input Fastq files are symbolically linked to the working directory",
+        help="copy input FASTQ files to the working directory instead of symlinking",
     )
 
 
@@ -112,19 +110,38 @@ def grid_configuration(parser):
 
 
 class InitAction(Action):
-    config_template = {
-        "global_settings": {
-            "target_coverage_depth": 150,
-            "target_num_reads": -1,
-            "genome_size": 0,
-            "min_length": 100,
-            "quality": 10,
-            "skip_filter": True,
-        },
-        "samples": {"sample1": {"illumina": "short_reads_?.fastq.gz"}},
-        "assemblers": {"spades_default": {"algorithm": "spades"}},
-    }
+    config_template = '''[global_settings.filter.short]
+enabled = false
+fastp_args = "--min-length 50 --detect_adapter_for_pe"
+
+[global_settings.filter.long]
+enabled = false
+chopper_args = ""
+
+[global_settings.downsample.short]
+enabled = false
+method = "random"                           # random|bbnorm
+target_depth = 150                          # desired depth of coverage
+target_num_reads = "auto"                   # number or "auto" to calculate from target_depth and genome_size; ignored if mode = "bbnorm"
+genome_size = "auto"                        # number (if genome size known) or "auto" to estimate using Mash; ignored if mode = "bbnorm"
+
+[global_settings.downsample.long]
+enabled = false
+target_depth = 150                          # desired depth of coverage
+target_num_reads = "auto"                   # number or "auto" to calculate from target_depth and genome_size
+genome_size = "auto"                        # number (if genome size known) or "auto" to estimate using Mash
+
+[samples.sample1]
+illumina = "data/short_reads_R?.fastq.gz"   # illumina|pacbio_hifi|ont_simplex|ont_duplex|ont_ultralong
+
+[samples.sample2]
+illumina = "data/short_reads_R?.fastq.gz"
+pacbio_hifi = "data/long_reads.fastq.gz"
+
+[assemblers.assembly1]
+algorithm = "spades"
+arguments = "--isolate"'''
 
     def __call__(self, parser, namespace, values, option_string=None):
-        toml.dump(self.config_template, sys.stdout)
+        print(self.config_template)
         raise SystemExit()

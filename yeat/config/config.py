@@ -77,26 +77,29 @@ class AssemblyConfiguration(BaseModel):
             targets.extend(assembler.targets)
         return targets
 
-    def get_sample_input_files(self, sample, read_type):
-        return self.samples[sample].data[read_type]
+    def get_sample_input_files(self, sample, platform):
+        return self.samples[sample].data[platform]
 
-    def get_sample_skip_filter(self, sample):
-        return self.samples[sample].skip_filter
+    def get_sample_filter_enabled(self, sample, read_type):
+        return self.samples[sample].filter_enabled(read_type)
 
-    def get_sample_quality(self, sample):
-        return self.samples[sample].quality
+    def get_sample_filter_args(self, sample, read_type):
+        return self.samples[sample].filter_args(read_type)
 
-    def get_sample_min_length(self, sample):
-        return self.samples[sample].min_length
+    def get_sample_downsample_enabled(self, sample, read_type):
+        return self.samples[sample].downsample_enabled(read_type)
 
-    def get_sample_target_num_reads(self, sample):
-        return self.samples[sample].target_num_reads
+    def get_sample_downsample_method(self, sample, read_type):
+        return self.samples[sample].downsample_method(read_type)
 
-    def get_sample_genome_size(self, sample):
-        return self.samples[sample].genome_size
+    def get_sample_target_depth(self, sample, read_type):
+        return self.samples[sample].target_depth(read_type)
 
-    def get_sample_target_coverage_depth(self, sample):
-        return self.samples[sample].target_coverage_depth
+    def get_sample_target_num_reads(self, sample, read_type):
+        return self.samples[sample].target_num_reads(read_type)
+
+    def get_sample_genome_size(self, sample, read_type):
+        return self.samples[sample].genome_size(read_type)
 
     def get_assembler_input_files(self, label, sample):
         infiles = self.assemblers[label].input_files(sample)

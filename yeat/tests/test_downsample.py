@@ -14,33 +14,35 @@ from yeat.tests import data_file
 
 def test_downsample():
     Downsample.parse_data(
-        genome_size=6275000,
-        mash_report=data_file("report.tsv"),
-        fastp_report=data_file("fastp.json"),
-        target_coverage_depth=150,
-        target_num_reads=0,
+        target_depth=150,
+        target_num_reads="auto",
+        genome_size="auto",
+        mash_report=data_file("mash_report.tsv"),
+        seqkit_report=data_file("seqkit_report.tsv"),
+        read_type="paired",
     )
 
 
-@pytest.mark.parametrize("input_genome_size", [0, 6275000])
-def test_get_genome_size(input_genome_size):
-    report_path = data_file("combined-reads.report.tsv")
-    genome_size = Downsample._get_genome_size(input_genome_size, report_path)
-    assert genome_size == 6275000
+def test_get_genome_size():
+    report_path = data_file("mash_report.tsv")
+    genome_size = Downsample._get_estimated_genome_size(report_path)
+    assert genome_size == 188786
 
 
 def test_get_average_read_length():
-    average_read_length = Downsample._get_average_read_length(data_file("fastp.json"))
+    report_path = data_file("seqkit_report.tsv")
+    average_read_length = Downsample._get_average_read_length(report_path)
     assert average_read_length == 125.0
 
 
 @pytest.mark.parametrize("input_down", [0, 3765000])
 def test_get_num_reads(input_down):
     downsample = Downsample(
+        target_depth=150,
+        target_num_reads=input_down,
         genome_size=6275000,
         average_read_length=125.0,
-        target_coverage_depth=150,
-        target_num_reads=input_down,
+        read_type="paired",
     )
-    down = downsample.get_num_reads()
+    down = downsample.target_num_reads
     assert down == 3765000

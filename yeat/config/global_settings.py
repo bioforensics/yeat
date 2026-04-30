@@ -7,19 +7,26 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+from .downsample_settings import DownsampleGroup
+from .filter_settings import FilterGroup
 from pydantic import BaseModel, ConfigDict
-from typing import Optional
 
 
 class GlobalSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    target_coverage_depth: Optional[int] = 150
-    target_num_reads: Optional[int] = -1  # -1 disable, 0 auto
-    genome_size: Optional[int] = 0  # 0 auto
-    min_length: Optional[int] = 100
-    quality: Optional[int] = 10
-    skip_filter: Optional[bool] = True
+    filter: FilterGroup = FilterGroup()
+    downsample: DownsampleGroup = DownsampleGroup()
 
     @classmethod
     def parse_data(cls, data):
+        data["filter"] = FilterGroup.parse_data(data.get("filter", {}))
+        data["downsample"] = DownsampleGroup.parse_data(data.get("downsample", {}))
         return cls(**data)
+
+    def update_filter_settings(self, data):
+        for read_type, filter_data in data.items():
+            self.filter.update_settings(read_type, filter_data)
+
+    def update_downsample_settings(self, data):
+        for read_type, downsample_data in data.items():
+            self.downsample.update_settings(read_type, downsample_data)

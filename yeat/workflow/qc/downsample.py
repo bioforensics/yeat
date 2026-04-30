@@ -7,45 +7,51 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-import json
+from dataclasses import dataclass
 import pandas as pd
-from pydantic import BaseModel
+from typing import Literal
 
 
-class Downsample(BaseModel):
+@dataclass
+class Downsample:
+    target_depth: int
+    target_num_reads: int
     genome_size: int
     average_read_length: int
-    target_coverage_depth: int
-    target_num_reads: int
+    read_type: Literal["paired", "single", "long"]
+
+    def __post_init__(self):
+        if self.target_num_reads:
+            return
+        avl = (
+            2 * self.average_read_length
+            if self.read_type == "paired"
+            else self.average_read_length
+        )
+        self.target_num_reads = int((self.genome_size * self.target_depth) / avl)
 
     @classmethod
     def parse_data(
-        cls, genome_size, mash_report, fastp_report, target_coverage_depth, target_num_reads
+        cls, target_depth, target_num_reads, genome_size, mash_report, seqkit_report, read_type
     ):
         return cls(
-            genome_size=cls._get_genome_size(genome_size, mash_report),
-            average_read_length=cls._get_average_read_length(fastp_report),
-            target_coverage_depth=target_coverage_depth,
-            target_num_reads=target_num_reads,
+            target_depth=target_depth,
+            target_num_reads=target_num_reads if isinstance(target_num_reads, int) else None,
+            genome_size=(
+                genome_size
+                if isinstance(genome_size, int)
+                else cls._get_estimated_genome_size(mash_report)
+            ),
+            average_read_length=cls._get_average_read_length(seqkit_report),
+            read_type=read_type,
         )
 
     @staticmethod
-    def _get_genome_size(genome_size, mash_report):
-        if genome_size != 0:
-            return genome_size
+    def _get_estimated_genome_size(mash_report):
         df = pd.read_csv(mash_report, sep="\t")
-        return int(df["Length"].iloc[0])
+        return int(df.iloc[0]["Length"])
 
     @staticmethod
-    def _get_average_read_length(fastp_report):
-        with open(fastp_report, "r") as fh:
-            data = json.load(fh)
-        base_count = data["summary"]["after_filtering"]["total_bases"]
-        read_count = data["summary"]["after_filtering"]["total_reads"]
-        return base_count / read_count
-
-    def get_num_reads(self, paired=True):
-        if self.target_num_reads != 0:
-            return self.target_num_reads
-        avl = 2 * self.average_read_length if paired else self.average_read_length
-        return int((self.genome_size * self.target_coverage_depth) / avl)
+    def _get_average_read_length(seqkit_report):
+        df = pd.read_csv(seqkit_report, sep=r"\s+")
+        return int(float(str(df.iloc[0]["avg_len"]).replace(",", "")))

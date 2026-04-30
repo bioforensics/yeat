@@ -8,6 +8,7 @@
 # -------------------------------------------------------------------------------------------------
 
 from yeat.workflow.qc.aux import copy_input
+from yeat.workflow.qc.downsample import Downsample
 
 
 rule copy_input:
@@ -51,29 +52,75 @@ rule chopper:
     threads: 128
     params:
         symlink_read="../read.fastq.gz",
-        skip_filter=lambda wc: config["asm_cfg"].get_sample_skip_filter(wc.sample),
-        quality=lambda wc: config["asm_cfg"].get_sample_quality(wc.sample),
-        min_length=lambda wc: config["asm_cfg"].get_sample_min_length(wc.sample),
+        filter_enabled=lambda wc: config["asm_cfg"].get_sample_filter_enabled(wc.sample, "long"),
+        filter_args=lambda wc: config["asm_cfg"].get_sample_filter_args(wc.sample, "long"),
+    log:
+        "analysis/{sample}/qc/{platform}/chopper/chopper.log",
     run:
-        if params.skip_filter:
+        if not params.filter_enabled:
             Path(output.read).symlink_to(params.symlink_read)
             return
-        shell("chopper -t {threads} -q {params.quality} -l {params.min_length} -i {input.read} | gzip > {output.read}")
+        shell("chopper -t {threads} -i {input.read} {params.filter_args} 2> {log} | gzip > {output.read}")
+
+
+rule estimate_genome_size:
+    input:
+        read=rules.chopper.output.read,
+    output:
+        mash_sentinel=touch("analysis/{sample}/qc/{platform}/mash/sentinel.done"),
+    wildcard_constraints:
+        platform="ont_simplex|ont_duplex|ont_ultralong|pacbio_hifi",
+    params:
+        min_copies=2,
+        sketch="analysis/{sample}/qc/{platform}/mash/reference.msh",
+        mash_report="analysis/{sample}/qc/{platform}/mash/report.tsv",
+        genome_size=lambda wc: config["asm_cfg"].get_sample_genome_size(wc.sample, "long"),
+    log:
+        "analysis/{sample}/qc/{platform}/mash/mash.log",
+    run:
+        if isinstance(params.genome_size, int):
+            return
+        shell("mash sketch -m {params.min_copies} -r {input.read} -o {params.sketch} > {log} 2>&1")
+        shell("mash info -t {params.sketch} > {params.mash_report}")
+
+
+rule seqkit:
+    input:
+        read=rules.chopper.output.read,
+    output:
+        seqkit_report="analysis/{sample}/qc/{platform}/seqkit/report.tsv",
+    wildcard_constraints:
+        platform="ont_simplex|ont_duplex|ont_ultralong|pacbio_hifi",
+    shell:
+        """
+        seqkit stats {input} > {output.seqkit_report}
+        """
 
 
 rule downsample:
     input:
         read=rules.chopper.output.read,
+        mash_sentinel=rules.estimate_genome_size.output.mash_sentinel,
+        seqkit_report=rules.seqkit.output.seqkit_report,
     output:
         read="analysis/{sample}/qc/{platform}/downsample/read.fastq.gz",
     wildcard_constraints:
         platform="ont_simplex|ont_duplex|ont_ultralong|pacbio_hifi",
+    threads: 128
     params:
         symlink_read="../chopper/read.fastq.gz",
+        mash_report="analysis/{sample}/qc/{platform}/mash/report.tsv",
+        outdir="analysis/{sample}/qc/{platform}/downsample",
         seed=config["seed"],
-        target_num_reads=lambda wc: config["asm_cfg"].get_sample_target_num_reads(wc.sample),
+        downsample_enabled=lambda wc: config["asm_cfg"].get_sample_downsample_enabled(wc.sample, "long"),
+        target_depth=lambda wc: config["asm_cfg"].get_sample_target_depth(wc.sample, "long"),
+        target_num_reads=lambda wc: config["asm_cfg"].get_sample_target_num_reads(wc.sample, "long"),
+        genome_size=lambda wc: config["asm_cfg"].get_sample_genome_size(wc.sample, "long"),
+    log:
+        "analysis/{sample}/qc/{platform}/downsample/bbnorm.log",
     run:
-        if params.target_num_reads == -1:
+        if not params.downsample_enabled:
             Path(output.read).symlink_to(params.symlink_read)
             return
-        shell("seqtk sample -s {params.seed} {input.read} {params.target_num_reads} | gzip > {output.read}")
+        downsample = Downsample.parse_data(params.target_depth, params.target_num_reads, params.genome_size, params.mash_report, input.seqkit_report, "long")
+        shell("seqtk sample -s {params.seed} {input.read} {downsample.target_num_reads} | gzip > {params.outdir}/read.fastq.gz")

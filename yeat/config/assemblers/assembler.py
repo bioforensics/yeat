@@ -9,12 +9,12 @@
 
 from ..sample import Sample
 from pydantic import BaseModel, field_validator
-from typing import Optional, Dict
+from typing import Dict
 
 
 class Assembler(BaseModel):
     label: str
-    arguments: Optional[str]
+    arguments: str | None = None
     samples: Dict[str, Sample]
 
     @field_validator("samples")

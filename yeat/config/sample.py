@@ -7,10 +7,12 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+from .downsample_settings import DownsampleGroup
+from .filter_settings import FilterGroup
 from .global_settings import GlobalSettings
 from pathlib import Path
 from pydantic import BaseModel, field_validator
-from typing import Dict, Union
+from typing import Dict
 
 
 ONT_PLATFORMS = {"ont_simplex", "ont_duplex", "ont_ultralong"}
@@ -20,7 +22,9 @@ BEST_LR_ORDER = ("pacbio_hifi", "ont_duplex", "ont_simplex", "ont_ultralong")
 
 class Sample(BaseModel):
     label: str
-    data: Dict[str, Union[list[Path], int, bool]]
+    data: Dict[str, list[Path]]
+    filter: FilterGroup = FilterGroup()
+    downsample: DownsampleGroup = DownsampleGroup()
 
     @field_validator("data")
     @classmethod
@@ -31,42 +35,39 @@ class Sample(BaseModel):
 
     @field_validator("data")
     @classmethod
-    def has_valid_keys(cls, data):
-        field_names = set(GlobalSettings.model_fields.keys())
-        valid_keys = field_names | READ_TYPES
-        extra_keys = set(data.keys()) - valid_keys
+    def has_read_paths(cls, data):
+        for read_type, read_paths in data.items():
+            if read_type not in READ_TYPES:
+                continue
+            if not read_paths:
+                message = f"Unable to find FASTQ files for sample"
+                raise SampleConfigurationError(message)
+            if len(read_paths) > 2:
+                message = f"Sample has too many FASTQ files. Expected at most 2, found {len(read_paths)}."
+                raise SampleConfigurationError(message)
+        return data
+
+    @field_validator("data")
+    @classmethod
+    def has_invalid_keys(cls, data):
+        extra_keys = set(data.keys()) - READ_TYPES - set(GlobalSettings.model_fields.keys())
         if extra_keys:
             raise SampleConfigurationError(f"Sample has unexpected key(s): {extra_keys}")
         return data
 
     @classmethod
     def parse_data(cls, label, data, global_settings):
-        cls._check_read_paths(label, data)
-        cls._add_global_settings(data, global_settings)
-        return cls(label=label, data=data)
-
-    @staticmethod
-    def _check_read_paths(label, data):
-        for read_type, read_paths in data.items():
-            if read_type not in READ_TYPES:
-                continue
-            reads = sorted(read_paths)
-            if not reads:
-                message = f"Unable to find FASTQ files for sample '{label}' at path: {read_paths}"
-                raise SampleConfigurationError(message)
-            if len(reads) > 2:
-                message = (
-                    f"Found too many FASTQ files for sample '{label}' at path: {read_paths}. "
-                    f"Expected at most 2, found {len(reads)}."
-                )
-                raise SampleConfigurationError(message)
-            data[read_type] = reads
-
-    @staticmethod
-    def _add_global_settings(data, global_settings):
-        for key, value in global_settings.model_dump().items():
-            if key not in data:
-                data[key] = value
+        global_settings_copy = global_settings.model_copy()
+        global_settings_copy.update_filter_settings(data.get("filter", {}))
+        global_settings_copy.update_downsample_settings(data.get("downsample", {}))
+        data.pop("filter", None)
+        data.pop("downsample", None)
+        return cls(
+            label=label,
+            data=data,
+            filter=global_settings_copy.filter,
+            downsample=global_settings_copy.downsample,
+        )
 
     @property
     def has_illumina(self):
@@ -85,35 +86,39 @@ class Sample(BaseModel):
         return self.has_ont or self.has_pacbio
 
     @property
-    def target_coverage_depth(self):
-        return self.data.get("target_coverage_depth", 150)
-
-    @property
-    def target_num_reads(self):
-        return self.data.get("target_num_reads", -1)
-
-    @property
-    def genome_size(self):
-        return self.data.get("genome_size", 0)
-
-    @property
-    def min_length(self):
-        return self.data.get("min_length", 100)
-
-    @property
-    def quality(self):
-        return self.data.get("quality", 10)
-
-    @property
-    def skip_filter(self):
-        return self.data.get("skip_filter", True)
-
-    @property
     def best_long_read_type(self):
         for read_type in BEST_LR_ORDER:
             if read_type in self.data:
                 return read_type
         return None
+
+    def get_filter_settings(self, read_type):
+        return getattr(self.filter, f"{read_type}_filter_settings")
+
+    def get_downsample_settings(self, read_type):
+        return getattr(self.downsample, f"{read_type}_downsample_settings")
+
+    def filter_enabled(self, read_type):
+        return self.get_filter_settings(read_type).enabled
+
+    def filter_args(self, read_type):
+        settings = self.get_filter_settings(read_type)
+        return settings.fastp_args if read_type == "short" else settings.chopper_args
+
+    def downsample_enabled(self, read_type):
+        return self.get_downsample_settings(read_type).enabled
+
+    def downsample_method(self, read_type):
+        return self.get_downsample_settings(read_type).method
+
+    def target_depth(self, read_type):
+        return self.get_downsample_settings(read_type).target_depth
+
+    def target_num_reads(self, read_type):
+        return self.get_downsample_settings(read_type).target_num_reads
+
+    def genome_size(self, read_type):
+        return self.get_downsample_settings(read_type).genome_size
 
     @property
     def targets(self):

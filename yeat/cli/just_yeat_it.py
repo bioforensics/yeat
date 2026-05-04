@@ -69,8 +69,8 @@ def filter_configuration(parser):
     )
     filter.add_argument(
         "--fastp-args",
-        default="--min-length 50 --detect_adapter_for_pe",
-        help='additional fastp arguments (default: "--min-length 50 --detect_adapter_for_pe")',
+        default="--length_required 50 --detect_adapter_for_pe",
+        help='additional fastp arguments (default: "--length_required 50 --detect_adapter_for_pe")',
         metavar="STR",
         type=str,
     )

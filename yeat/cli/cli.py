@@ -112,7 +112,7 @@ def grid_configuration(parser):
 class InitAction(Action):
     config_template = '''[global_settings.filter.short]
 enabled = false
-fastp_args = "--min-length 50 --detect_adapter_for_pe"
+fastp_args = "--length_required 50 --detect_adapter_for_pe"
 
 [global_settings.filter.long]
 enabled = false
@@ -121,7 +121,7 @@ chopper_args = ""
 [global_settings.downsample.short]
 enabled = false
 method = "random"                           # random|bbnorm
-target_depth = 150                          # desired depth of coverage
+target_depth = 150                          # desired depth of coverage; ignored if mode = "bbnorm"
 target_num_reads = "auto"                   # number or "auto" to calculate from target_depth and genome_size; ignored if mode = "bbnorm"
 genome_size = "auto"                        # number (if genome size known) or "auto" to estimate using Mash; ignored if mode = "bbnorm"
 

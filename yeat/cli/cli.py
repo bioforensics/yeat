@@ -121,7 +121,7 @@ chopper_args = ""
 [global_settings.downsample.short]
 enabled = false
 method = "random"                           # random|bbnorm
-target_depth = 150                          # desired depth of coverage; ignored if mode = "bbnorm"
+target_depth = 150                          # desired depth of coverage
 target_num_reads = "auto"                   # number or "auto" to calculate from target_depth and genome_size; ignored if mode = "bbnorm"
 genome_size = "auto"                        # number (if genome size known) or "auto" to estimate using Mash; ignored if mode = "bbnorm"
 

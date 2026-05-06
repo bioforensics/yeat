@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.9.2] 2026-05-04
 
+### Added
+- Ability to adjust target depth when using BBNorm (#111)
+
 ### Changed
 - Incorrect fastp minimum read length argument (#111)
 

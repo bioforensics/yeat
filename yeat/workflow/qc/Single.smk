@@ -116,4 +116,4 @@ rule downsample:
             downsample = Downsample.parse_data(params.target_depth, params.target_num_reads, params.genome_size, params.mash_report, input.seqkit_report, "single")
             shell("seqtk sample -s {params.seed} {input.read} {downsample.target_num_reads} | gzip > {params.outdir}/read.fastq.gz")
         elif params.downsample_method == "bbnorm":
-            shell("bbnorm.sh threads={threads} in={input.read} out={params.outdir}/read.fastq.gz > {log} 2>&1")
+            shell("bbnorm.sh threads={threads} in={input.read} out={params.outdir}/read.fastq.gz target={params.target_depth} > {log} 2>&1")

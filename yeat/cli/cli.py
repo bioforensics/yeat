@@ -112,7 +112,7 @@ def grid_configuration(parser):
 class InitAction(Action):
     config_template = '''[global_settings.filter.short]
 enabled = false
-fastp_args = "--min-length 50 --detect_adapter_for_pe"
+fastp_args = "--length_required 50 --detect_adapter_for_pe"
 
 [global_settings.filter.long]
 enabled = false

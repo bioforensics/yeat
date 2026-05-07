@@ -19,7 +19,7 @@ GLOBAL_DEFAULT_SETTINGS = {
     "filter": {
         "short_filter_settings": {
             "enabled": False,
-            "fastp_args": "--min-length 50 --detect_adapter_for_pe",
+            "fastp_args": "--length_required 50 --detect_adapter_for_pe",
         },
         "long_filter_settings": {"enabled": False, "chopper_args": ""},
     },
@@ -88,7 +88,7 @@ def test_global_settings_parse_data(data):
             ("filter", "short_filter_settings"),
             {
                 "enabled": False,
-                "fastp_args": "--min-length 50 --detect_adapter_for_pe",
+                "fastp_args": "--length_required 50 --detect_adapter_for_pe",
             },
             {"short": {"enabled": True, "fastp_args": ""}},
             {"enabled": True, "fastp_args": ""},

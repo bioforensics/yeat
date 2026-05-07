@@ -25,7 +25,7 @@ class FilterSettings(BaseModel):
 
 
 class ShortFilterSettings(FilterSettings):
-    fastp_args: str = "--min-length 50 --detect_adapter_for_pe"
+    fastp_args: str = "--length_required 50 --detect_adapter_for_pe"
 
 
 class LongFilterSettings(FilterSettings):

@@ -25,6 +25,9 @@ rule spades:
     shell:
         """
         spades.py {params.input_args} -t {threads} -o {params.outdir} {params.extra_args} > {log} 2>&1
+        if [[ "{params.extra_args}" == *"--corona"* ]]; then
+            ln -s raw_contigs.fasta {output.contigs}
+        fi
         """
 
 

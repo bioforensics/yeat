@@ -49,8 +49,10 @@ def run_workflow(
     if dry_run:
         command.append("--dryrun")
     command = list(map(str, command))
-    subprocess.run(command)
+    process = subprocess.run(command)
     expected_output_file_status(command, workdir)
+    if process.returncode != 0:
+        raise RuntimeError("Snakemake Failed")
 
 
 def write_snakemake_config(config, seed, threads, workdir, dry_run, copy_input):

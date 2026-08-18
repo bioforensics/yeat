@@ -8,7 +8,9 @@
 # -------------------------------------------------------------------------------------------------
 
 from importlib.resources import files
+from io import StringIO
 import json
+import pandas as pd
 from pathlib import Path
 from random import randint
 import subprocess
@@ -38,6 +40,7 @@ def run_workflow(
         snakemake_config,
         "--printshellcmds",
         "--use-conda",
+        "--keep-going",
     ]
     if slurm:
         command.extend(("--executor", "slurm", "--jobs", max_jobs))
@@ -46,9 +49,8 @@ def run_workflow(
     if dry_run:
         command.append("--dryrun")
     command = list(map(str, command))
-    process = subprocess.run(command)
-    if process.returncode != 0:
-        raise RuntimeError("Snakemake Failed")
+    subprocess.run(command)
+    expected_output_file_status(command, workdir)
 
 
 def write_snakemake_config(config, seed, threads, workdir, dry_run, copy_input):
@@ -78,3 +80,14 @@ def get_config_data(infile):
                 reads = list(reads.parent.glob(reads.name))
             data["samples"][sample_label][readtype] = [str(read) for read in reads]
     return data
+
+
+def expected_output_file_status(command, workdir):
+    status_dir = Path(workdir) / "status"
+    status_dir.mkdir(parents=True, exist_ok=True)
+    command.append("--summary")
+    command = list(map(str, command))
+    process = subprocess.run(command, capture_output=True, text=True)
+    result = "\n".join(process.stdout.split("\n", 1)[1:])
+    df = pd.read_csv(StringIO(result), sep="\t")
+    df.to_csv(status_dir / "yeat.tsv", sep="\t", index=False)

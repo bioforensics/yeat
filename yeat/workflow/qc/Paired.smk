@@ -31,7 +31,7 @@ rule fastqc:
     output:
         r1_html="analysis/{sample}/qc/illumina/fastqc/R1_fastqc.html",
         r2_html="analysis/{sample}/qc/illumina/fastqc/R2_fastqc.html",
-    threads: config['threads']
+    threads: config["threads"]
     params:
         outdir="analysis/{sample}/qc/illumina/fastqc",
     log:
@@ -107,7 +107,7 @@ rule downsample:
     output:
         r1="analysis/{sample}/qc/illumina/downsample/R1.fastq.gz",
         r2="analysis/{sample}/qc/illumina/downsample/R2.fastq.gz",
-    threads: config['threads']
+    threads: config["threads"]
     params:
         symlink_r1="../R1.fastq.gz",
         symlink_r2="../R2.fastq.gz",

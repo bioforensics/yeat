@@ -31,7 +31,7 @@ rule fastqc:
         html="analysis/{sample}/qc/{platform}/fastqc/read_fastqc.html",
     wildcard_constraints:
         platform="ont_simplex|ont_duplex|ont_ultralong|pacbio_hifi",
-    threads: 128
+    threads: config['threads']
     params:
         outdir="analysis/{sample}/qc/{platform}/fastqc",
     log:
@@ -49,7 +49,7 @@ rule chopper:
         read="analysis/{sample}/qc/{platform}/chopper/read.fastq.gz",
     wildcard_constraints:
         platform="ont_simplex|ont_duplex|ont_ultralong|pacbio_hifi",
-    threads: 128
+    threads: config['threads']
     params:
         symlink_read="../read.fastq.gz",
         filter_enabled=lambda wc: config["asm_cfg"].get_sample_filter_enabled(wc.sample, "long"),
@@ -106,7 +106,7 @@ rule downsample:
         read="analysis/{sample}/qc/{platform}/downsample/read.fastq.gz",
     wildcard_constraints:
         platform="ont_simplex|ont_duplex|ont_ultralong|pacbio_hifi",
-    threads: 128
+    threads: config['threads']
     params:
         symlink_read="../chopper/read.fastq.gz",
         mash_report="analysis/{sample}/qc/{platform}/mash/report.tsv",

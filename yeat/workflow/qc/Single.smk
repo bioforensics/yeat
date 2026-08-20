@@ -27,7 +27,7 @@ rule fastqc:
         read=rules.copy_input.output.read,
     output:
         html="analysis/{sample}/qc/illumina/fastqc/read_fastqc.html",
-    threads: 128
+    threads: config['threads']
     params:
         outdir="analysis/{sample}/qc/illumina/fastqc",
     log:
@@ -95,7 +95,7 @@ rule downsample:
         seqkit_report=rules.seqkit.output.seqkit_report,
     output:
         read="analysis/{sample}/qc/illumina/downsample/read.fastq.gz",
-    threads: 128
+    threads: config['threads']
     params:
         symlink_read="../read.fastq.gz",
         mash_report="analysis/{sample}/qc/illumina/mash/report.tsv",

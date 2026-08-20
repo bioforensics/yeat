@@ -47,10 +47,9 @@ class Sample(BaseModel):
     @model_validator(mode="after")
     def validate_read_paths_exist(self):
         for read_type, read_paths in self.data.items():
-            if read_type not in READ_TYPES:
-                continue
             if not read_paths:
-                raise FileNotFoundError(f"Unable to find FASTQ files for sample {self.label}")
+                message = f"Unable to find FASTQ {read_type} files for sample {self.label}"
+                raise FileNotFoundError(message)
         return self
 
     @field_validator("data")

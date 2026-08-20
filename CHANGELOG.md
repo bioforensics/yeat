@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+- Throw `FileNotFoundError` for bad FASTQ paths (!115)
+
 ### Fixed
 - Maximum thread limit per rule during parallel execution (!114)
 

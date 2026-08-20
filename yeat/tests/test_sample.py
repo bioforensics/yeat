@@ -60,13 +60,6 @@ def test_validate_read_path_count_found_too_many(tmp_path):
 
 def test_validate_read_paths_exist_unable_to_find():
     data = {"illumina": []}
-    message = "Unable to find FASTQ files for sample"
-    with pytest.raises(FileNotFoundError, match=message):
-        Sample.validate_read_paths_exist()
-
-
-def test_validate_read_paths_exist_unable_to_find():
-    data = {"illumina": []}
     message = "Unable to find FASTQ illumina files for sample sample1"
     with pytest.raises(FileNotFoundError, match=message):
         Sample(label="sample1", data=data)

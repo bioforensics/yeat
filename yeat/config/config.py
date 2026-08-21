@@ -11,6 +11,7 @@ from .assemblers import ALGORITHM_CONFIGS
 from .assemblers.assembler import Assembler
 from .global_settings import GlobalSettings
 from .sample import Sample
+import copy
 from pydantic import BaseModel, ConfigDict, field_validator
 from typing import Dict
 
@@ -38,7 +39,7 @@ class AssemblyConfiguration(BaseModel):
     @classmethod
     def parse_snakemake_config(cls, config):
         global_settings = cls._parse_global_settings(config)
-        samples = cls._parse_samples(config, global_settings)
+        samples = cls._parse_samples(config, copy.deepcopy(global_settings))
         assemblers = cls._parse_assemblers(config, samples)
         return cls(global_settings=global_settings, samples=samples, assemblers=assemblers)
 

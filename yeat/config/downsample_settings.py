@@ -21,9 +21,9 @@ class DownsampleSettings(BaseModel):
     @field_validator("genome_size", mode="before")
     @classmethod
     def parse_genome_size(cls, value):
-        if not isinstance(value, str) or value == "auto":
+        if not isinstance(value, str) or value.strip().lower() == "auto":
             return value
-        value = "".join(value.lower().split())
+        value = "".join(value.lower().split()).replace(",", "")
         multipliers = {
             "k": 1_000,
             "m": 1_000_000,
@@ -34,7 +34,7 @@ class DownsampleSettings(BaseModel):
         suffix = value[-1]
         if suffix in multipliers:
             return int(float(value[:-1]) * multipliers[suffix])
-        return value
+        return int(value)
 
     @classmethod
     def parse_data(cls, data):

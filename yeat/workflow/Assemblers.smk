@@ -24,7 +24,7 @@ rule spades:
         "analysis/{sample}/yeat/spades/{label}/spades.log",
     run:
         shell("spades.py {params.input_args} -t {threads} -o {params.outdir} {params.extra_args} > {log} 2>&1")
-        if "--corona" in params.extra_args:
+        if "--corona" in params.extra_args.split():
             shell("ln -s raw_contigs.fasta {output.contigs}")
 
 

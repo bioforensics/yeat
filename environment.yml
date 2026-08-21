@@ -27,7 +27,6 @@ dependencies:
     - pkg-config>=0.29
     - pandas>=1.4
     - pilon>=1.24
-    - pint>=0.25
     - plass>=4.687d7
     - pulp=2.7
     - pytest>=7.1

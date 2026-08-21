@@ -7,7 +7,7 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
-from pydantic import BaseModel, ConfigDict, PositiveInt, Field
+from pydantic import BaseModel, ConfigDict, PositiveInt, Field, field_validator
 from typing import Literal
 
 
@@ -17,6 +17,24 @@ class DownsampleSettings(BaseModel):
     target_depth: PositiveInt = 150
     target_num_reads: PositiveInt | Literal["auto"] = "auto"
     genome_size: PositiveInt | Literal["auto"] = "auto"
+
+    @field_validator("genome_size", mode="before")
+    @classmethod
+    def parse_genome_size(cls, value):
+        if not isinstance(value, str) or value == "auto":
+            return value
+        value = "".join(value.lower().split())
+        multipliers = {
+            "k": 1_000,
+            "m": 1_000_000,
+            "g": 1_000_000_000,
+        }
+        if value.endswith("b"):
+            value = value[:-1]
+        suffix = value[-1]
+        if suffix in multipliers:
+            return int(float(value[:-1]) * multipliers[suffix])
+        return value
 
     @classmethod
     def parse_data(cls, data):

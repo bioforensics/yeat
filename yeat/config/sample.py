@@ -11,7 +11,7 @@ from .downsample_settings import DownsampleGroup
 from .filter_settings import FilterGroup
 from .global_settings import GlobalSettings
 from pathlib import Path
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, model_validator
 from typing import Dict
 
 
@@ -35,17 +35,22 @@ class Sample(BaseModel):
 
     @field_validator("data")
     @classmethod
-    def has_read_paths(cls, data):
+    def validate_read_path_count(cls, data):
         for read_type, read_paths in data.items():
             if read_type not in READ_TYPES:
                 continue
-            if not read_paths:
-                message = f"Unable to find FASTQ files for sample"
-                raise SampleConfigurationError(message)
             if len(read_paths) > 2:
                 message = f"Sample has too many FASTQ files. Expected at most 2, found {len(read_paths)}."
                 raise SampleConfigurationError(message)
         return data
+
+    @model_validator(mode="after")
+    def validate_read_paths_exist(self):
+        for read_type, read_paths in self.data.items():
+            if not read_paths:
+                message = f"Unable to find FASTQ {read_type} files for sample {self.label}"
+                raise FileNotFoundError(message)
+        return self
 
     @field_validator("data")
     @classmethod

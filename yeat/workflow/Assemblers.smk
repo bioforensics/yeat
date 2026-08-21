@@ -15,7 +15,7 @@ rule spades:
         reads=lambda wc: config["asm_cfg"].get_assembler_input_files(wc.label, wc.sample),
     output:
         contigs="analysis/{sample}/yeat/spades/{label}/contigs.fasta",
-    threads: 128
+    threads: config["threads"]
     params:
         outdir="analysis/{sample}/yeat/spades/{label}",
         input_args=lambda wc: config["asm_cfg"].get_assembler_input_args(wc.label, wc.sample),
@@ -38,7 +38,7 @@ rule megahit:
         contigs="analysis/{sample}/yeat/megahit/{label}/contigs.fasta",
     conda:
         "yeat-megahit"
-    threads: 128
+    threads: config["threads"]
     params:
         temp_outdir="analysis/{sample}/yeat/megahit/{label}/megahit-temp",
         outdir="analysis/{sample}/yeat/megahit/{label}",
@@ -60,7 +60,7 @@ rule unicycler:
         reads=lambda wc: config["asm_cfg"].get_assembler_input_files(wc.label, wc.sample),
     output:
         contigs="analysis/{sample}/yeat/unicycler/{label}/contigs.fasta",
-    threads: 128
+    threads: config["threads"]
     params:
         outdir="analysis/{sample}/yeat/unicycler/{label}",
         input_args=lambda wc: config["asm_cfg"].get_assembler_input_args(wc.label, wc.sample),
@@ -79,7 +79,7 @@ rule penguin:
         reads=lambda wc: config["asm_cfg"].get_assembler_input_files(wc.label, wc.sample),
     output:
         contigs="analysis/{sample}/yeat/penguin/{label}/contigs.fasta",
-    threads: 128
+    threads: config["threads"]
     params:
         outdir="analysis/{sample}/yeat/penguin/{label}",
         input_args=lambda wc: config["asm_cfg"].get_assembler_input_args(wc.label, wc.sample),
@@ -102,7 +102,7 @@ rule flye:
         reads=lambda wc: config["asm_cfg"].get_assembler_input_files(wc.label, wc.sample),
     output:
         contigs="analysis/{sample}/yeat/flye/{label}/contigs.fasta",
-    threads: 128
+    threads: config["threads"]
     params:
         outdir="analysis/{sample}/yeat/flye/{label}",
         input_args=lambda wc: config["asm_cfg"].get_assembler_input_args(wc.label, wc.sample),
@@ -121,7 +121,7 @@ rule canu:
         reads=lambda wc: config["asm_cfg"].get_assembler_input_files(wc.label, wc.sample),
     output:
         contigs="analysis/{sample}/yeat/canu/{label}/contigs.fasta",
-    threads: 128
+    threads: config["threads"]
     params:
         outdir="analysis/{sample}/yeat/canu/{label}",
         input_args=lambda wc: config["asm_cfg"].get_assembler_input_args(wc.label, wc.sample),
@@ -140,7 +140,7 @@ rule hifiasm:
         reads=lambda wc: config["asm_cfg"].get_assembler_input_files(wc.label, wc.sample),
     output:
         contigs="analysis/{sample}/yeat/hifiasm/{label}/contigs.fasta",
-    threads: 128
+    threads: config["threads"]
     params:
         prefix="analysis/{sample}/yeat/hifiasm/{label}/asm",
         input_args=lambda wc: config["asm_cfg"].get_assembler_input_args(wc.label, wc.sample),
@@ -160,7 +160,7 @@ rule hifiasm_meta:
         reads=lambda wc: config["asm_cfg"].get_assembler_input_files(wc.label, wc.sample),
     output:
         contigs="analysis/{sample}/yeat/hifiasm_meta/{label}/contigs.fasta",
-    threads: 128
+    threads: config["threads"]
     params:
         prefix="analysis/{sample}/yeat/hifiasm_meta/{label}/asm",
         input_args=lambda wc: config["asm_cfg"].get_assembler_input_args(wc.label, wc.sample),
@@ -180,7 +180,7 @@ rule metamdbg:
         reads=lambda wc: config["asm_cfg"].get_assembler_input_files(wc.label, wc.sample),
     output:
         contigs="analysis/{sample}/yeat/metamdbg/{label}/contigs.fasta",
-    threads: 128
+    threads: config["threads"]
     params:
         outdir="analysis/{sample}/yeat/metamdbg/{label}",
         input_args=lambda wc: config["asm_cfg"].get_assembler_input_args(wc.label, wc.sample),
@@ -201,7 +201,7 @@ rule verkko:
         contigs="analysis/{sample}/yeat/verkko/{label}/contigs.fasta",
     conda:
         "yeat-verkko"
-    threads: 128
+    threads: config["threads"]
     params:
         outdir="analysis/{sample}/yeat/verkko/{label}",
         input_args=lambda wc: config["asm_cfg"].get_assembler_input_args(wc.label, wc.sample),
@@ -222,7 +222,7 @@ rule myloasm:
         contigs="analysis/{sample}/yeat/myloasm/{label}/contigs.fasta",
     conda:
         "yeat-myloasm"
-    threads: 128
+    threads: config["threads"]
     params:
         outdir="analysis/{sample}/yeat/myloasm/{label}",
         input_args=lambda wc: config["asm_cfg"].get_assembler_input_args(wc.label, wc.sample),

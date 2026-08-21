@@ -35,24 +35,17 @@ def test_has_no_read_type():
         [data_file("short_reads_1.fastq.gz")],
     ],
 )
-def test_has_read_paths(read_path):
+def test_validate_read_path_count(read_path):
     data = {"illumina": read_path}
-    Sample.has_read_paths(data)
+    Sample.validate_read_path_count(data)
 
 
-def test_has_read_paths_add_global_setting_keys():
+def test_validate_read_path_count_add_global_setting_keys():
     data = {"illumina": ["READ1.fastq.gz", "READ2.fastq.gz"], "filter": {"enabled": False}}
-    Sample.has_read_paths(data)
+    Sample.validate_read_path_count(data)
 
 
-def test_has_read_paths_unable_to_find():
-    data = {"illumina": []}
-    message = "Unable to find FASTQ files for sample"
-    with pytest.raises(SampleConfigurationError, match=message):
-        Sample.has_read_paths(data)
-
-
-def test_has_read_paths_found_too_many(tmp_path):
+def test_validate_read_path_count_found_too_many(tmp_path):
     wd = tmp_path
     read1 = data_file("short_reads_1.fastq.gz")
     read2 = data_file("short_reads_2.fastq.gz")
@@ -62,7 +55,14 @@ def test_has_read_paths_found_too_many(tmp_path):
     data = {"illumina": glob(str(wd / "short_reads_*.fastq.gz"))}
     message = "Sample has too many FASTQ files. Expected at most 2, found 3."
     with pytest.raises(SampleConfigurationError, match=message):
-        Sample.has_read_paths(data)
+        Sample.validate_read_path_count(data)
+
+
+def test_validate_read_paths_exist_unable_to_find():
+    data = {"illumina": []}
+    message = "Unable to find FASTQ illumina files for sample sample1"
+    with pytest.raises(FileNotFoundError, match=message):
+        Sample(label="sample1", data=data)
 
 
 def test_has_invalid_keys():

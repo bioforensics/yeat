@@ -22,13 +22,10 @@ rule spades:
         extra_args=lambda wc: config["asm_cfg"].get_assembler_extra_args(wc.label),
     log:
         "analysis/{sample}/yeat/spades/{label}/spades.log",
-    shell:
-        """
-        spades.py {params.input_args} -t {threads} -o {params.outdir} {params.extra_args} > {log} 2>&1
-        if [[ "{params.extra_args}" == *"--corona"* ]]; then
-            ln -s raw_contigs.fasta {output.contigs}
-        fi
-        """
+    run:
+        shell("spades.py {params.input_args} -t {threads} -o {params.outdir} {params.extra_args} > {log} 2>&1")
+        if "--corona" in params.extra_args:
+            shell("ln -s raw_contigs.fasta {output.contigs}")
 
 
 rule megahit:

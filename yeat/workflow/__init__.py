@@ -90,6 +90,5 @@ def expected_output_file_status(command, workdir):
     command.append("--summary")
     command = list(map(str, command))
     process = subprocess.run(command, capture_output=True, text=True)
-    result = "\n".join(process.stdout.split("\n", 1)[1:])
-    df = pd.read_csv(StringIO(result), sep="\t")
+    df = pd.read_csv(StringIO(process.stdout), sep="\t")
     df.to_csv(status_dir / "yeat.tsv", sep="\t", index=False, header=True)

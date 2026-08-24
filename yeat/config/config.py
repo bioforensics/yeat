@@ -39,7 +39,7 @@ class AssemblyConfiguration(BaseModel):
     @classmethod
     def parse_snakemake_config(cls, config):
         global_settings = cls._parse_global_settings(config)
-        samples = cls._parse_samples(config, copy.deepcopy(global_settings))
+        samples = cls._parse_samples(config, global_settings)
         assemblers = cls._parse_assemblers(config, samples)
         return cls(global_settings=global_settings, samples=samples, assemblers=assemblers)
 
@@ -52,7 +52,7 @@ class AssemblyConfiguration(BaseModel):
     def _parse_samples(config, global_settings):
         samples = dict()
         for label, data in config["samples"].items():
-            samples[label] = Sample.parse_data(label, data, global_settings)
+            samples[label] = Sample.parse_data(label, data, copy.deepcopy(global_settings))
         return samples
 
     @staticmethod

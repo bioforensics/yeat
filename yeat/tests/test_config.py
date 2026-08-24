@@ -13,8 +13,8 @@ import pytest
 from yeat.config.assemblers import SPAdesAssembler, PenguiNAssembler
 from yeat.config.config import ConfigurationError, AssemblyConfiguration
 from yeat.config.global_settings import GlobalSettings
-from yeat.workflow import get_config_data
 from yeat.tests import data_file
+from yeat.workflow import get_config_data
 
 
 @pytest.mark.parametrize("samples", [{"sample1": SAMPLES["sample1"]}, SAMPLES])

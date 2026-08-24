@@ -11,19 +11,23 @@ import pytest
 from yeat.config.downsample_settings import DownsampleSettings
 
 
-@pytest.mark.parametrize("genome_size", ["3.5kb", "3.5 kb", "3.5 Kb", "3.5 KB", "3,500"])
+@pytest.mark.parametrize("genome_size", ["3.5kb", "3.5 kb", "3.5 Kb", "3.5 KB", "3,500", 3500])
 def test_genome_size_kb(genome_size):
     ds = DownsampleSettings.parse_data({"genome_size": genome_size})
     assert ds.genome_size == 3500
 
 
-@pytest.mark.parametrize("genome_size", ["3.5mb", "3.5 mb", "3.5 Mb", "3.5 MB", "3,500,000"])
+@pytest.mark.parametrize(
+    "genome_size", ["3.5mb", "3.5 mb", "3.5 Mb", "3.5 MB", "3,500,000", 3500000]
+)
 def test_genome_size_mb(genome_size):
     ds = DownsampleSettings.parse_data({"genome_size": genome_size})
     assert ds.genome_size == 3500000
 
 
-@pytest.mark.parametrize("genome_size", ["3.5gb", "3.5 gb", "3.5 Gb", "3.5 GB", "3,500,000,000"])
+@pytest.mark.parametrize(
+    "genome_size", ["3.5gb", "3.5 gb", "3.5 Gb", "3.5 GB", "3,500,000,000", 3500000000]
+)
 def test_genome_size_gb(genome_size):
     ds = DownsampleSettings.parse_data({"genome_size": genome_size})
     assert ds.genome_size == 3500000000

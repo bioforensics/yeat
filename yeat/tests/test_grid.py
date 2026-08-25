@@ -16,5 +16,5 @@ def test_grid(tmp_path):
     wd = str(tmp_path)
     config = data_file("configs/paired.toml")
     arglist = ["-w", wd, "-t", "200", "--slurm", config]
-    run_yeat(arglist)
+    run_yeat(arglist, wd)
     final_contig_files_exist(wd, config)

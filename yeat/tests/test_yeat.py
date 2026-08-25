@@ -25,7 +25,7 @@ from yeat.tests import data_file, run_yeat, get_core_count, final_contig_files_e
 def test_assemblers_dry_run(tmp_path, config):
     wd = str(tmp_path)
     arglist = ["-w", wd, "-n", config]
-    run_yeat(arglist)
+    run_yeat(arglist, wd, dry_run=True)
 
 
 @pytest.mark.long
@@ -40,7 +40,7 @@ def test_short_assemblers(capsys, tmp_path, config):
     wd = str(tmp_path)
     cores = str(get_core_count())
     arglist = ["-w", wd, "-t", cores, config]
-    run_yeat(arglist)
+    run_yeat(arglist, wd)
     final_contig_files_exist(wd, config)
 
 
@@ -56,7 +56,7 @@ def test_long_assemblers(capsys, tmp_path, config):
     wd = str(tmp_path)
     cores = str(get_core_count())
     arglist = ["-w", wd, "-t", cores, config]
-    run_yeat(arglist)
+    run_yeat(arglist, wd)
     final_contig_files_exist(wd, config)
 
 
@@ -66,7 +66,7 @@ def test_hybrid_assemblers(capsys, tmp_path):
     cores = str(get_core_count())
     config = data_file("configs/hybrid.toml")
     arglist = ["-w", wd, "-t", cores, config]
-    run_yeat(arglist)
+    run_yeat(arglist, wd)
     final_contig_files_exist(wd, config)
 
 
@@ -76,5 +76,5 @@ def test_metagenomics_assemblers(capsys, tmp_path):
     cores = str(get_core_count())
     config = data_file("configs/metagenomics.toml")
     arglist = ["-w", wd, "-t", cores, config]
-    run_yeat(arglist)
+    run_yeat(arglist, wd)
     final_contig_files_exist(wd, config)

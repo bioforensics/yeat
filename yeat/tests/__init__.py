@@ -10,6 +10,7 @@
 from importlib.resources import files
 import multiprocessing
 from pathlib import Path
+import pandas as pd
 from yeat.cli import main, cli
 from yeat.config.assemblers import ALGORITHM_CONFIGS
 from yeat.config.config import AssemblyConfiguration
@@ -47,10 +48,15 @@ def get_core_count():
     return multiprocessing.cpu_count()
 
 
-def run_yeat(arglist):
+def run_yeat(arglist, wd, dry_run=False):
     arglist = map(str, arglist)
     args = cli.get_parser().parse_args(arglist)
     main(args)
+    df = pd.read_csv(f"{wd}/status/yeat.tsv", sep="\t")
+    if dry_run:
+        assert df["status"].eq("missing").all()
+    else:
+        assert not df["status"].isin(["missing"]).any()
 
 
 def final_contig_files_exist(wd, config_path):

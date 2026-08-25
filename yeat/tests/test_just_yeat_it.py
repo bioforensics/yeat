@@ -7,15 +7,21 @@
 # Development Center.
 # -------------------------------------------------------------------------------------------------
 
+import pandas as pd
 from pathlib import Path
 import pytest
 from yeat.cli.just_yeat_it import get_parser, main
 from yeat.tests import data_file, final_contig_files_exist
 
 
-def run_yeat(arglist):
+def run_yeat(arglist, wd, dry_run=False):
     args = get_parser().parse_args(arglist)
     main(args)
+    df = pd.read_csv(f"{wd}/status/yeat.tsv", sep="\t")
+    if dry_run:
+        assert df["status"].eq("missing").all()
+    else:
+        assert not df["status"].isin(["missing"]).any()
 
 
 def test_paired_end_assemblers_dry_run(tmp_path):
@@ -27,7 +33,7 @@ def test_paired_end_assemblers_dry_run(tmp_path):
         data_file("short_reads_1.fastq.gz"),
         data_file("short_reads_2.fastq.gz"),
     ]
-    run_yeat(arglist)
+    run_yeat(arglist, wd, dry_run=True)
 
 
 @pytest.mark.long
@@ -39,7 +45,7 @@ def test_paired_end_assemblers(capsys, tmp_path):
         data_file("short_reads_1.fastq.gz"),
         data_file("short_reads_2.fastq.gz"),
     ]
-    run_yeat(arglist)
+    run_yeat(arglist, wd)
     config = str((Path(wd) / "config.toml").resolve())
     final_contig_files_exist(wd, config)
 
@@ -55,6 +61,6 @@ def test_invalid_input_algorithm(capsys, tmp_path):
         data_file("short_reads_2.fastq.gz"),
     ]
     with pytest.raises(SystemExit):
-        run_yeat(arglist)
+        run_yeat(arglist, wd)
     out, err = capsys.readouterr()
     assert "argument --algorithm: invalid choice: 'DNE'" in err

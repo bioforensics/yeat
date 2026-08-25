@@ -11,6 +11,7 @@ from .assemblers import ALGORITHM_CONFIGS
 from .assemblers.assembler import Assembler
 from .global_settings import GlobalSettings
 from .sample import Sample
+from copy import deepcopy
 from pydantic import BaseModel, ConfigDict, field_validator
 from typing import Dict
 
@@ -51,7 +52,7 @@ class AssemblyConfiguration(BaseModel):
     def _parse_samples(config, global_settings):
         samples = dict()
         for label, data in config["samples"].items():
-            samples[label] = Sample.parse_data(label, data, global_settings)
+            samples[label] = Sample.parse_data(label, data, deepcopy(global_settings))
         return samples
 
     @staticmethod

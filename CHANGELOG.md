@@ -5,10 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
 ## Unreleased
 
 ### Added
 - Statuses of expected Snakemake output files (!113)
+- Genome size input flexibility (!116)
 
 ### Changed
 - Throw `FileNotFoundError` for bad FASTQ paths (!115)
@@ -16,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - coronaSPAdes target snakemake output file (!113)
 - Maximum thread limit per rule during parallel execution (!114)
+- Overriding global filter and downsample values per sample (!116)
 
 
 ## [0.9.2] 2026-05-07

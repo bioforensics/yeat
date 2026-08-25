@@ -13,6 +13,8 @@ import pytest
 from yeat.config.assemblers import SPAdesAssembler, PenguiNAssembler
 from yeat.config.config import ConfigurationError, AssemblyConfiguration
 from yeat.config.global_settings import GlobalSettings
+from yeat.tests import data_file
+from yeat.workflow import get_config_data
 
 
 @pytest.mark.parametrize("samples", [{"sample1": SAMPLES["sample1"]}, SAMPLES])
@@ -125,3 +127,17 @@ def test_penguin_metadata():
         config.get_assembler_bowtie2_input_args("penguin_default", "sample1")
         == "-1 analysis/sample1/qc/illumina/downsample/R1.fastq.gz -2 analysis/sample1/qc/illumina/downsample/R2.fastq.gz"
     )
+
+
+def test_overwrite_global_settings():
+    data = get_config_data(data_file("configs/overwrite_global_settings.toml"))
+    config = AssemblyConfiguration.parse_snakemake_config(data)
+    assert config.global_settings.filter.short_filter_settings.enabled == False
+    assert config.global_settings.downsample.short_downsample_settings.enabled == False
+    assert config.global_settings.downsample.short_downsample_settings.genome_size == "auto"
+    assert config.samples["Animal_289"].filter.short_filter_settings.enabled == False
+    assert config.samples["Animal_289"].downsample.short_downsample_settings.enabled == False
+    assert config.samples["Animal_289"].downsample.short_downsample_settings.genome_size == "auto"
+    assert config.samples["short_reads"].filter.short_filter_settings.enabled == True
+    assert config.samples["short_reads"].downsample.short_downsample_settings.enabled == True
+    assert config.samples["short_reads"].downsample.short_downsample_settings.genome_size == 15000

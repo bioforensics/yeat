@@ -99,7 +99,7 @@ rule flye:
         reads=lambda wc: config["asm_cfg"].get_assembler_input_files(wc.label, wc.sample),
     output:
         contigs="analysis/{sample}/yeat/flye/{label}/contigs.fasta",
-    threads: config["threads"]
+    threads: min(config["threads"], 128)
     params:
         outdir="analysis/{sample}/yeat/flye/{label}",
         input_args=lambda wc: config["asm_cfg"].get_assembler_input_args(wc.label, wc.sample),

@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.10] 2026-10-08
 
+### Fixed
+- Max threads for Flye (!)
+
+
+## [0.10] 2026-10-08
+
 ### Added
 - Statuses of expected Snakemake output files (!113)
 - Genome size input flexibility (!116)
@@ -15,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Throw `FileNotFoundError` for bad FASTQ paths (!115)
 
-### Fixed
+
 - coronaSPAdes target snakemake output file (!113)
 - Maximum thread limit per rule during parallel execution (!114)
 - Overriding global filter and downsample values per sample (!116)
